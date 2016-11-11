@@ -16,6 +16,9 @@ func main() {
 
 	fmt.Println("exclude:", *excludePtr)
 	fmt.Println("tail:", flag.Args())
-	
-	filepath.Walk(flag.Args()[0], linecounter)
+
+	roots := flag.Args()
+	for i := range roots {
+		filepath.Walk(roots[i], linecounter)
+	}
 }
