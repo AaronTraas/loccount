@@ -21,7 +21,7 @@ func filter(path string, info os.FileInfo, err error) error {
 	if strings.Contains(path, "/.") || path[0] == '.' {
 		return err
 	}
-	for i :=range exclusions {
+	for i := range exclusions {
 		if path == exclusions[i] || strings.HasPrefix(path, exclusions[i] + "/") {
 			return err
 		}
