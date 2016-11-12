@@ -13,20 +13,30 @@ func process(path string) {
 	fmt.Printf("%s\n", path)
 }
 
+func isDirectory(path string) (bool) {
+	fileInfo, err := os.Stat(path)
+	return err == nil && fileInfo.IsDir()
+}
+
 // filter - winnows out uninteresting paths before handing them to process
 func filter(path string, info os.FileInfo, err error) error {
 	neverInterestingByPrefix := []string{"."}
 	neverInterestingByInfix := []string{".so.", "/."}
 	neverInterestingBySuffix := []string{"~", ".a", ".la", ".o", ".so"}
 
+
 	for i := range neverInterestingByPrefix {
-		if strings.HasSuffix(path, neverInterestingByPrefix[i]) {
+		if strings.HasPrefix(path, neverInterestingByPrefix[i]) {
 			return err
 		}
 	}
 	for i := range neverInterestingByInfix {
 		if strings.Contains(path, neverInterestingByInfix[i]) {
-			return err
+			if isDirectory(path) {
+				return filepath.SkipDir
+			} else {
+				return err
+			}
 		}
 	}
 	for i := range neverInterestingBySuffix {
@@ -45,7 +55,7 @@ func filter(path string, info os.FileInfo, err error) error {
 }
 
 func main() {
-	excludePtr := flag.String("exclude", "", "directories to exclude")
+	excludePtr := flag.String("exclude", "", "paths directories to exclude")
 	flag.Parse()
 
 	exclusions = strings.Split(*excludePtr, ",")
