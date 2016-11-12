@@ -4,11 +4,11 @@ import "fmt"
 import "flag"
 import "os"
 import "path/filepath"
-import "strings" 
+import "strings"
 
 var exclusions []string
 
-// process - stub, eventually the statistics gatherer 
+// process - stub, eventually the statistics gatherer
 func process(path string) {
 	fmt.Printf("%s\n", path)
 }
@@ -22,7 +22,7 @@ func filter(path string, info os.FileInfo, err error) error {
 		return err
 	}
 	for i := range exclusions {
-		if path == exclusions[i] || strings.HasPrefix(path, exclusions[i] + "/") {
+		if path == exclusions[i] || strings.HasPrefix(path, exclusions[i]+"/") {
 			return err
 		}
 	}
