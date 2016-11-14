@@ -1,6 +1,7 @@
 package stats
 
 type SourceStat struct {
-	Sloc int
+	Language string
+	SLOC int
 }
 

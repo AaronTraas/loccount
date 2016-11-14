@@ -19,8 +19,11 @@ func process(path string) {
 	var st stats.SourceStat
 	for i := range handlerList {
 		st = handlerList[i](path)
+		if st.SLOC > 0 {
+			break
+		}
 	}
-	fmt.Printf("%s %d\n", path, st.Sloc)
+	fmt.Printf("%s %d\n", path, st.SLOC)
 }
 
 func isDirectory(path string) (bool) {
