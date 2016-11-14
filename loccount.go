@@ -6,10 +6,19 @@ import "os"
 import "path/filepath"
 import "strings"
 
+import "loccount/lang"
+
 var exclusions []string
+
+//type SourceStat struct {
+//	sloc int
+//}
 
 // process - stub, eventually the statistics gatherer
 func process(path string) {
+	flist := {
+		lang.c,
+	}
 	fmt.Printf("%s\n", path)
 }
 
