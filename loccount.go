@@ -7,15 +7,19 @@ import "path/filepath"
 import "strings"
 
 import "loccount/lang"
+import "loccount/stats"
 
 var exclusions []string
 
 // process - stub, eventually the statistics gatherer
 func process(path string) {
-	//flist := {
-	//	lang.c,
-	//}
-	st := lang.C(path)
+	handlerList := []func(string) stats.SourceStat {
+		lang.C,
+	}
+	var st stats.SourceStat
+	for i := range handlerList {
+		st = handlerList[i](path)
+	}
 	fmt.Printf("%s %d\n", path, st.Sloc)
 }
 
