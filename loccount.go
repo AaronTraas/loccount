@@ -6,7 +6,7 @@ import "os"
 import "path/filepath"
 import "strings"
 
-//import "loccount/lang"
+import "loccount/lang"
 
 var exclusions []string
 
@@ -15,7 +15,8 @@ func process(path string) {
 	//flist := {
 	//	lang.c,
 	//}
-	fmt.Printf("%s\n", path)
+	st := lang.C(path)
+	fmt.Printf("%s %d\n", path, st.Sloc)
 }
 
 func isDirectory(path string) (bool) {
