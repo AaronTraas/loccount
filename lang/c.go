@@ -1,5 +1,8 @@
 package lang
 
-func c(path string) int {
-	return 0
+import "loccount/stats"
+
+func c(path string) stats.SourceStat {
+	var stat stats.SourceStat
+	return stat
 }
