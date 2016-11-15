@@ -4,10 +4,8 @@ package lang
  * Algorithm by David A. Wheeler; Go code by ESR.
  */
 
-import "os"
 import "strings"
 import "io"
-import "bufio"
 import "log"
 import "loccount/stats"
 
@@ -18,14 +16,13 @@ const CPP_STYLE = 1
 var warn_embedded_newlines = false
 
 /*
- * sloc_count - Count the SLOC in a C file
+ * sloc_count - Count the SLOC in a C or C++ file
  */
-func sloc_count(stream *os.File) uint {
+func sloc_count(path string) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
 	var comment_type int = ANSIC_STYLE /* ANSIC_STYLE or CPP_STYLE */
-	rc = bufio.NewReader(stream)
 
 	/*
         The following implements a state machine with transitions; the
@@ -90,7 +87,7 @@ func sloc_count(stream *os.File) uint {
                                 We found a bare newline in a string without
 				preceding backslash.
                                 */
-				log.Printf("c_count WARNING - newline in string, line %ld, file %s\n", line_number, stream.Name())
+				log.Printf("WARNING - newline in string, line %ld, file %s\n", line_number, path)
 
 				/*
                                 We COULD warn & reset mode to
@@ -127,29 +124,39 @@ func sloc_count(stream *os.File) uint {
 	}
 
 	if mode == INCOMMENT {
-		log.Printf("c_count ERROR - terminated in comment in %s\n", stream.Name())
+		log.Printf("ERROR - terminated in comment in %s\n", path)
 	} else if mode == INSTRING {
-		log.Printf("c_count ERROR - terminated in string in %s\n", stream.Name())
+		log.Printf("ERROR - terminated in string in %s\n", path)
 	}
 
 	return sloc
 }
 
 /*
- * C - recognize C files and get linecounts from them.
+ * C - recognize files from C/C++/Go and get linecounts from them.
+ *
+ * C++ headers get counted as C. This can only be fixed in postprocessing
+ * by noticing that there are no files with a C extension in the tree.
  */
 func C(path string) stats.SourceStat {
 	var stat stats.SourceStat
 	if strings.HasSuffix(path, ".c") || strings.HasSuffix(path, ".h") {
 		stat.Language = "C"
-		f, err := os.Open(path)
-		if err != nil {
-			log.Println(err)
-			return stat
-		}
-		defer f.Close()
-		line_number = 1
-		stat.SLOC = sloc_count(f)
+		bufferSetup(path)
+		defer bufferTeardown()
+		stat.SLOC = sloc_count(path)
+	}
+	if strings.HasSuffix(path, ".cpp") || strings.HasSuffix(path, ".cxx") {
+		stat.Language = "C++"
+		bufferSetup(path)
+		defer bufferTeardown()
+		stat.SLOC = sloc_count(path)
+	}
+	if strings.HasSuffix(path, ".go") {
+		stat.Language = "Go"
+		bufferSetup(path)
+		defer bufferTeardown()
+		stat.SLOC = sloc_count(path)
 	}
 	return stat
 }
