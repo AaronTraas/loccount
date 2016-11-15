@@ -352,6 +352,7 @@ func Generic(path string) SourceStat {
 		{"Python", ".py", "python", "'\"", "#"},
 		{"waf", "wscript", "waf", "'\"", "#"},
 		{"Perl", ".pl", "perl", "'\"", "#"},
+		{"C-shell", ".csh", "csh", "'\"", "#"},
 		{"shell", ".sh", "sh", "'\"", "#"},
 		{"Ruby", ".rb", "ruby", "'\"", "#"},
 		{"Awk", ".awk", "awk", "'\"", "#"},
