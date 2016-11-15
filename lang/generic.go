@@ -16,6 +16,7 @@ var line_number uint
 var last_char_was_newline bool = false
 var underlyingStream *os.File
 var rc *bufio.Reader
+var lastpath string
 
 func peek() byte {
 	bytes, err := rc.Peek(1)
@@ -66,15 +67,16 @@ func contains(s string, c byte) bool {
 // so that we never have to open a source file more than once.
 
 func bufferSetup(path string) bool {
-	if underlyingStream == nil {
+	if len(lastpath) > 0 && (lastpath == path) {
+		underlyingStream.Seek(0, 0)
+	} else {
 		var err error
 		underlyingStream, err = os.Open(path)
+		lastpath = path
 		if err != nil {
 			log.Println(err)
 			return false
 		}
-	} else {
-		underlyingStream.Seek(0, 0)
 	}
 	rc = bufio.NewReader(underlyingStream)
 	line_number = 1
@@ -105,7 +107,7 @@ func generic_sloc_count(path string, stringdelims string, commentleader byte) ui
 
 	bufferSetup(path)
 	defer bufferTeardown()
-
+	
 	/*
         The following implements a state machine with transitions; the
         main state is "mode", the transitions are
@@ -123,14 +125,17 @@ func generic_sloc_count(path string, stringdelims string, commentleader byte) ui
 				sawchar = true
 				delimseen = c
 				mode = INSTRING
+				//log.Printf("normal->string at line %d\n", line_number)
 			} else if (c == commentleader) {
 				c, err = getachar()
 				mode = INCOMMENT
+				//log.Printf("normal->comment at line %d\n", line_number)
 			} else if !isspace(c) {
 				sawchar = true
 			}
 		} else if mode == INSTRING {
 			if c == delimseen {
+				//log.Printf("string->normal at line %d\n", line_number)
 				mode = NORMAL
 			} else if !isspace(c) {
 				sawchar = true
@@ -138,6 +143,7 @@ func generic_sloc_count(path string, stringdelims string, commentleader byte) ui
 		} else { /* INCOMMENT mode */
 			if (c == '\n') {
 				mode = NORMAL
+				//log.Printf("comment->normal at line %d\n", line_number)
 			}
 		}
 		if c == '\n' {
