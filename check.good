@@ -4,6 +4,8 @@ tests/csh-lookup 6 C-shell
 tests/dirlist.pl 8 Perl
 tests/guide.awk 7 Awk
 tests/hello.ada 5 Ada
+tests/hello.cl 1 Lisp
+tests/hello.lsp 3 Lisp
 tests/hello.m 6 Objective-C
 tests/hello.rb 1 Ruby
 tests/hello.sh 1 shell

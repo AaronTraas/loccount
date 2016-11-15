@@ -10,9 +10,8 @@ import "strings"
 import "log"
 
 // Not yet supported from the sloccount list: asm, Cobol, exp, f90, fortran,
-// Haskell, Lisp, ML, Modula 3, Pascal,
-// Lisp could be generic with stringdelim " and comment ";", but what would
-// we use as an extension?
+// Haskell, ML, Modula 3, Pascal.
+// Known problem: Lisp sources with a .l extension are rare but not unknown.
 
 var exclusions []string
 var unclassified bool
@@ -391,6 +390,9 @@ func Generic(path string) SourceStat {
 		{"Makefile", ".mk", "#"},
 		{"Makefile", "Makefile", "#"},
 		{"Makefile", "makefile", "#"},
+		{"Lisp", ".lisp", ";"},
+		{"Lisp", ".lsp", ";"},	// XLISP
+		{"Lisp", ".cl", ";"},	// Common Lisp
 	}
 
 	for i := range genericLanguages {
