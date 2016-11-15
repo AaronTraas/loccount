@@ -11,62 +11,14 @@ import "bufio"
 import "log"
 import "loccount/stats"
 
-/* Modes */
-const NORMAL = 0
-const INSTRING = 1
-const INCOMMENT = 2
-
 /* Types of comments: */
 const ANSIC_STYLE = 0
 const CPP_STYLE = 1
 
-/* Globals */
-var line_number uint
 var warn_embedded_newlines = false
-var last_char_was_newline bool = false
-
-var rc *bufio.Reader
-
-func peek() byte {
-	bytes, err := rc.Peek(1)
-	if err != nil {
-		panic("error while peeking")
-	}
-	return bytes[0]
-}
-
-func ispeek(c byte) bool {
-	if c == peek() {
-		return true
-	}
-	return false
-}
 
 /*
- * getachar - Get one character, tracking line number
- */
-func getachar() (byte, error) {
-	c, err := rc.ReadByte()
-	if err != nil && err != io.EOF {
-		panic("error while reading a character")
-	}
-	if last_char_was_newline {
-		line_number++
-	}
-	if c == '\n' {
-		last_char_was_newline = true
-	} else {
-		last_char_was_newline = false
-	}
-	return c, err
-}
-
-func isspace(c byte) bool {
-	return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f'
-}
-
-/*
- * sloc_count - Count the SLOC in the program.
+ * sloc_count - Count the SLOC in a C file
  */
 func sloc_count(stream *os.File) uint {
 	var sloc uint = 0
