@@ -172,10 +172,10 @@ func generic_sloc_count(path string, stringdelims string, commentleader byte) ui
 }
 
 /*
- * Script - recognize lots of languages with generic scripting syntax
+ * Generic - recognize lots of languages with generic syntax
  */
 
-func Script(path string) stats.SourceStat {
+func Generic(path string) stats.SourceStat {
 	var stat stats.SourceStat
 
 	type scriptingLanguage struct {
@@ -185,7 +185,7 @@ func Script(path string) stats.SourceStat {
 		stringdelims string
 		commentleader byte
 	}
-	languages := []scriptingLanguage{
+	scriptingLanguages := []scriptingLanguage{
 		// First line doesn't look like it handles Python
 		// multiline string literals, but it actually does.
 		// The delimiters for them are ''' """ which get seen
@@ -194,7 +194,7 @@ func Script(path string) stats.SourceStat {
 		// multiline literal get counted if they contain non-
 		// whitespace.
 		//
-		// This is different fron sloccount's behavior, which
+		// This is different from sloccount's behavior, which
 		// doesn't count multiline literals if they start at the
 		// beginning of a line (e.g. as in Python header comments).
 		{"Python", ".py", "python", "'\"", '#'},
@@ -204,8 +204,8 @@ func Script(path string) stats.SourceStat {
 		{"Ruby", ".rb", "ruby", "'\"", '#'},
 	}
 
-	for i := range languages {
-		lang := languages[i]
+	for i := range scriptingLanguages {
+		lang := scriptingLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) || hashbang(path, lang.hashbang) {
 			stat.Language = lang.name
 			stat.SLOC = generic_sloc_count(path,

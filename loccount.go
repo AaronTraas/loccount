@@ -16,7 +16,7 @@ var unclassified bool
 func process(path string) {
 	handlerList := []func(string) stats.SourceStat {
 		lang.C,        /* also C++ */
-		lang.Script,   /* Python, Perl, Ruby, shell */
+		lang.Generic,   /* Python, Perl, Ruby, shell, waf, Ada... */
 	}
 	var st stats.SourceStat
 	for i := range handlerList {
