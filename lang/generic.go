@@ -6,6 +6,8 @@ import "io"
 import "strings"
 import "bufio"
 
+import "loccount/stats"
+
 /* Modes */
 const NORMAL = 0
 const INSTRING = 1
@@ -168,4 +170,42 @@ func generic_sloc_count(path string, stringdelims string, commentleader byte) ui
 
 	return sloc
 }
+
+/*
+ * Script - recognize lots of languages with generic scripting syntax
+ */
+func Script(path string) stats.SourceStat {
+	var stat stats.SourceStat
+	if strings.HasSuffix(path, ".py") || sniff(path, "python") {
+		stat.Language = "Python"
+		// This doesn't look like it handles Python multiline string
+		// literals, but it actually does.  The delimiters for them are
+		// ''' """ which get seen as an empty string followed by a
+		// string delimiter, or the reverse of that. Interior lines
+		// of a multiline literal get counted if they contain non-
+		// whitespace.
+		//
+		// This is different fron sloccount's behavior, which
+		// doesn't count multiline literals if they start at the
+		// beginning of a line (e.g. as in Python header comments).
+		stat.SLOC = generic_sloc_count(path, "'\"", '#')
+	} else if strings.HasSuffix(path, "wscript") {
+		stat.Language = "waf"
+		stat.SLOC = generic_sloc_count(path, "'\"", '#')
+	} else if strings.HasSuffix(path, ".pl") || sniff(path, "perl") {
+		stat.Language = "Perl"
+		stat.SLOC = generic_sloc_count(path, "'\"", '#')
+	} else if strings.HasSuffix(path, ".sh") || sniff(path, "sh") {
+		stat.Language = "shell"
+		stat.SLOC = generic_sloc_count(path, "'\"", '#')
+	} else if strings.HasSuffix(path, ".rb") || sniff(path, "ruby") {
+		stat.Language = "Ruby"
+		stat.SLOC = generic_sloc_count(path, "'\"", '#')
+	}
+
+	return stat
+}
+
+
+
 // end

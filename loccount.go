@@ -15,8 +15,8 @@ var unclassified bool
 // process - stub, eventually the statistics gatherer
 func process(path string) {
 	handlerList := []func(string) stats.SourceStat {
-		lang.C,
-		lang.Python,
+		lang.C,        /* also C++ */
+		lang.Script,   /* Python, Perl, Ruby, shell */
 	}
 	var st stats.SourceStat
 	for i := range handlerList {
