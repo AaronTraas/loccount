@@ -202,7 +202,7 @@ func Generic(path string) stats.SourceStat {
 		{"Python", ".py", "python", "'\"", "#"},
 		{"waf", "wscript", "waf", "'\"", "#"},
 		{"Perl", ".pl", "perl", "'\"", "#"},
-		{"shell", ".sh", "shell", "'\"", "#"},
+		{"shell", ".sh", "sh", "'\"", "#"},
 		{"Ruby", ".rb", "ruby", "'\"", "#"},
 	}
 
