@@ -101,7 +101,7 @@ func hashbang(path string, langname string) bool {
 // We get to specify a set of possible string delimiters (normally
 // a singleton string containing single or double quote, or a doubleton
 // containing both). We also get to specify a comment leader.
-func generic_sloc_count(path string, stringdelims string, commentleader byte) uint {
+func generic_sloc_count(path string, stringdelims string, commentleader string) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
@@ -127,17 +127,21 @@ func generic_sloc_count(path string, stringdelims string, commentleader byte) ui
 				sawchar = true
 				delimseen = c
 				mode = INSTRING
-				//log.Printf("normal->string at line %d\n", line_number)
-			} else if (c == commentleader) {
+			} else if (c == commentleader[0]) {
 				c, err = getachar()
-				mode = INCOMMENT
-				//log.Printf("normal->comment at line %d\n", line_number)
+				if len(commentleader) == 1 {
+					mode = INCOMMENT
+				} else {
+					c, err = getachar()
+					if err == nil && c == commentleader[1] {
+						mode = INCOMMENT
+					}
+				}
 			} else if !isspace(c) {
 				sawchar = true
 			}
 		} else if mode == INSTRING {
 			if c == delimseen {
-				//log.Printf("string->normal at line %d\n", line_number)
 				mode = NORMAL
 			} else if !isspace(c) {
 				sawchar = true
@@ -145,7 +149,6 @@ func generic_sloc_count(path string, stringdelims string, commentleader byte) ui
 		} else { /* INCOMMENT mode */
 			if (c == '\n') {
 				mode = NORMAL
-				//log.Printf("comment->normal at line %d\n", line_number)
 			}
 		}
 		if c == '\n' {
@@ -183,7 +186,7 @@ func Generic(path string) stats.SourceStat {
 		suffix string
 		hashbang string
 		stringdelims string
-		commentleader byte
+		commentleader string
 	}
 	scriptingLanguages := []scriptingLanguage{
 		// First line doesn't look like it handles Python
@@ -197,11 +200,11 @@ func Generic(path string) stats.SourceStat {
 		// This is different from sloccount's behavior, which
 		// doesn't count multiline literals if they start at the
 		// beginning of a line (e.g. as in Python header comments).
-		{"Python", ".py", "python", "'\"", '#'},
-		{"waf", "wscript", "waf", "'\"", '#'},
-		{"Perl", ".pl", "perl", "'\"", '#'},
-		{"shell", ".sh", "shell", "'\"", '#'},
-		{"Ruby", ".rb", "ruby", "'\"", '#'},
+		{"Python", ".py", "python", "'\"", "#"},
+		{"waf", "wscript", "waf", "'\"", "#"},
+		{"Perl", ".pl", "perl", "'\"", "#"},
+		{"shell", ".sh", "shell", "'\"", "#"},
+		{"Ruby", ".rb", "ruby", "'\"", "#"},
 	}
 
 	for i := range scriptingLanguages {
@@ -210,6 +213,25 @@ func Generic(path string) stats.SourceStat {
 			stat.Language = lang.name
 			stat.SLOC = generic_sloc_count(path,
 				lang.stringdelims, lang.commentleader)
+			break
+		}
+	}
+
+	type genericLanguage struct {
+		name string
+		suffix string
+		commentleader string
+	}
+	genericLanguages := []genericLanguage{
+		{"Ada", ".ada", "--"},
+	}
+
+	for i := range genericLanguages {
+		lang := genericLanguages[i]
+		if strings.HasSuffix(path, lang.suffix) {
+			stat.Language = lang.name
+			stat.SLOC = generic_sloc_count(path,
+				"", lang.commentleader)
 			break
 		}
 	}
