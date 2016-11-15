@@ -93,7 +93,7 @@ func bufferTeardown() {
 func hashbang(path string, langname string) bool {
 	bufferSetup(path)
 	s, err := rc.ReadString('\n')
-	return err != nil && strings.HasPrefix(s, "#!") && strings.Contains(s, langname)
+	return err == nil && strings.HasPrefix(s, "#!") && strings.Contains(s, langname)
 }
 
 // generic_sloc_count - count SLOC in a generic scripting language.

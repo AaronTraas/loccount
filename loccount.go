@@ -23,7 +23,7 @@ func process(path string) {
 		st = handlerList[i](path)
 		if st.SLOC > 0 {
 			if !unclassified {
-				fmt.Printf("%s %d\n", path, st.SLOC)
+				fmt.Printf("%s %d %s\n", path, st.SLOC, st.Language)
 			}
 			return
 		}

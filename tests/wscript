@@ -1,0 +1,72 @@
+def build(ctx):
+	srcnode = ctx.srcnode.abspath()
+
+	libntp_source = [
+		"a_md5encrypt.c",
+		"atolfp.c",
+		"authkeys.c",
+		"authreadkeys.c",
+		"clocktime.c",
+		"decodenetnum.c",
+		"dofptoa.c",
+		"dolfptoa.c",
+		"getopt.c",
+		"initnetwork.c",
+		"md5.c",
+		"mstolfp.c",
+		"netof.c",
+		"ntp_endian.c",
+		"ntp_intres.c",
+		"ntp_random.c",
+		"ntp_worker.c",
+		"numtoa.c",
+		"recvbuff.c",
+		"refidsmear.c",
+		"socket.c",
+		"socktoa.c",
+		"ssl_init.c",
+		"syssignal.c",
+		"vint64ops.c",
+		"work_thread.c",
+		"ymd2yd.c",
+	]
+
+	libntp_source_sharable = [
+		"clockwork.c",
+		"emalloc.c",
+		"hextolfp.c",
+		"humandate.c",
+		"lib_strbuf.c",
+		"msyslog.c",
+		"ntp_calendar.c",
+		"prettydate.c",
+		"statestr.c",
+		"strl_obsd.c",
+		"systime.c",
+		"timetoa.c",
+	]
+
+	includes = [
+		"%s/libisc/include/" % srcnode,
+		"%s/libisc/unix/include/" % srcnode, # XXX: platform: requires unix/win32 switch.
+		"%s/libsodium/include/" % srcnode,
+	]
+
+	# C library
+	ctx(
+		target		= "ntp",
+		features	= "c cstlib bld_include src_include",
+		use		= "sodium",
+		source		= libntp_source + libntp_source_sharable,
+		includes	= includes,
+	)
+
+	# Loadable Python extension
+	ctx(
+		target		= "ntpc",
+		features	= "c cshlib bld_include src_include pyext",
+		source		= ["pymodule.c"] + libntp_source_sharable,
+		install_path	= '${PYTHONDIR}/ntp',
+		use		= "M RT",
+		includes	= includes,
+	)
