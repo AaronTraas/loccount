@@ -64,6 +64,11 @@ func filter(path string, info os.FileInfo, err error) error {
 		}
 	}
 
+	/* has to come after the infix check for directory */
+	if isDirectory(path) {
+		return err
+	}
+	
 	process(path)
 	return err
 }
