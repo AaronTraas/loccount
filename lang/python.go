@@ -24,7 +24,11 @@ func Python(path string) stats.SourceStat {
 		// ''' """ which get seen as an empty string followed by a
 		// string delimiter, or the reverse of that. Interior lines
 		// of a multiline literal get counted if they contain non-
-		// whitespace. 
+		// whitespace.
+		//
+		// This is different fron sloccount's behavior, which
+		// doesn't count multiline literals if they start at the
+		// beginning of a line (e.g. as in Python header comments).
 		stat.SLOC = generic_sloc_count(f, "'\"", '#')
 	}
 	return stat
