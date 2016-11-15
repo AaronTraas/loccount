@@ -32,12 +32,16 @@ func isDirectory(path string) (bool) {
 	return err == nil && fileInfo.IsDir()
 }
 
+
+
+
 // filter - winnows out uninteresting paths before handing them to process
 func filter(path string, info os.FileInfo, err error) error {
 	neverInterestingByPrefix := []string{"."}
 	neverInterestingByInfix := []string{".so.", "/."}
-	neverInterestingBySuffix := []string{"~", ".a", ".la", ".o", ".so"}
-
+	neverInterestingBySuffix := []string{"~",
+		".a", ".la", ".o", ".so",
+		".pyc", ".pyo"}
 
 	for i := range neverInterestingByPrefix {
 		if strings.HasPrefix(path, neverInterestingByPrefix[i]) {
