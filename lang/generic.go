@@ -128,7 +128,6 @@ func generic_sloc_count(path string, stringdelims string, commentleader string) 
 				delimseen = c
 				mode = INSTRING
 			} else if (c == commentleader[0]) {
-				c, err = getachar()
 				if len(commentleader) == 1 {
 					mode = INCOMMENT
 				} else {
