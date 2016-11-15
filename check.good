@@ -1,0 +1,11 @@
+tests/dirlist.pl 8 Perl
+tests/hello.ada 5 Ada
+tests/hello.rb 1 Ruby
+tests/hello.sh 1 shell
+tests/ntp_fp.h 254 C
+tests/ntpver 1 shell
+tests/packet.py 980 Python
+tests/perl-filewrite 11 Perl
+tests/ruby-hello 1 Ruby
+tests/upload 6 Python
+tests/wscript 65 waf

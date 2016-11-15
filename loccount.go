@@ -354,6 +354,7 @@ func Generic(path string) SourceStat {
 		{"Perl", ".pl", "perl", "'\"", "#"},
 		{"shell", ".sh", "sh", "'\"", "#"},
 		{"Ruby", ".rb", "ruby", "'\"", "#"},
+		{"Awk", ".awk", "awk", "'\"", "#"},
 	}
 
 	for i := range scriptingLanguages {

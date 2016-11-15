@@ -1,0 +1,5 @@
+#!/usr/bin/env awk
+# Should count 3 lines
+BEGIN {
+print "Hello, World!";
+}
