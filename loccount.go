@@ -15,6 +15,7 @@ var exclusions []string
 func process(path string) {
 	handlerList := []func(string) stats.SourceStat {
 		lang.C,
+		lang.Python,
 	}
 	var st stats.SourceStat
 	for i := range handlerList {
