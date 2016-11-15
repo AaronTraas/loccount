@@ -89,11 +89,11 @@ func bufferTeardown() {
 	underlyingStream.Close()
 }
 
-// sniff - hunt for a specified string in the first line of a file
-func sniff(path string, langname string) bool {
+// hashbang - hunt for a specified string in the first line of a file
+func hashbang(path string, langname string) bool {
 	bufferSetup(path)
 	s, err := rc.ReadString('\n')
-	return err != nil && strings.Contains(s, langname)
+	return err != nil && strings.HasPrefix(s, "#!") && strings.Contains(s, langname)
 }
 
 // generic_sloc_count - count SLOC in a generic scripting language.
@@ -174,33 +174,44 @@ func generic_sloc_count(path string, stringdelims string, commentleader byte) ui
 /*
  * Script - recognize lots of languages with generic scripting syntax
  */
+
 func Script(path string) stats.SourceStat {
 	var stat stats.SourceStat
-	if strings.HasSuffix(path, ".py") || sniff(path, "python") {
-		stat.Language = "Python"
-		// This doesn't look like it handles Python multiline string
-		// literals, but it actually does.  The delimiters for them are
-		// ''' """ which get seen as an empty string followed by a
-		// string delimiter, or the reverse of that. Interior lines
-		// of a multiline literal get counted if they contain non-
+
+	type scriptingLanguage struct {
+		name string
+		suffix string
+		hashbang string
+		stringdelims string
+		commentleader byte
+	}
+	languages := []scriptingLanguage{
+		// First line doesn't look like it handles Python
+		// multiline string literals, but it actually does.
+		// The delimiters for them are ''' """ which get seen
+		// as an empty string followed by a string delimiter,
+		// or the reverse of that. Interior lines of a
+		// multiline literal get counted if they contain non-
 		// whitespace.
 		//
 		// This is different fron sloccount's behavior, which
 		// doesn't count multiline literals if they start at the
 		// beginning of a line (e.g. as in Python header comments).
-		stat.SLOC = generic_sloc_count(path, "'\"", '#')
-	} else if strings.HasSuffix(path, "wscript") {
-		stat.Language = "waf"
-		stat.SLOC = generic_sloc_count(path, "'\"", '#')
-	} else if strings.HasSuffix(path, ".pl") || sniff(path, "perl") {
-		stat.Language = "Perl"
-		stat.SLOC = generic_sloc_count(path, "'\"", '#')
-	} else if strings.HasSuffix(path, ".sh") || sniff(path, "sh") {
-		stat.Language = "shell"
-		stat.SLOC = generic_sloc_count(path, "'\"", '#')
-	} else if strings.HasSuffix(path, ".rb") || sniff(path, "ruby") {
-		stat.Language = "Ruby"
-		stat.SLOC = generic_sloc_count(path, "'\"", '#')
+		{"Python", ".py", "python", "'\"", '#'},
+		{"waf", "wscript", "waf", "'\"", '#'},
+		{"Perl", ".pl", "perl", "'\"", '#'},
+		{"shell", ".sh", "shell", "'\"", '#'},
+		{"Ruby", ".rb", "ruby", "'\"", '#'},
+	}
+
+	for i := range languages {
+		lang := languages[i]
+		if strings.HasSuffix(path, lang.suffix) || hashbang(path, lang.hashbang) {
+			stat.Language = lang.name
+			stat.SLOC = generic_sloc_count(path,
+				lang.stringdelims, lang.commentleader)
+			break
+		}
 	}
 
 	return stat
