@@ -1,5 +1,10 @@
+tests/awk-hello 3 Awk
+tests/count.csh 7 C-shell
+tests/csh-lookup 6 C-shell
 tests/dirlist.pl 8 Perl
+tests/guide.awk 7 Awk
 tests/hello.ada 5 Ada
+tests/hello.m 6 Objective-C
 tests/hello.rb 1 Ruby
 tests/hello.sh 1 shell
 tests/ntp_fp.h 254 C
@@ -8,4 +13,5 @@ tests/packet.py 980 Python
 tests/perl-filewrite 11 Perl
 tests/ruby-hello 1 Ruby
 tests/upload 6 Python
+tests/wokka.cs 5 C#
 tests/wscript 65 waf

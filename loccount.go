@@ -9,6 +9,11 @@ import "path/filepath"
 import "strings"
 import "log"
 
+// Not yet supported from the sloccount list: asm, Cobol, exp, f90, fortran,
+// Haskell, Lisp, ML, Modula 3, Pascal,
+// Lisp could be generic with stringdelim " and comment ";", but what would
+// we use as an extension?
+
 var exclusions []string
 var unclassified bool
 
@@ -246,6 +251,18 @@ func C(path string) SourceStat {
 		defer bufferTeardown()
 		stat.SLOC = sloc_count(path)
 	}
+	if strings.HasSuffix(path, ".m") {
+		stat.Language = "Objective-C"
+		bufferSetup(path)
+		defer bufferTeardown()
+		stat.SLOC = sloc_count(path)
+	}
+	if strings.HasSuffix(path, ".cs") {
+		stat.Language = "C#"
+		bufferSetup(path)
+		defer bufferTeardown()
+		stat.SLOC = sloc_count(path)
+	}
 	if strings.HasSuffix(path, ".go") {
 		stat.Language = "Go"
 		bufferSetup(path)
@@ -375,6 +392,9 @@ func Generic(path string) SourceStat {
 	}
 	genericLanguages := []genericLanguage{
 		{"Ada", ".ada", "--"},
+		{"Makefile", ".mk", "#"},
+		{"Makefile", "Makefile", "#"},
+		{"Makefile", "makefile", "#"},
 	}
 
 	for i := range genericLanguages {
