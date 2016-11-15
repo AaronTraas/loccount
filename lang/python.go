@@ -21,7 +21,11 @@ func Python(path string) stats.SourceStat {
 		// doesn't count multiline literals if they start at the
 		// beginning of a line (e.g. as in Python header comments).
 		stat.SLOC = generic_sloc_count(path, "'\"", '#')
+	} else if strings.HasSuffix(path, "wscript") {
+		stat.Language = "waf"
+		stat.SLOC = generic_sloc_count(path, "'\"", '#')
 	}
+
 	return stat
 }
 

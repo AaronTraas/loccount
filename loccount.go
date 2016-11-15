@@ -10,6 +10,7 @@ import "loccount/lang"
 import "loccount/stats"
 
 var exclusions []string
+var unclassified bool
 
 // process - stub, eventually the statistics gatherer
 func process(path string) {
@@ -21,10 +22,16 @@ func process(path string) {
 	for i := range handlerList {
 		st = handlerList[i](path)
 		if st.SLOC > 0 {
-			break
+			if !unclassified {
+				fmt.Printf("%s %d\n", path, st.SLOC)
+			}
+			return
 		}
 	}
-	fmt.Printf("%s %d\n", path, st.SLOC)
+	// Not a recognized source type, nor anything we know to discard
+	if unclassified {
+		fmt.Println(path)
+	}
 }
 
 func isDirectory(path string) (bool) {
@@ -41,6 +48,7 @@ func filter(path string, info os.FileInfo, err error) error {
 	neverInterestingByInfix := []string{".so.", "/."}
 	neverInterestingBySuffix := []string{"~",
 		".a", ".la", ".o", ".so",
+		".gif", ".jpg", ".jpeg", ".ico",
 		".pyc", ".pyo"}
 
 	for i := range neverInterestingByPrefix {
@@ -78,7 +86,10 @@ func filter(path string, info os.FileInfo, err error) error {
 }
 
 func main() {
-	excludePtr := flag.String("exclude", "", "paths directories to exclude")
+	excludePtr := flag.String("exclude", "",
+		"paths directories to exclude")
+	flag.BoolVar(&unclassified, "unclassified", false,
+		"list unclassified files")
 	flag.Parse()
 
 	exclusions = strings.Split(*excludePtr, ",")
