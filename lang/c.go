@@ -74,11 +74,12 @@ func sloc_count(stream *os.File) uint {
 	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
 	var comment_type int = ANSIC_STYLE /* ANSIC_STYLE or CPP_STYLE */
 	rc = bufio.NewReader(stream)
- 
-	/* The following implements a state machine with transitions; the
-	 * main state is "mode" and "comment_type", the transitions are
-         * triggered by characters input.
-	 */
+
+	/*
+        The following implements a state machine with transitions; the
+        main state is "mode" and "comment_type", the transitions are
+	triggered by characters input.
+	*/
 
 	for {
 		c, err := getachar()
@@ -94,7 +95,7 @@ func sloc_count(stream *os.File) uint {
 				/* Consume single-character 'xxxx' values */
 				sawchar = true
 				c, err = getachar()
-				if (c == '\\') {
+				if c == '\\' {
 					c, err = getachar()
 				}
 				for {
@@ -111,40 +112,44 @@ func sloc_count(stream *os.File) uint {
 				c, err = getachar()
 				mode = INCOMMENT
 				comment_type = CPP_STYLE
-			} else if (!isspace(c)) {
+			} else if !isspace(c) {
 				sawchar = true
 			}
 		} else if mode == INSTRING {
 			/*
-                         * We only count string lines with non-whitespace --
-			 * this is to gracefully handle syntactically invalid
-			 * programs.
-                         * You could argue that multiline strings with
-                         * whitespace are still executable and should be
-                         * counted.
-                         */
+		        We only count string lines with non-whitespace --
+		        this is to gracefully handle syntactically invalid
+			programs.
+			You could argue that multiline strings with
+			whitespace are still executable and should be
+			counted.
+			 */
 			if !isspace(c) {
 				sawchar = true
 			}
-			if (c == '"') {
+			if c == '"' {
 				mode = NORMAL
 			} else if (c == '\\') && (ispeek('"') || ispeek('\\')) {
 				c, err = getachar()
 			} else if (c == '\\') && ispeek('\n') {
 				c, err = getachar()
 			} else if (c == '\n') && warn_embedded_newlines {
-                                /* We found a bare newline in a string without
-                                 * preceding backslash. */
+				/*
+                                We found a bare newline in a string without
+				preceding backslash.
+                                */
 				log.Printf("c_count WARNING - newline in string, line %ld, file %s\n", line_number, stream.Name())
-			       /* We COULD warn & reset mode to
-			        * "Normal", but lots of code does
-			        * this, so we'll just depend on the
-			        * warning for ending the program
-				*  in a string to catch syntactically
-                                * erroneous programs.
+
+				/*
+                                We COULD warn & reset mode to
+                                "Normal", but lots of code does this,
+                                so we'll just depend on the warning
+                                for ending the program in a string to
+                                catch syntactically erroneous
+                                programs.
                                 */
 			}
-		} else {  /* INCOMMENT mode */
+		} else { /* INCOMMENT mode */
 			if (c == '\n') && (comment_type == CPP_STYLE) {
 				mode = NORMAL
 			}
@@ -153,8 +158,8 @@ func sloc_count(stream *os.File) uint {
 				mode = NORMAL
 			}
 		}
-		if (c == '\n') {
-			if (sawchar) {
+		if c == '\n' {
+			if sawchar {
 				sloc++
 			}
 			sawchar = false
@@ -169,9 +174,9 @@ func sloc_count(stream *os.File) uint {
 		mode = NORMAL
 	}
 
-	if (mode == INCOMMENT) {
+	if mode == INCOMMENT {
 		log.Printf("c_count ERROR - terminated in comment in %s\n", stream.Name())
-	} else if (mode == INSTRING) {
+	} else if mode == INSTRING {
 		log.Printf("c_count ERROR - terminated in string in %s\n", stream.Name())
 	}
 
@@ -194,5 +199,5 @@ func C(path string) stats.SourceStat {
 		line_number = 1
 		stat.SLOC = sloc_count(f)
 	}
-	return stat		
+	return stat
 }
