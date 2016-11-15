@@ -118,7 +118,7 @@ func hashbang(path string, langname string) bool {
 const ANSIC_STYLE = 0
 const CPP_STYLE = 1
 
-// sloc_count - Count the SLOC in a C or C++ file
+// sloc_count - Count the SLOC in a C-family source file
 func sloc_count(path string) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
@@ -233,41 +233,37 @@ func sloc_count(path string) uint {
 	return sloc
 }
 
-// C - recognize files from C/C++/Go and get linecounts from them.
+// C - recognize files from C-family languages and get linecounts from them.
 //
 // C++ headers get counted as C. This can only be fixed in postprocessing
 // by noticing that there are no files with a C extension in the tree.
+// Another minor issue is that it's possible for the antcedents in Lex rules
+// to look like C comment starts.
 func C(path string) SourceStat {
 	var stat SourceStat
-	if strings.HasSuffix(path, ".c") || strings.HasSuffix(path, ".h") {
-		stat.Language = "C"
-		bufferSetup(path)
-		defer bufferTeardown()
-		stat.SLOC = sloc_count(path)
+	type cLike struct {
+		language string
+		extension string
 	}
-	if strings.HasSuffix(path, ".cpp") || strings.HasSuffix(path, ".cxx") {
-		stat.Language = "C++"
-		bufferSetup(path)
-		defer bufferTeardown()
-		stat.SLOC = sloc_count(path)
+	cLikes := []cLike{
+		{"C", ".c"},
+		{"C", ".h"},
+		{"Yacc", ".y"},
+		{"Lex", ".l"},
+		{"C++", ".cpp"},
+		{"C++", ".cxx"},
+		{"Objective-C", ".m"},
+		{"C#", ".cs"},
+		{"Go", ".go"},
 	}
-	if strings.HasSuffix(path, ".m") {
-		stat.Language = "Objective-C"
-		bufferSetup(path)
-		defer bufferTeardown()
-		stat.SLOC = sloc_count(path)
-	}
-	if strings.HasSuffix(path, ".cs") {
-		stat.Language = "C#"
-		bufferSetup(path)
-		defer bufferTeardown()
-		stat.SLOC = sloc_count(path)
-	}
-	if strings.HasSuffix(path, ".go") {
-		stat.Language = "Go"
-		bufferSetup(path)
-		defer bufferTeardown()
-		stat.SLOC = sloc_count(path)
+	for i := range cLikes {
+		lang := cLikes[i]
+		if strings.HasSuffix(path, lang.extension) {
+			stat.Language = lang.language
+			bufferSetup(path)
+			defer bufferTeardown()
+			stat.SLOC = sloc_count(path)
+		}
 	}
 	return stat
 }
