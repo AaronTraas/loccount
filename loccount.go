@@ -555,7 +555,7 @@ func main() {
 		"list unclassified files")
 	flag.Parse()
 
-	pipeline = make(chan SourceStat) 
+	pipeline = make(chan SourceStat, 0) 
 	
 	exclusions = strings.Split(*excludePtr, ",")
 	roots := flag.Args()
