@@ -7,7 +7,7 @@ import "io"
 import "os"
 import "path/filepath"
 import "regexp"
-//import "sort"
+import "sort"
 import "strings"
 import "log"
 
@@ -527,6 +527,17 @@ func filter(path string, info os.FileInfo, err error) error {
 	return err
 }
 
+type countRecord struct {
+	language string
+	linecount uint
+	filecount uint
+}
+
+type sortable []countRecord 
+func (a sortable) Len() int {return len(a)}
+func (a sortable) Swap(i int, j int)  { a[i], a[j] = a[j], a[i] }
+func (a sortable) Less(i, j int) bool { return -a[i].linecount < -a[j].linecount }
+
 func main() {
 	var individual bool
 	var unclassified bool
@@ -549,12 +560,6 @@ func main() {
 		}
 		close(pipeline)
 	}()
-
-	type countRecord struct {
-		language string
-		linecount uint
-		filecount uint
-	}
 
 	var totals countRecord
 	counts := map[string]countRecord{} 
@@ -589,19 +594,22 @@ func main() {
 		}
 	}
 
-	//type sortable []countRecord 
-	//func (a sortable) Len() int {return len(a)}
-	//func (a sortable) Swap(i int, j int)  { a[i], a[j] = a[j], a[i] }
-	//func (a sortable) Less(i, j int) bool { return a[i].linecount < a[j].linecount }
-	var summary []countRecord
+	if individual {
+		return
+	}
+	
+	var summary sortable
 	for _, v := range counts {
 		summary = append(summary, v)
 	}
 
-	fmt.Println(summary)
-	//sort.Sort(sortable(counts))
-	//fmt.Println(summary)
-
+	sort.Sort(summary)
+	for i := range summary {
+		r := summary[i]
+		fmt.Printf("%d\t%s in %d files\n",
+			r.linecount, r.language, r.filecount)
+	}
+	
 	
 	fmt.Printf("%d SLOC in %d files\n",
 		totals.linecount, totals.filecount)

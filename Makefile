@@ -6,7 +6,7 @@ loccount:
 	go build
 
 check: loccount 
-	@./loccount tests | diff -u check.good -
+	@./loccount -i tests | diff -u check.good -
 	@echo "No output is good news"
 
 testbuild: loccount
