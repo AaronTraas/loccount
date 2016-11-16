@@ -29,41 +29,42 @@ const NORMAL = 0
 const INSTRING = 1
 const INCOMMENT = 2
 
-/* Globals */
-var line_number uint
-var last_char_was_newline bool = false
-var underlyingStream *os.File
-var rc *bufio.Reader
-var lastpath string
+type countContext struct {
+	line_number uint
+	last_char_was_newline bool
+	underlyingStream *os.File
+	rc *bufio.Reader
+	lastpath string
+}
 
-func peek() byte {
-	bytes, err := rc.Peek(1)
+func peek(ctx *countContext) byte {
+	bytes, err := ctx.rc.Peek(1)
 	if err != nil {
 		panic("error while peeking")
 	}
 	return bytes[0]
 }
 
-func ispeek(c byte) bool {
-	if c == peek() {
+func ispeek(ctx *countContext, c byte) bool {
+	if c == peek(ctx) {
 		return true
 	}
 	return false
 }
 
 // getachar - Get one character, tracking line number
-func getachar() (byte, error) {
-	c, err := rc.ReadByte()
+func getachar(ctx *countContext) (byte, error) {
+	c, err := ctx.rc.ReadByte()
 	if err != nil && err != io.EOF {
 		panic("error while reading a character")
 	}
-	if last_char_was_newline {
-		line_number++
+	if ctx.last_char_was_newline {
+		ctx.line_number++
 	}
 	if c == '\n' {
-		last_char_was_newline = true
+		ctx.last_char_was_newline = true
 	} else {
-		last_char_was_newline = false
+		ctx.last_char_was_newline = false
 	}
 	return c, err
 }
@@ -84,31 +85,31 @@ func contains(s string, c byte) bool {
 // The purpose of the following two functions is to set up context
 // so that we never have to open a source file more than once.
 
-func bufferSetup(path string) bool {
-	if len(lastpath) > 0 && (lastpath == path) {
-		underlyingStream.Seek(0, 0)
+func bufferSetup(ctx *countContext, path string) bool {
+	if len(ctx.lastpath) > 0 && (ctx.lastpath == path) {
+		ctx.underlyingStream.Seek(0, 0)
 	} else {
 		var err error
-		underlyingStream, err = os.Open(path)
-		lastpath = path
+		ctx.underlyingStream, err = os.Open(path)
+		ctx.lastpath = path
 		if err != nil {
 			log.Println(err)
 			return false
 		}
 	}
-	rc = bufio.NewReader(underlyingStream)
-	line_number = 1
+	ctx.rc = bufio.NewReader(ctx.underlyingStream)
+	ctx.line_number = 1
 	return true
 }
 
-func bufferTeardown() {
-	underlyingStream.Close()
+func bufferTeardown(ctx *countContext) {
+	ctx.underlyingStream.Close()
 }
 
 // hashbang - hunt for a specified string in the first line of a file
-func hashbang(path string, langname string) bool {
-	bufferSetup(path)
-	s, err := rc.ReadString('\n')
+func hashbang(ctx *countContext, path string, langname string) bool {
+	bufferSetup(ctx, path)
+	s, err := ctx.rc.ReadString('\n')
 	return err == nil && strings.HasPrefix(s, "#!") && strings.Contains(s, langname)
 }
 
@@ -119,7 +120,7 @@ const ANSIC_STYLE = 0
 const CPP_STYLE = 1
 
 // sloc_count - Count the SLOC in a C-family source file
-func sloc_count(path string) uint {
+func sloc_count(ctx *countContext, path string) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
@@ -132,7 +133,7 @@ func sloc_count(path string) uint {
 	*/
 
 	for {
-		c, err := getachar()
+		c, err := getachar(ctx)
 		if err == io.EOF {
 			break
 		}
@@ -144,22 +145,22 @@ func sloc_count(path string) uint {
 			} else if c == '\'' {
 				/* Consume single-character 'xxxx' values */
 				sawchar = true
-				c, err = getachar()
+				c, err = getachar(ctx)
 				if c == '\\' {
-					c, err = getachar()
+					c, err = getachar(ctx)
 				}
 				for {
-					c, err = getachar()
+					c, err = getachar(ctx)
 					if (c == '\'') || (c == '\n') || (err == io.EOF) {
 						break
 					}
 				}
-			} else if (c == '/') && ispeek('*') {
-				c, err = getachar()
+			} else if (c == '/') && ispeek(ctx, '*') {
+				c, err = getachar(ctx)
 				mode = INCOMMENT
 				comment_type = ANSIC_STYLE
-			} else if (c == '/') && ispeek('/') {
-				c, err = getachar()
+			} else if (c == '/') && ispeek(ctx, '/') {
+				c, err = getachar(ctx)
 				mode = INCOMMENT
 				comment_type = CPP_STYLE
 			} else if !isspace(c) {
@@ -179,16 +180,16 @@ func sloc_count(path string) uint {
 			}
 			if c == '"' {
 				mode = NORMAL
-			} else if (c == '\\') && (ispeek('"') || ispeek('\\')) {
-				c, err = getachar()
-			} else if (c == '\\') && ispeek('\n') {
-				c, err = getachar()
+			} else if (c == '\\') && (ispeek(ctx, '"') || ispeek(ctx, '\\')) {
+				c, err = getachar(ctx)
+			} else if (c == '\\') && ispeek(ctx, '\n') {
+				c, err = getachar(ctx)
 			} else if (c == '\n') {
 				/*
                                 We found a bare newline in a string without
 				preceding backslash.
                                 */
-				log.Printf("WARNING - newline in string, line %ld, file %s\n", line_number, path)
+				log.Printf("WARNING - newline in string, line %ld, file %s\n", ctx.line_number, path)
 
 				/*
                                 We COULD warn & reset mode to
@@ -203,8 +204,8 @@ func sloc_count(path string) uint {
 			if (c == '\n') && (comment_type == CPP_STYLE) {
 				mode = NORMAL
 			}
-			if (comment_type == ANSIC_STYLE) && (c == '*') && ispeek('/') {
-				c, err = getachar()
+			if (comment_type == ANSIC_STYLE) && (c == '*') && ispeek(ctx, '/') {
+				c, err = getachar(ctx)
 				mode = NORMAL
 			}
 		}
@@ -237,9 +238,11 @@ func sloc_count(path string) uint {
 //
 // C++ headers get counted as C. This can only be fixed in postprocessing
 // by noticing that there are no files with a C extension in the tree.
-// Another minor issue is that it's possible for the antcedents in Lex rules
-// to look like C comment starts.
-func C(path string) SourceStat {
+//
+// Another minor issue is that it's possible for the antecedents in Lex rules
+// to look like C comment starts. In theory we could fix this by requiring Lex
+// files to contain %%.
+func C(ctx *countContext, path string) SourceStat {
 	var stat SourceStat
 	type cLike struct {
 		language string
@@ -260,9 +263,9 @@ func C(path string) SourceStat {
 		lang := cLikes[i]
 		if strings.HasSuffix(path, lang.extension) {
 			stat.Language = lang.language
-			bufferSetup(path)
-			defer bufferTeardown()
-			stat.SLOC = sloc_count(path)
+			bufferSetup(ctx, path)
+			defer bufferTeardown(ctx)
+			stat.SLOC = sloc_count(ctx, path)
 		}
 	}
 	return stat
@@ -273,17 +276,17 @@ func C(path string) SourceStat {
 // We get to specify a set of possible string delimiters (normally
 // a singleton string containing single or double quote, or a doubleton
 // containing both). We also get to specify a comment leader.
-func generic_sloc_count(path string, stringdelims string, commentleader string) uint {
+func generic_sloc_count(ctx *countContext, path string, stringdelims string, commentleader string) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
 	var delimseen byte                 /* what string delimiter? */
 
-	bufferSetup(path)
-	defer bufferTeardown()
+	bufferSetup(ctx, path)
+	defer bufferTeardown(ctx)
 	
 	for {
-		c, err := getachar()
+		c, err := getachar(ctx)
 		if err == io.EOF {
 			break
 		}
@@ -297,7 +300,7 @@ func generic_sloc_count(path string, stringdelims string, commentleader string) 
 				if len(commentleader) == 1 {
 					mode = INCOMMENT
 				} else {
-					c, err = getachar()
+					c, err = getachar(ctx)
 					if err == nil && c == commentleader[1] {
 						mode = INCOMMENT
 					}
@@ -340,7 +343,7 @@ func generic_sloc_count(path string, stringdelims string, commentleader string) 
 }
 
 // Generic - recognize lots of languages with generic syntax
-func Generic(path string) SourceStat {
+func Generic(ctx *countContext, path string) SourceStat {
 	var stat SourceStat
 
 	type scriptingLanguage struct {
@@ -373,10 +376,10 @@ func Generic(path string) SourceStat {
 
 	for i := range scriptingLanguages {
 		lang := scriptingLanguages[i]
-		if strings.HasSuffix(path, lang.suffix) || hashbang(path, lang.hashbang) {
+		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
 			stat.Language = lang.name
-			stat.SLOC = generic_sloc_count(path,
-				lang.stringdelims, lang.commentleader)
+			stat.SLOC = generic_sloc_count(ctx,
+				path, lang.stringdelims, lang.commentleader)
 			break
 		}
 	}
@@ -400,8 +403,8 @@ func Generic(path string) SourceStat {
 		lang := genericLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
-			stat.SLOC = generic_sloc_count(path,
-				"", lang.commentleader)
+			stat.SLOC = generic_sloc_count(ctx,
+				path, "", lang.commentleader)
 			break
 		}
 	}
@@ -409,15 +412,15 @@ func Generic(path string) SourceStat {
 	return stat
 }
 
-func Fortran90(path string) SourceStat {
+func Fortran90(ctx *countContext, path string) SourceStat {
 	var stat SourceStat
 
 	if !strings.HasSuffix(path, ".f90") {
 		return stat
 	}
 	
-	bufferSetup(path)
-	defer bufferTeardown()
+	bufferSetup(ctx, path)
+	defer bufferTeardown(ctx)
 
 	re1, err := regexp.Compile("^([c*!]|[ \t]+!|[ \t]*$)")
 	if err != nil {
@@ -428,7 +431,7 @@ func Fortran90(path string) SourceStat {
 		panic("unexpected failure while building 90 no-comment analyzer")
 	}
 	for {
-		line, err := rc.ReadBytes('\n')
+		line, err := ctx.rc.ReadBytes('\n')
 		if err != nil {
 			break
 		}
@@ -444,14 +447,15 @@ func Fortran90(path string) SourceStat {
 
 // process - stub, eventually the statistics gatherer
 func process(path string) {
-	handlerList := []func(string) SourceStat {
+	handlerList := []func(*countContext, string) SourceStat {
 		C,          /* also C++ */
 		Generic,    /* Python, Perl, Ruby, shell, waf, Ada... */
 		Fortran90,  /* Fortran90 */
 	}
 	var st SourceStat
+	ctx := new(countContext)
 	for i := range handlerList {
-		st = handlerList[i](path)
+		st = handlerList[i](ctx, path)
 		if st.SLOC > 0 {
 			if !unclassified {
 				fmt.Printf("%s %d %s\n", path, st.SLOC, st.Language)
