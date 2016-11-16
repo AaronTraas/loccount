@@ -7,6 +7,7 @@ import "io"
 import "os"
 import "path/filepath"
 import "regexp"
+import "runtime"
 import "sort"
 import "strings"
 import "log"
@@ -555,7 +556,18 @@ func main() {
 		"list unclassified files")
 	flag.Parse()
 
-	pipeline = make(chan SourceStat, 0) 
+	// For maximum performance, make the pipeline be as deep as the
+	// number of processor we have available, that way the machine will
+	// be running full-out exactly when it's filled and no sooner.
+	// This makes order of output nondeterministic, which is why
+	// we sometimes want to disable it.
+	var chandepth int
+	if individual || unclassified {
+		chandepth = 0
+	} else {
+		chandepth = runtime.NumCPU()
+	}
+	pipeline = make(chan SourceStat, chandepth) 
 	
 	exclusions = strings.Split(*excludePtr, ",")
 	roots := flag.Args()
