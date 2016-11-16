@@ -7,6 +7,7 @@ import "io"
 import "os"
 import "path/filepath"
 import "regexp"
+//import "sort"
 import "strings"
 import "log"
 
@@ -550,6 +551,7 @@ func main() {
 	}()
 
 	type countRecord struct {
+		language string
 		linecount uint
 		filecount uint
 	}
@@ -577,15 +579,30 @@ func main() {
 		}
 
 		if st.SLOC > 0 {
-			var tmp = counts[st.Path]
+			var tmp = counts[st.Language]
+			tmp.language = st.Language
 			tmp.linecount += st.SLOC
 			tmp.filecount++
-			counts[st.Path] = tmp
+			counts[st.Language] = tmp
 			totals.linecount += st.SLOC
 			totals.filecount++
 		}
 	}
 
+	//type sortable []countRecord 
+	//func (a sortable) Len() int {return len(a)}
+	//func (a sortable) Swap(i int, j int)  { a[i], a[j] = a[j], a[i] }
+	//func (a sortable) Less(i, j int) bool { return a[i].linecount < a[j].linecount }
+	var summary []countRecord
+	for _, v := range counts {
+		summary = append(summary, v)
+	}
+
+	fmt.Println(summary)
+	//sort.Sort(sortable(counts))
+	//fmt.Println(summary)
+
+	
 	fmt.Printf("%d SLOC in %d files\n",
 		totals.linecount, totals.filecount)
 	
