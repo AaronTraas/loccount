@@ -13,7 +13,9 @@ import "log"
 
 // Not yet supported from the sloccount list: asm, Cobol, exp, fortran,
 // Haskell, ML, Modula 3, Pascal.
-// Known problem: Lisp sources with a .l extension are rare but not unknown.
+// Known problems:
+// * Lisp sources with a .l extension are rare but not unknown.
+// * PHP #-comments taking up an entire line will be counted.
 
 type SourceStat struct {
 	Path string
@@ -65,6 +67,7 @@ func init() {
 		{"C++", ".cxx"},
 		{"Objective-C", ".m"},
 		{"C#", ".cs"},
+		{"PHP", ".php"},
 		{"Go", ".go"},
 	}
 	scriptingLanguages = []scriptingLanguage{
