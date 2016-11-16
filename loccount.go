@@ -4,6 +4,7 @@ import "bufio"
 import "fmt"
 import "flag"
 import "io"
+import "math"
 import "os"
 import "path/filepath"
 import "regexp"
@@ -540,6 +541,25 @@ type countRecord struct {
 	filecount uint
 }
 
+func reportCocomo(sloc uint) {
+	const TIME_MULT = 2.4
+	const TIME_EXP = 1.05
+	const SCHED_MULT = 2.5
+	const SCHED_EXP = 0.38
+	const SALARY = 56286
+	const OVERHEAD = 2.40
+	fmt.Printf("Total Physical Source Lines of Code (SLOC)                = %d\n", sloc)
+	person_months := TIME_MULT * math.Pow(float64(sloc)/1000, TIME_EXP)
+	fmt.Printf("Development Effort Estimate, Person-Years (Person-Months) = %2.2f (%2.2f)\n", person_months / 12, person_months) 
+	fmt.Printf(" (Basic COCOMO model, Person-Months = %2.2f * (KSLOC**%2.2f))\n", TIME_MULT, TIME_EXP)
+	sched_months := SCHED_MULT * math.Pow(person_months, SCHED_EXP)
+	fmt.Printf("Schedule Estimate, Years (Months)                         = %2.2f (%2.2f)\n", sched_months/12, sched_months)
+	fmt.Printf(" (Basic COCOMO model, Months = %2.2f * (person-months**%2.2f))\n", SCHED_MULT, SCHED_EXP)
+	fmt.Printf("Estimated Average Number of Developers (Effort/Schedule)  = %2.2f\n", person_months / sched_months)
+	fmt.Printf("Total Estimated Cost to Develop                           = $%d\n", int(SALARY * (person_months / 12) * OVERHEAD))
+	fmt.Printf(" (average salary = $%d/year, overhead = %2.2f).\n", SALARY, OVERHEAD)
+}
+
 type sortable []countRecord 
 func (a sortable) Len() int {return len(a)}
 func (a sortable) Swap(i int, j int)  { a[i], a[j] = a[j], a[i] }
@@ -548,12 +568,15 @@ func (a sortable) Less(i, j int) bool { return -a[i].linecount < -a[j].linecount
 func main() {
 	var individual bool
 	var unclassified bool
+	var cocomo bool
 	excludePtr := flag.String("x", "",
 		"paths and directories to exclude")
 	flag.BoolVar(&individual, "i", false,
 		"list counts and types for individual files")
 	flag.BoolVar(&unclassified, "u", false,
 		"list unclassified files")
+	flag.BoolVar(&cocomo, "c", false,
+		"report Cocomo-model estimation")
 	flag.Parse()
 
 	// For maximum performance, make the pipeline be as deep as the
@@ -631,6 +654,8 @@ func main() {
 	}
 	
 	var summary sortable
+	totals.language = "all"
+	summary = append(summary, totals)
 	for _, v := range counts {
 		summary = append(summary, v)
 	}
@@ -638,14 +663,16 @@ func main() {
 	sort.Sort(summary)
 	for i := range summary {
 		r := summary[i]
-		fmt.Printf("%d\t%s in %d files\n",
-			r.linecount, r.language, r.filecount)
+		fmt.Printf("%-12s %7d (%2.2f%%) in %d files\n",
+			r.language,
+			r.linecount,
+			float64(r.linecount) * 100.0 / float64(totals.linecount),
+			r.filecount)
 	}
-	
-	
-	fmt.Printf("%d SLOC in %d files\n",
-		totals.linecount, totals.filecount)
-	
+
+	if (cocomo) {
+		reportCocomo(totals.linecount)
+	}
 }
 
 // end
