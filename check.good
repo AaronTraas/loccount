@@ -5,6 +5,7 @@ tests/dirlist.pl 8 Perl
 tests/guide.awk 7 Awk
 tests/hello.ada 5 Ada
 tests/hello.cl 1 Lisp
+tests/hello.f90 6 Fortran90
 tests/hello.lsp 3 Lisp
 tests/hello.m 6 Objective-C
 tests/hello.rb 1 Ruby
