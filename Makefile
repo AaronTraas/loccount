@@ -10,5 +10,5 @@ check: loccount
 	@echo "No output is good news"
 
 testbuild: loccount
-	./loccount tests >check.good
+	./loccount -i tests >check.good
 

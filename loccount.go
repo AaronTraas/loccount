@@ -277,7 +277,7 @@ func sloc_count(ctx *countContext, path string) uint {
                                 We found a bare newline in a string without
 				preceding backslash.
                                 */
-				log.Printf("WARNING - newline in string, line %ld, file %s\n", ctx.line_number, path)
+				log.Printf("WARNING - newline in string, line %d, file %s\n", ctx.line_number, path)
 
 				/*
                                 We COULD warn & reset mode to

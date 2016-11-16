@@ -1,13 +1,20 @@
-986	Python in 2 files
-260	Objective-C in 1 files
-65	waf in 1 files
-19	Perl in 2 files
-13	C-shell in 2 files
-10	Awk in 2 files
-6	Fortran90 in 1 files
-5	Ada in 1 files
-5	C# in 1 files
-4	Lisp in 2 files
-2	Ruby in 2 files
-2	shell in 2 files
-1377 SLOC in 20 files
+tests/awk-hello 3 Awk
+tests/count.csh 7 C-shell
+tests/csh-lookup 6 C-shell
+tests/dirlist.pl 8 Perl
+tests/guide.awk 7 Awk
+tests/hello.ada 5 Ada
+tests/hello.cl 1 Lisp
+tests/hello.f90 6 Fortran90
+tests/hello.lsp 3 Lisp
+tests/hello.m 6 Objective-C
+tests/hello.rb 1 Ruby
+tests/hello.sh 1 shell
+tests/ntp_fp.h 254 C-header
+tests/ntpver 1 shell
+tests/packet.py 980 Python
+tests/perl-filewrite 11 Perl
+tests/ruby-hello 1 Ruby
+tests/upload 6 Python
+tests/wokka.cs 5 C#
+tests/wscript 65 waf
