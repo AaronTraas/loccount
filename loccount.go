@@ -21,7 +21,6 @@ type SourceStat struct {
 }
 
 var exclusions []string
-var unclassified bool
 var pipeline chan SourceStat
 
 // Data tables driving the recognition and counting of classes of languages.
@@ -528,9 +527,13 @@ func filter(path string, info os.FileInfo, err error) error {
 }
 
 func main() {
-	excludePtr := flag.String("exclude", "",
-		"paths directories to exclude")
-	flag.BoolVar(&unclassified, "unclassified", false,
+	var individual bool
+	var unclassified bool
+	excludePtr := flag.String("x", "",
+		"paths and directories to exclude")
+	flag.BoolVar(&individual, "i", false,
+		"list counts and types for individual files")
+	flag.BoolVar(&unclassified, "u", false,
 		"list unclassified files")
 	flag.Parse()
 
@@ -546,6 +549,14 @@ func main() {
 		close(pipeline)
 	}()
 
+	type countRecord struct {
+		linecount uint
+		filecount uint
+	}
+
+	var totals countRecord
+	counts := map[string]countRecord{} 
+
 	// Mainline resumes
 	for {
 		st, more := <-pipeline
@@ -553,14 +564,31 @@ func main() {
 			break
 		}
 
-		if !unclassified && st.SLOC > 0 {
-			fmt.Printf("%s %d %s\n", st.Path, st.SLOC, st.Language)
-		} else if unclassified {
-			// Not a recognized source type,
-			// nor anything we know to discard
-			fmt.Println(st.Path)
+		if individual {
+			if !unclassified && st.SLOC > 0 {
+				fmt.Printf("%s %d %s\n",
+					st.Path, st.SLOC, st.Language)
+			} else if unclassified {
+				// Not a recognized source type,
+				// nor anything we know to discard
+				fmt.Println(st.Path)
+			}
+			continue
+		}
+
+		if st.SLOC > 0 {
+			var tmp = counts[st.Path]
+			tmp.linecount += st.SLOC
+			tmp.filecount++
+			counts[st.Path] = tmp
+			totals.linecount += st.SLOC
+			totals.filecount++
 		}
 	}
+
+	fmt.Printf("%d SLOC in %d files\n",
+		totals.linecount, totals.filecount)
+	
 }
 
 // end
