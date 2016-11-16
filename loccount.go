@@ -6,10 +6,11 @@ import "flag"
 import "io"
 import "os"
 import "path/filepath"
+import "regexp"
 import "strings"
 import "log"
 
-// Not yet supported from the sloccount list: asm, Cobol, exp, f90, fortran,
+// Not yet supported from the sloccount list: asm, Cobol, exp, fortran,
 // Haskell, ML, Modula 3, Pascal.
 // Known problem: Lisp sources with a .l extension are rare but not unknown.
 
@@ -408,11 +409,45 @@ func Generic(path string) SourceStat {
 	return stat
 }
 
+func Fortran90(path string) SourceStat {
+	var stat SourceStat
+
+	if !strings.HasSuffix(path, ".f90") {
+		return stat
+	}
+	
+	bufferSetup(path)
+	defer bufferTeardown()
+
+	re1, err := regexp.Compile("^([c*!]|[ \t]+!|[ \t]*$)")
+	if err != nil {
+		panic("unexpected failure while building 90 comment analyzer")
+	}
+	re2, err := regexp.Compile("^[c*!](hpf|omp)[$]")
+	if err != nil {
+		panic("unexpected failure while building 90 no-comment analyzer")
+	}
+	for {
+		line, err := rc.ReadBytes('\n')
+		if err != nil {
+			break
+		}
+		if !(re1.Match(line) && !re2.Match(line)) {
+			stat.SLOC++
+		}
+	}
+	if stat.SLOC > 0 {
+		stat.Language = "Fortran90"
+	}
+	return stat
+}
+
 // process - stub, eventually the statistics gatherer
 func process(path string) {
 	handlerList := []func(string) SourceStat {
-		C,        /* also C++ */
-		Generic,   /* Python, Perl, Ruby, shell, waf, Ada... */
+		C,          /* also C++ */
+		Generic,    /* Python, Perl, Ruby, shell, waf, Ada... */
+		Fortran90,  /* Fortran90 */
 	}
 	var st SourceStat
 	for i := range handlerList {
