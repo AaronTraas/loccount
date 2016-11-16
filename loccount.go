@@ -22,6 +22,74 @@ type SourceStat struct {
 	SLOC uint
 }
 
+// Data tables driving the recognition and counting of classes of languages.
+// These span everything except Fortran 90.
+
+type cLike struct {
+	language string
+	extension string
+}
+var cLikes []cLike
+
+type scriptingLanguage struct {
+	name string
+	suffix string
+	hashbang string
+	stringdelims string
+	commentleader string
+}
+var scriptingLanguages []scriptingLanguage
+
+type genericLanguage struct {
+	name string
+	suffix string
+	commentleader string
+}
+var genericLanguages []genericLanguage
+
+func init() {
+	cLikes = []cLike{
+		{"C", ".c"},
+		{"C", ".h"},
+		{"Yacc", ".y"},
+		{"Lex", ".l"},
+		{"C++", ".cpp"},
+		{"C++", ".cxx"},
+		{"Objective-C", ".m"},
+		{"C#", ".cs"},
+		{"Go", ".go"},
+	}
+	scriptingLanguages = []scriptingLanguage{
+		// First line doesn't look like it handles Python
+		// multiline string literals, but it actually does.
+		// The delimiters for them are ''' """ which get seen
+		// as an empty string followed by a string delimiter,
+		// or the reverse of that. Interior lines of a
+		// multiline literal get counted if they contain non-
+		// whitespace.
+		//
+		// This is different from sloccount's behavior, which
+		// doesn't count multiline literals if they start at the
+		// beginning of a line (e.g. as in Python header comments).
+		{"Python", ".py", "python", "'\"", "#"},
+		{"waf", "wscript", "waf", "'\"", "#"},
+		{"Perl", ".pl", "perl", "'\"", "#"},
+		{"C-shell", ".csh", "csh", "'\"", "#"},
+		{"shell", ".sh", "sh", "'\"", "#"},
+		{"Ruby", ".rb", "ruby", "'\"", "#"},
+		{"Awk", ".awk", "awk", "'\"", "#"},
+	}
+	genericLanguages = []genericLanguage{
+		{"Ada", ".ada", "--"},
+		{"Makefile", ".mk", "#"},
+		{"Makefile", "Makefile", "#"},
+		{"Makefile", "makefile", "#"},
+		{"Lisp", ".lisp", ";"},
+		{"Lisp", ".lsp", ";"},	// XLISP
+		{"Lisp", ".cl", ";"},	// Common Lisp
+	}
+}
+
 // Generic machinery for walking source text to count lines
 
 /* Modes */
@@ -244,21 +312,6 @@ func sloc_count(ctx *countContext, path string) uint {
 // files to contain %%.
 func C(ctx *countContext, path string) SourceStat {
 	var stat SourceStat
-	type cLike struct {
-		language string
-		extension string
-	}
-	cLikes := []cLike{
-		{"C", ".c"},
-		{"C", ".h"},
-		{"Yacc", ".y"},
-		{"Lex", ".l"},
-		{"C++", ".cpp"},
-		{"C++", ".cxx"},
-		{"Objective-C", ".m"},
-		{"C#", ".cs"},
-		{"Go", ".go"},
-	}
 	for i := range cLikes {
 		lang := cLikes[i]
 		if strings.HasSuffix(path, lang.extension) {
@@ -346,34 +399,6 @@ func generic_sloc_count(ctx *countContext, path string, stringdelims string, com
 func Generic(ctx *countContext, path string) SourceStat {
 	var stat SourceStat
 
-	type scriptingLanguage struct {
-		name string
-		suffix string
-		hashbang string
-		stringdelims string
-		commentleader string
-	}
-	scriptingLanguages := []scriptingLanguage{
-		// First line doesn't look like it handles Python
-		// multiline string literals, but it actually does.
-		// The delimiters for them are ''' """ which get seen
-		// as an empty string followed by a string delimiter,
-		// or the reverse of that. Interior lines of a
-		// multiline literal get counted if they contain non-
-		// whitespace.
-		//
-		// This is different from sloccount's behavior, which
-		// doesn't count multiline literals if they start at the
-		// beginning of a line (e.g. as in Python header comments).
-		{"Python", ".py", "python", "'\"", "#"},
-		{"waf", "wscript", "waf", "'\"", "#"},
-		{"Perl", ".pl", "perl", "'\"", "#"},
-		{"C-shell", ".csh", "csh", "'\"", "#"},
-		{"shell", ".sh", "sh", "'\"", "#"},
-		{"Ruby", ".rb", "ruby", "'\"", "#"},
-		{"Awk", ".awk", "awk", "'\"", "#"},
-	}
-
 	for i := range scriptingLanguages {
 		lang := scriptingLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
@@ -382,21 +407,6 @@ func Generic(ctx *countContext, path string) SourceStat {
 				path, lang.stringdelims, lang.commentleader)
 			break
 		}
-	}
-
-	type genericLanguage struct {
-		name string
-		suffix string
-		commentleader string
-	}
-	genericLanguages := []genericLanguage{
-		{"Ada", ".ada", "--"},
-		{"Makefile", ".mk", "#"},
-		{"Makefile", "Makefile", "#"},
-		{"Makefile", "makefile", "#"},
-		{"Lisp", ".lisp", ";"},
-		{"Lisp", ".lsp", ";"},	// XLISP
-		{"Lisp", ".cl", ";"},	// Common Lisp
 	}
 
 	for i := range genericLanguages {
