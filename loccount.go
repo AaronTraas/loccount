@@ -14,13 +14,15 @@ import "log"
 // Haskell, ML, Modula 3, Pascal.
 // Known problem: Lisp sources with a .l extension are rare but not unknown.
 
-var exclusions []string
-var unclassified bool
-
 type SourceStat struct {
+	Path string
 	Language string
 	SLOC uint
 }
+
+var exclusions []string
+var unclassified bool
+var pipeline chan SourceStat
 
 // Data tables driving the recognition and counting of classes of languages.
 // These span everything except Fortran 90.
@@ -477,16 +479,11 @@ func process(path string) {
 	for i := range handlerList {
 		st = handlerList[i](ctx, path)
 		if st.SLOC > 0 {
-			if !unclassified {
-				fmt.Printf("%s %d %s\n", path, st.SLOC, st.Language)
-			}
-			return
+			break
 		}
 	}
-	// Not a recognized source type, nor anything we know to discard
-	if unclassified {
-		fmt.Println(path)
-	}
+	st.Path = path
+	pipeline <- st
 }
 
 func isDirectory(path string) (bool) {
@@ -537,10 +534,32 @@ func main() {
 		"list unclassified files")
 	flag.Parse()
 
+	pipeline = make(chan SourceStat) 
+	
 	exclusions = strings.Split(*excludePtr, ",")
 	roots := flag.Args()
-	for i := range roots {
-		filepath.Walk(roots[i], filter)
+
+	go func() {
+		for i := range roots {
+			filepath.Walk(roots[i], filter)
+		}
+		close(pipeline)
+	}()
+
+	// Mainline resumes
+	for {
+		st, more := <-pipeline
+		if !more {
+			break
+		}
+
+		if !unclassified && st.SLOC > 0 {
+			fmt.Printf("%s %d %s\n", st.Path, st.SLOC, st.Language)
+		} else if unclassified {
+			// Not a recognized source type,
+			// nor anything we know to discard
+			fmt.Println(st.Path)
+		}
 	}
 }
 
