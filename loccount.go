@@ -47,6 +47,10 @@ type genericLanguage struct {
 }
 var genericLanguages []genericLanguage
 
+var neverInterestingByPrefix []string
+var neverInterestingByInfix []string
+var neverInterestingBySuffix []string
+
 func init() {
 	cLikes = []cLike{
 		{"C", ".c"},
@@ -88,6 +92,12 @@ func init() {
 		{"Lisp", ".lsp", ";"},	// XLISP
 		{"Lisp", ".cl", ";"},	// Common Lisp
 	}
+	neverInterestingByPrefix = []string{"."}
+	neverInterestingByInfix = []string{".so.", "/."}
+	neverInterestingBySuffix = []string{"~",
+		".a", ".la", ".o", ".so",
+		".gif", ".jpg", ".jpeg", ".ico",
+		".pyc", ".pyo"}
 }
 
 // Generic machinery for walking source text to count lines
@@ -486,13 +496,6 @@ func isDirectory(path string) (bool) {
 
 // filter - winnows out uninteresting paths before handing them to process
 func filter(path string, info os.FileInfo, err error) error {
-	neverInterestingByPrefix := []string{"."}
-	neverInterestingByInfix := []string{".so.", "/."}
-	neverInterestingBySuffix := []string{"~",
-		".a", ".la", ".o", ".so",
-		".gif", ".jpg", ".jpeg", ".ico",
-		".pyc", ".pyo"}
-
 	for i := range neverInterestingByPrefix {
 		if strings.HasPrefix(path, neverInterestingByPrefix[i]) {
 			return err
