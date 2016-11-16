@@ -53,10 +53,12 @@ var neverInterestingByPrefix []string
 var neverInterestingByInfix []string
 var neverInterestingBySuffix []string
 
+var cHeaderPriority []string
+
 func init() {
 	cLikes = []cLike{
 		{"C", ".c"},
-		{"C", ".h"},
+		{"C-header", ".h"},
 		{"Yacc", ".y"},
 		{"Lex", ".l"},
 		{"C++", ".cpp"},
@@ -100,6 +102,7 @@ func init() {
 		".a", ".la", ".o", ".so",
 		".gif", ".jpg", ".jpeg", ".ico",
 		".pyc", ".pyo"}
+	cHeaderPriority = []string{"C", "C++", "Objective-C"}
 }
 
 // Generic machinery for walking source text to count lines
@@ -596,6 +599,20 @@ func main() {
 
 	if individual {
 		return
+	}
+
+	// C headers may get reassigned based on what other languages
+	// are present in the tree
+	if counts["C-header"].linecount > 0 {
+		for i := range cHeaderPriority {
+			if counts[cHeaderPriority[i]].linecount > 0 {
+				var tmp = counts[cHeaderPriority[i]]
+				tmp.linecount += counts["C-header"].linecount
+				counts[cHeaderPriority[i]] = tmp
+				delete(counts, "C-header")
+				break
+			}
+		}
 	}
 	
 	var summary sortable
