@@ -195,8 +195,13 @@ func bufferTeardown(ctx *countContext) {
 	ctx.underlyingStream.Close()
 }
 
-// hashbang - hunt for a specified string in the first line of a file
+// hashbang - hunt for a specified string in the first line of an executable
 func hashbang(ctx *countContext, path string, langname string) bool {
+	fi, err := os.Stat(path)
+	// If it's not executable by somebody, don't read for hashbang
+	if err != nil && (fi.Mode() & 01111) == 0 {
+		return false
+	}
 	bufferSetup(ctx, path)
 	s, err := ctx.rc.ReadString('\n')
 	return err == nil && strings.HasPrefix(s, "#!") && strings.Contains(s, langname)
