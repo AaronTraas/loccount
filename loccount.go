@@ -115,6 +115,7 @@ func init() {
 		{"modula3", ".m3", false},
 		{"modula3", ".ig", false},
 		{"modula3", ".mg", false},
+		{"ml",      ".ml", false},
 	}
 
 	neverInterestingByPrefix = []string{"."}
