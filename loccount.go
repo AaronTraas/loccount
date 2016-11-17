@@ -14,7 +14,7 @@ import "strings"
 import "log"
 
 // Not yet supported from the sloccount list: asm, Cobol, exp, fortran,
-// Haskell, ML, Modula 3, Pascal.
+// Haskell, ML, Modula 3.
 // Known problems:
 // * Lisp sources with a .l extension are rare but not unknown.
 // * PHP #-comments taking up an entire line will be counted.
@@ -29,7 +29,7 @@ var exclusions []string
 var pipeline chan SourceStat
 
 // Data tables driving the recognition and counting of classes of languages.
-// These span everything except Fortran 90.
+// These span everything except Fortran 90 and Pascal.
 
 type cLike struct {
 	language string
@@ -421,6 +421,59 @@ func generic_sloc_count(ctx *countContext, path string, stringdelims string, com
 	return sloc
 }
 
+/* pascalLike - Handle Pascal and Modula 3 */
+func pascalLike(ctx *countContext, path string) uint {
+	var sloc uint = 0
+	var sawchar bool = false           /* Did you see a char on this line? */
+	var mode int = NORMAL              /* NORMAL, or INCOMMENT */
+
+	bufferSetup(ctx, path)
+	defer bufferTeardown(ctx)
+
+	for {
+		c, err := getachar(ctx)
+		if err == io.EOF {
+			break
+		}
+
+		if mode == NORMAL {
+			if c == '{' {
+				mode = INCOMMENT
+			} else if (c == '(') && ispeek(ctx, '*') {
+				c, err = getachar(ctx)
+				mode = INCOMMENT
+			} else if !isspace(c) {
+				sawchar = true
+			} else if c == '\n' {
+				if sawchar {
+					sloc++
+				}
+				sawchar = false
+			}
+		} else { /* INCOMMENT mode */
+			if c == '}' {
+				mode = NORMAL
+			} else if (c == '*') && ispeek(ctx, ')') {
+				c, err = getachar(ctx)
+				mode = NORMAL
+			}
+		}
+	}
+	/* We're done with the file.  Handle EOF-without-EOL. */
+	if sawchar {
+		sloc++
+	}
+	sawchar = false
+
+	if mode == INCOMMENT {
+		log.Printf("ERROR - terminated in comment in %s\n", path)
+	} else if mode == INSTRING {
+		log.Printf("ERROR - terminated in string in %s\n", path)
+	}
+
+	return sloc
+}
+
 // Generic - recognize lots of languages with generic syntax
 func Generic(ctx *countContext, path string) SourceStat {
 	var stat SourceStat
@@ -442,6 +495,13 @@ func Generic(ctx *countContext, path string) SourceStat {
 			stat.SLOC = generic_sloc_count(ctx,
 				path, "", lang.commentleader)
 			break
+		}
+	}
+
+	if strings.HasSuffix(path, ".pas") {
+		stat.SLOC = pascalLike(ctx, path)
+		if stat.SLOC > 0 {
+			stat.Language = "pascal"
 		}
 	}
 
@@ -661,7 +721,9 @@ func main() {
 	
 	var summary sortable
 	totals.language = "all"
-	summary = append(summary, totals)
+	if totals.filecount > 1 {
+		summary = append(summary, totals)
+	}
 	for _, v := range counts {
 		summary = append(summary, v)
 	}
