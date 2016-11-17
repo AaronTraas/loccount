@@ -34,6 +34,7 @@ var pipeline chan SourceStat
 type cLike struct {
 	language string
 	extension string
+	commentleader string
 }
 var cLikes []cLike
 
@@ -68,16 +69,17 @@ var cHeaderPriority []string
 
 func init() {
 	cLikes = []cLike{
-		{"ansic", ".c"},
-		{"c-header", ".h"},
-		{"yacc", ".y"},
-		{"lex", ".l"},
-		{"c++", ".cpp"},
-		{"c++", ".cxx"},
-		{"obj-c", ".m"},
-		{"c#", ".cs"},
-		{"php", ".php"},
-		{"go", ".go"},
+		{"ansic", ".c", "//"},
+		{"c-header", ".h", "//"},
+		{"yacc", ".y", "//"},
+		{"lex", ".l", "//"},
+		{"c++", ".cpp", "//"},
+		{"c++", ".cxx", "//"},
+		{"obj-c", ".m", "//"},
+		{"c#", ".cs", "//"},
+		{"php", ".php", "//"},
+		{"go", ".go", "//"},
+		{"sql", ".sql", "--"},
 	}
 	scriptingLanguages = []scriptingLanguage{
 		// First line doesn't look like it handles Python
@@ -230,7 +232,7 @@ const ANSIC_STYLE = 0
 const CPP_STYLE = 1
 
 // sloc_count - Count the SLOC in a C-family source file
-func c_family_counter(ctx *countContext, path string) uint {
+func c_family_counter(ctx *countContext, path string, commentleader string) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
@@ -269,7 +271,7 @@ func c_family_counter(ctx *countContext, path string) uint {
 				c, err = getachar(ctx)
 				mode = INCOMMENT
 				comment_type = ANSIC_STYLE
-			} else if (c == '/') && ispeek(ctx, '/') {
+			} else if (c == commentleader[0]) && ispeek(ctx, commentleader[1]) {
 				c, err = getachar(ctx)
 				mode = INCOMMENT
 				comment_type = CPP_STYLE
@@ -360,7 +362,7 @@ func C(ctx *countContext, path string) SourceStat {
 			stat.Language = lang.language
 			bufferSetup(ctx, path)
 			defer bufferTeardown(ctx)
-			stat.SLOC = c_family_counter(ctx, path)
+			stat.SLOC = c_family_counter(ctx, path, lang.commentleader)
 		}
 	}
 	return stat

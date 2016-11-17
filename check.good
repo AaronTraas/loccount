@@ -1,4 +1,5 @@
 tests/awk-hello 3 awk
+tests/comment.sql 20 sql
 tests/count.csh 7 csh
 tests/csh-lookup 6 csh
 tests/dirlist.pl 8 perl
