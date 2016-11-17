@@ -35,6 +35,8 @@ type cLike struct {
 	language string
 	extension string
 	commentleader string
+	commenttrailer string
+	eolcomment string
 }
 var cLikes []cLike
 
@@ -43,14 +45,14 @@ type scriptingLanguage struct {
 	suffix string
 	hashbang string
 	stringdelims string
-	commentleader string
+	eolcomment string
 }
 var scriptingLanguages []scriptingLanguage
 
 type genericLanguage struct {
 	name string
 	suffix string
-	commentleader string
+	eolcomment string
 }
 var genericLanguages []genericLanguage
 
@@ -69,17 +71,17 @@ var cHeaderPriority []string
 
 func init() {
 	cLikes = []cLike{
-		{"ansic", ".c", "//"},
-		{"c-header", ".h", "//"},
-		{"yacc", ".y", "//"},
-		{"lex", ".l", "//"},
-		{"c++", ".cpp", "//"},
-		{"c++", ".cxx", "//"},
-		{"obj-c", ".m", "//"},
-		{"c#", ".cs", "//"},
-		{"php", ".php", "//"},
-		{"go", ".go", "//"},
-		{"sql", ".sql", "--"},
+		{"ansic", ".c", "/*", "*/", "//"},
+		{"c-header", ".h", "/*", "*/", "//"},
+		{"yacc", ".y", "/*", "*/", "//"},
+		{"lex", ".l", "/*", "*/", "//"},
+		{"c++", ".cpp", "/*", "*/", "//"},
+		{"c++", ".cxx", "/*", "*/", "//"},
+		{"obj-c", ".m", "/*", "*/", "//"},
+		{"c#", ".cs", "/*", "*/", "//"},
+		{"php", ".php", "/*", "*/", "//"},
+		{"go", ".go", "/*", "*/", "//"},
+		{"sql", ".sql", "/*", "*/", "--"},
 	}
 	scriptingLanguages = []scriptingLanguage{
 		// First line doesn't look like it handles Python
@@ -228,15 +230,15 @@ func hashbang(ctx *countContext, path string, langname string) bool {
 // C line counting algorithm by David A. Wheeler; Go code by ESR.
 
 /* Types of comments: */
-const ANSIC_STYLE = 0
-const CPP_STYLE = 1
+const BLOCK_COMMENT = 0
+const TRAILING_COMMENT = 1
 
-// sloc_count - Count the SLOC in a C-family source file
-func c_family_counter(ctx *countContext, path string, commentleader string) uint {
+// c_family_counter - Count the SLOC in a C-family source file
+func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
-	var comment_type int = ANSIC_STYLE /* ANSIC_STYLE or CPP_STYLE */
+	var comment_type int = BLOCK_COMMENT /* BLOCK_COMMENT or TRAILING_COMMENT */
 
 	/*
         The following implements a state machine with transitions; the
@@ -267,14 +269,14 @@ func c_family_counter(ctx *countContext, path string, commentleader string) uint
 						break
 					}
 				}
-			} else if (c == '/') && ispeek(ctx, '*') {
+			} else if (c == syntax.commentleader[0]) && ispeek(ctx, syntax.commentleader[1]) {
 				c, err = getachar(ctx)
 				mode = INCOMMENT
-				comment_type = ANSIC_STYLE
-			} else if (c == commentleader[0]) && ispeek(ctx, commentleader[1]) {
+				comment_type = BLOCK_COMMENT
+			} else if (c == syntax.eolcomment[0]) && ispeek(ctx, syntax.eolcomment[1]) {
 				c, err = getachar(ctx)
 				mode = INCOMMENT
-				comment_type = CPP_STYLE
+				comment_type = TRAILING_COMMENT
 			} else if !isspace(c) {
 				sawchar = true
 			}
@@ -313,10 +315,10 @@ func c_family_counter(ctx *countContext, path string, commentleader string) uint
                                 */
 			}
 		} else { /* INCOMMENT mode */
-			if (c == '\n') && (comment_type == CPP_STYLE) {
+			if (c == '\n') && (comment_type == TRAILING_COMMENT) {
 				mode = NORMAL
 			}
-			if (comment_type == ANSIC_STYLE) && (c == '*') && ispeek(ctx, '/') {
+			if (comment_type == BLOCK_COMMENT) && (c == syntax.commenttrailer[0]) && ispeek(ctx, syntax.commenttrailer[1]) {
 				c, err = getachar(ctx)
 				mode = NORMAL
 			}
@@ -333,7 +335,7 @@ func c_family_counter(ctx *countContext, path string, commentleader string) uint
 		sloc++
 	}
 	sawchar = false
-	if (mode == INCOMMENT) && (comment_type == CPP_STYLE) {
+	if (mode == INCOMMENT) && (comment_type == TRAILING_COMMENT) {
 		mode = NORMAL
 	}
 
@@ -362,7 +364,7 @@ func C(ctx *countContext, path string) SourceStat {
 			stat.Language = lang.language
 			bufferSetup(ctx, path)
 			defer bufferTeardown(ctx)
-			stat.SLOC = c_family_counter(ctx, path, lang.commentleader)
+			stat.SLOC = c_family_counter(ctx, path, lang)
 		}
 	}
 	return stat
@@ -373,7 +375,7 @@ func C(ctx *countContext, path string) SourceStat {
 // We get to specify a set of possible string delimiters (normally
 // a singleton string containing single or double quote, or a doubleton
 // containing both). We also get to specify a comment leader.
-func generic_counter(ctx *countContext, path string, stringdelims string, commentleader string) uint {
+func generic_counter(ctx *countContext, path string, stringdelims string, eolcomment string) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
@@ -393,12 +395,12 @@ func generic_counter(ctx *countContext, path string, stringdelims string, commen
 				sawchar = true
 				delimseen = c
 				mode = INSTRING
-			} else if (c == commentleader[0]) {
-				if len(commentleader) == 1 {
+			} else if (c == eolcomment[0]) {
+				if len(eolcomment) == 1 {
 					mode = INCOMMENT
 				} else {
 					c, err = getachar(ctx)
-					if err == nil && c == commentleader[1] {
+					if err == nil && c == eolcomment[1] {
 						mode = INCOMMENT
 					}
 				}
@@ -501,7 +503,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
 			stat.Language = lang.name
 			stat.SLOC = generic_counter(ctx,
-				path, lang.stringdelims, lang.commentleader)
+				path, lang.stringdelims, lang.eolcomment)
 			break
 		}
 	}
@@ -511,7 +513,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
 			stat.SLOC = generic_counter(ctx,
-				path, "", lang.commentleader)
+				path, "", lang.eolcomment)
 			break
 		}
 	}
