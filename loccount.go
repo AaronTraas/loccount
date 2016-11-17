@@ -701,6 +701,7 @@ func (a sortable) Less(i, j int) bool { return -a[i].linecount < -a[j].linecount
 func main() {
 	var individual bool
 	var unclassified bool
+	var list bool
 	var cocomo bool
 	excludePtr := flag.String("x", "",
 		"paths and directories to exclude")
@@ -710,7 +711,48 @@ func main() {
 		"list unclassified files")
 	flag.BoolVar(&cocomo, "c", false,
 		"report Cocomo-model estimation")
+	flag.BoolVar(&list, "l", false,
+		"list supported languages and exit")
 	flag.Parse()
+
+	var names []string
+	var lastlang string
+	if list {
+		for i := range scriptingLanguages {
+			lang := scriptingLanguages[i].name
+			if lang != lastlang {
+				names = append(names, lang)
+				lastlang = lang
+			}
+		}
+
+		for i := range genericLanguages {
+			lang := genericLanguages[i].name
+			if lang != lastlang {
+				names = append(names, lang)
+				lastlang = lang
+			}
+		}
+
+		for i := range pascalLikes {
+			lang := pascalLikes[i].name
+			if lang != lastlang {
+				names = append(names, lang)
+				lastlang = lang
+			}
+		}
+
+		for i := range fortranLikes {
+			lang := fortranLikes[i].name
+			if lang != lastlang {
+				names = append(names, lang)
+				lastlang = lang
+			}
+		}
+		sort.Strings(names)
+		fmt.Printf("%s\n", names)
+		return
+	}
 
 	// For maximum performance, make the pipeline be as deep as the
 	// number of processor we have available, that way the machine will

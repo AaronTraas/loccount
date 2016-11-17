@@ -5,7 +5,7 @@
 loccount - count lines of code in a source tree and perform cost estimation
 
 == SYNOPSIS ==
-*loccount* [-c] [-i] [-u] [-x pathlist] [-?] file-or-dir
+*loccount* [-c] [-i] [-l] [-u] [-x pathlist] [-?] file-or-dir
 
 == DESCRIPTION ==
 
@@ -29,11 +29,10 @@ With these qualifications, SLOC does have some other uses. It
 is quite effective for tracking changes in complexity and attack
 surface as a codebase changes over time.
 
-Languages supported are C, Yacc, Lex, C++, Objective-C, C#, PHP, Go,
-Python, Perl, csh, shell (which includes bash, dash, the Bourne shell,
-ksh, and other similar variants), sed, Ruby, Tcl, Awk, Ada, Lisp,
-Haskell, Pascal, Modula-3, Eiffel, Sather, lua, ML, Fortran, Fortran
-90, COBOL, and SQL.
+All languages in common use on Unix-like operating systems are supported.
+For a full list of supported languages, run "loccount -l". Note that
+"shell" includes bash, dash, ksh, and other similar variants descended
+from the Bourne shell.
 
 The program also emits counts for build recipes - Makefiles, autoconf
 specifications, scons recipes, and waf scripts. Generated Makefiles
@@ -63,6 +62,9 @@ projects.
 
 -i::
 Report file path, line count, and type for each individual path.
+
+-l::
+List supported languages and exit.
 
 -u::
 List paths of files that could not be classified into a type.
