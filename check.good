@@ -1,5 +1,6 @@
 tests/awk-hello 3 awk
 tests/comment.sql 20 sql
+tests/conditions.CBL 25 cobol
 tests/count.csh 7 csh
 tests/csh-lookup 6 csh
 tests/dirlist.pl 8 perl

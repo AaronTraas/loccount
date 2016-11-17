@@ -32,8 +32,8 @@ surface as a codebase changes over time.
 Languages supported are C, Yacc, Lex, C++, Objective-C, C#, PHP, Go,
 Python, Perl, csh, shell (which includes bash, dash, the Bourne shell,
 ksh, and other similar variants), sed, Ruby, Tcl, Awk, Ada, Lisp,
-Haskell, Pascal, Modula-3, ML, Fortran 90, and SQL. The program also emits
-counts for build recipes - Makefiles and waf scripts.
+Haskell, Pascal, Modula-3, ML, Fortran 90, COBOL, and SQL. The program
+also emits counts for build recipes - Makefiles and waf scripts.
 
 Languages are recognized by file extension or filename pattern;
 executable filenames without an extension are mined for #! lines
@@ -94,7 +94,7 @@ will be mistaken for Lex sources.
 PHP #-comments taking up an entire line or following only whitespace
 on a line will be counted, not recognized as comments and skipped.
 
-Literate Haskell (.lhs) is not supported. Neither is asm, Cobol,
+Literate Haskell (.lhs) is not supported. Neither is asm,
 or Fortran. (These omissions are regressions from sloccount).
 
 == REPORTING BUGS ==
