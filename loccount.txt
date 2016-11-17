@@ -1,4 +1,4 @@
-= cvs-fast-export(1) =
+= loccount(1) =
 :doctype: manpage
 
 == NAME ==
