@@ -23,7 +23,6 @@ var exclusions []string
 var pipeline chan SourceStat
 
 // Data tables driving the recognition and counting of classes of languages.
-// These span everything except Fortran 90 and Pascal.
 
 type cLike struct {
 	language string
@@ -369,8 +368,8 @@ func C(ctx *countContext, path string) SourceStat {
 	return stat
 }
 
-// generic_counter - count SLOC in a generic language.
-func generic_counter(ctx *countContext, path string, stringdelims string, eolcomment string) uint {
+// genericCounter - count SLOC in a generic language.
+func genericCounter(ctx *countContext, path string, stringdelims string, eolcomment string) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
@@ -436,8 +435,8 @@ func generic_counter(ctx *countContext, path string, stringdelims string, eolcom
 	return sloc
 }
 
-// wirthian_counter - Handle lanuages like Pascal and Modula 3
-func wirthian_counter(ctx *countContext, path string, syntax pascalLike) uint {
+// pascalCounter - Handle lanuages like Pascal and Modula 3
+func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, or INCOMMENT */
@@ -497,7 +496,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		lang := scriptingLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
 			stat.Language = lang.name
-			stat.SLOC = generic_counter(ctx,
+			stat.SLOC = genericCounter(ctx,
 				path, lang.stringdelims, lang.eolcomment)
 			break
 		}
@@ -507,7 +506,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		lang := genericLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
-			stat.SLOC = generic_counter(ctx,
+			stat.SLOC = genericCounter(ctx,
 				path, "", lang.eolcomment)
 			break
 		}
@@ -517,7 +516,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		lang := pascalLikes[i]
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
-			stat.SLOC = wirthian_counter(ctx, path, lang)
+			stat.SLOC = pascalCounter(ctx, path, lang)
 			break
 		}
 	}
@@ -558,7 +557,7 @@ func Fortran90(ctx *countContext, path string) SourceStat {
 	return stat
 }
 
-// process - stub, eventually the statistics gatherer
+// process - gather file statistics and suff them in the pipeline
 func process(path string) {
 	handlerList := []func(*countContext, string) SourceStat {
 		C,          /* also C++ */
