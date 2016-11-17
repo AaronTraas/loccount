@@ -10,7 +10,8 @@ tests/hello.ada 5 ada
 tests/hello.cl 1 lisp
 tests/hello.clu 11 clu
 tests/hello.e 12 eiffel
-tests/hello.f90 6 Fortran90
+tests/hello.f 10 fortran
+tests/hello.f90 7 fortran90
 tests/hello.lsp 3 lisp
 tests/hello.m 6 obj-c
 tests/hello.m3 5 modula3

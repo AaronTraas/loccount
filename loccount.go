@@ -59,6 +59,15 @@ type pascalLike struct {
 }
 var pascalLikes []pascalLike
 
+type fortranLike struct {
+	name string
+	suffix string
+	comment string
+	nocomment string
+}
+var fortranLikes []fortranLike
+
+
 var neverInterestingByPrefix []string
 var neverInterestingByInfix []string
 var neverInterestingBySuffix []string
@@ -138,7 +147,13 @@ func init() {
 		{"modula3", ".mg", false},
 		{"ml",      ".ml", false},
 	}
-
+	fortranLikes = []fortranLike{
+		{"fortran90", ".f90",
+			"^([ \t]*!|[ \t]*$)", "^[ \t]*!(hpf|omp)[$]"},
+		{"fortran", ".f",
+			"^([c*!]|[ \t]+!|[ \t]*$)", "^[c*!](hpf|omp)[$]"},
+	}
+	
 	neverInterestingByPrefix = []string{"."}
 	neverInterestingByInfix = []string{".so.", "/."}
 	neverInterestingBySuffix = []string{"~",
@@ -511,6 +526,32 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 	return sloc
 }
 
+func fortranCounter(ctx *countContext, path string, syntax fortranLike) uint {
+	var sloc uint
+
+	bufferSetup(ctx, path)
+	defer bufferTeardown(ctx)
+
+	re1, err := regexp.Compile("(?i:re)" + syntax.comment)
+	if err != nil {
+		panic("unexpected failure while building Fortran comment analyzer")
+	}
+	re2, err := regexp.Compile("(?i:re)" + syntax.nocomment)
+	if err != nil {
+		panic("unexpected failure while building Fortran no-comment analyzer")
+	}
+	for {
+		line, err := ctx.rc.ReadBytes('\n')
+		if err != nil {
+			break
+		}
+		if !(re1.Match(line) && !re2.Match(line)) {
+			sloc++
+		}
+	}
+	return sloc
+}
+
 // Generic - recognize lots of languages with generic syntax
 func Generic(ctx *countContext, path string) SourceStat {
 	var stat SourceStat
@@ -544,39 +585,15 @@ func Generic(ctx *countContext, path string) SourceStat {
 		}
 	}
 
-	return stat
-}
-
-func Fortran90(ctx *countContext, path string) SourceStat {
-	var stat SourceStat
-
-	if !strings.HasSuffix(path, ".f90") {
-		return stat
-	}
-	
-	bufferSetup(ctx, path)
-	defer bufferTeardown(ctx)
-
-	re1, err := regexp.Compile("^([c*!]|[ \t]+!|[ \t]*$)")
-	if err != nil {
-		panic("unexpected failure while building 90 comment analyzer")
-	}
-	re2, err := regexp.Compile("^[c*!](hpf|omp)[$]")
-	if err != nil {
-		panic("unexpected failure while building 90 no-comment analyzer")
-	}
-	for {
-		line, err := ctx.rc.ReadBytes('\n')
-		if err != nil {
+	for i := range fortranLikes {
+		lang := fortranLikes[i]
+		if strings.HasSuffix(path, lang.suffix) {
+			stat.Language = lang.name
+			stat.SLOC = fortranCounter(ctx, path, lang)
 			break
 		}
-		if !(re1.Match(line) && !re2.Match(line)) {
-			stat.SLOC++
-		}
 	}
-	if stat.SLOC > 0 {
-		stat.Language = "Fortran90"
-	}
+
 	return stat
 }
 
@@ -584,8 +601,7 @@ func Fortran90(ctx *countContext, path string) SourceStat {
 func process(path string) {
 	handlerList := []func(*countContext, string) SourceStat {
 		C,          /* also C++ */
-		Generic,    /* Python, Perl, Ruby, shell, waf, Ada... */
-		Fortran90,  /* Fortran90 */
+		Generic,    /* all others */
 	}
 	var st SourceStat
 	ctx := new(countContext)

@@ -32,8 +32,8 @@ surface as a codebase changes over time.
 Languages supported are C, Yacc, Lex, C++, Objective-C, C#, PHP, Go,
 Python, Perl, csh, shell (which includes bash, dash, the Bourne shell,
 ksh, and other similar variants), sed, Ruby, Tcl, Awk, Ada, Lisp,
-Haskell, Pascal, Modula-3, Eiffel, Sather, lua, ML, Fortran 90, COBOL, and
-SQL.
+Haskell, Pascal, Modula-3, Eiffel, Sather, lua, ML, Fortran, Fortran
+90, COBOL, and SQL.
 
 The program also emits counts for build recipes - Makefiles, autoconf
 specifications, scons recipes, and waf scripts. Generated Makefiles
@@ -102,8 +102,12 @@ on a line will be counted, not recognized as comments and skipped.
 Eiffel indexing comments are counted as code, not text. (This is
 arguably a feature.)
 
-Literate Haskell (.lhs) is not supported. Neither is asm
-or Fortran. (These omissions are regressions from sloccount).
+The languages MUMPS and occam are unsupported because the file
+extensions they use conflict with more-widely used ones (Objective-C
+and Fortran respectively).
+
+Literate Haskell (.lhs) is not supported, nor is asm.
+(These omissions are regressions from sloccount).
 
 == REPORTING BUGS ==
 Report bugs to Eric S. Raymond <esr@thyrsus.com>.
