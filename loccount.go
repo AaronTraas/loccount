@@ -13,12 +13,6 @@ import "sort"
 import "strings"
 import "log"
 
-// Not yet supported from the sloccount list: asm, Cobol, exp, fortran,
-// ML.
-// Known problems:
-// * Lisp sources with a .l extension are rare but not unknown.
-// * PHP #-comments taking up an entire line will be counted.
-
 type SourceStat struct {
 	Path string
 	Language string

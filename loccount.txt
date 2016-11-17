@@ -71,14 +71,6 @@ used by the graphviz tools, rather than fast-exporting.
 Take a comma-separated list of exclusion paths. If a directory is
 excluded, all paths beneath it are.
 
-== BUGS ==
-
-Lisp sources with a .l extension are rare but not unknown. These
-may be mistaken for Lex sources
-
-PHP #-comments taking up an entire line or following only whitespace
-on a line will be counted, not recgomized as comments and skipped.
-
 == HISTORY AND COMPATIBILITY ==
 
 The algorithms in this code originated with David A. Wheeler's
@@ -93,6 +85,17 @@ have them.
 
 Notably, for individual C files you can expect it to produce identical
 counts.
+
+== BUGS ==
+
+Lisp sources with a .l extension are rare but not unknown. These
+will be mistaken for Lex sources.
+
+PHP #-comments taking up an entire line or following only whitespace
+on a line will be counted, not recognized as comments and skipped.
+
+Literate Haskell (.lhs) is not supported. Neither is asm, Cobol,
+Fortran, or ML. (These omissions are regressions from sloccount).
 
 == REPORTING BUGS ==
 Report bugs to Eric S. Raymond <esr@thyrsus.com>.
