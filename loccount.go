@@ -138,6 +138,8 @@ func init() {
 		{"haskell", ".hs", "{-", "-}", "--"},
 		{"pl/1", ".pl1", "/*", "*/", ""},
 		{"asm", ".asm", "/*", "*/", ";"},
+		{"asm", ".s", "/*", "*/", ";"},
+		{"asm", ".S", "/*", "*/", ";"},
 	}
 	scriptingLanguages = []scriptingLanguage{
 		// First line doesn't look like it handles Python
@@ -163,6 +165,9 @@ func init() {
 	}
 	genericLanguages = []genericLanguage{
 		{"ada", ".ada", "--"},
+		{"ada", ".adb", "--"},
+		{"ada", ".ads", "--"},
+		{"ada", ".pad", "--"},	// Oracle Ada preprocessor.
 		{"makefile", ".mk", "#"},
 		{"makefile", "Makefile", "#"},
 		{"makefile", "makefile", "#"},
@@ -171,9 +176,12 @@ func init() {
 		{"lisp", ".lisp", ";"},
 		{"lisp", ".lsp", ";"},	// XLISP
 		{"lisp", ".cl", ";"},	// Common Lisp
+		{"scheme", ".scm", ";"},
 		{"elisp", ".el", ";"},	// Emacs Lisp
 		{"cobol", ".CBL", "*"},
 		{"cobol", ".cbl", "*"},
+		{"cobol", ".COB", "*"},
+		{"cobol", ".cob", "*"},
 		{"eiffel", ".e", "--"},
 		{"sather", ".sa", "--"},
 		{"lua", ".lua", "--"},
@@ -213,10 +221,21 @@ func init() {
 	neverInterestingByInfix = []string{".so.", "/."}
 	neverInterestingBySuffix = []string{"~",
 		".a", ".la", ".o", ".so",
-		".gif", ".jpg", ".jpeg", ".ico",
-		".pyc", ".pyo",
+		".gif", ".jpg", ".jpeg", ".ico", ".xpm", ".xbm", ".bmp",
+		".ps", ".pdf", ".eps",
+		".tfm", ".ttf", ".bdf", ".afm",
+		".fig", ".pic",
+		".pyc", ".pyo", ".elc",
+		".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".n", ".man",
+		".html", ".htm", ".sgml", ".xml", ".txt", ".tex",
+		".po",
+		".gz", ".bz2", ".Z", ".tgz", ".zip",
+		".au", ".wav", ".ogg",
 	}
 	neverInterestingByBasename = []string{
+		"README", "Readme", "readme", "README.tk", "Changelog",
+		"ChangeLog", "Repository", "CHANGES", "Changes",
+		"BUGS", "TODO", "COPYING", "MAINTAINERS", "NEWS",
 		"configure", "autom4te.cache", "config.log", "config.status",
 	}
 	cHeaderPriority = []string{"C", "C++", "Objective-C"}
