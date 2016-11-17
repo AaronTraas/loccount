@@ -1,0 +1,97 @@
+= cvs-fast-export(1) =
+:doctype: manpage
+
+== NAME ==
+loccount - count lines of code in a source tree and perform cost estimation
+
+== SYNOPSIS ==
+*loccount* [-c] [-i] [-u] [-x pathlist] [-?] file-or-dir
+
+== DESCRIPTION ==
+
+This program counts source lines of code (SLOC) in one or more files
+or directories given on the command line.  A line of code is counted
+if it (a) includes characters other than whitespace and a terminating
+newline, and (b) is not composed solely of a comment or part of a
+comment.
+
+Optionally, this program can perform a cost estimation using the
+COCOMO II model. It uses the "organic"  profile of COCOMO II, which is
+generally appropriate for open-source projects.
+
+SLOC figures should be used with caution.  While they do predict
+project costs reasonably well, they are not appropriate for use as
+'productivity' measures; good code is often less bulky than bad code.
+Comparing SLOC across languages is also dubious, as differing
+languages can have very different complexity per line.
+
+With these qualifications, SLOC does have some other uses. It
+is quite effective for tracking changes in complexity and attack
+surface as a codebase changes over time.
+
+Languages supported are C, Yacc, Lex, C++, Objective-C, C#, PHP, Go,
+Python, Perl, csh, shell (which includes bash, dash, the Bourne shell,
+ksh, and other similar variants), Ruby, Awk, Ada, Lisp, and Fortran
+90. The program also emits counts for build recipes - Makefiles and waf
+scripts.
+
+Languages are recognized by file extension or filename pattern;
+executable filenames without an extension are mined for #! lines
+identifying an interpreter.  Files that cannot be classified in
+this way are skipped, but a list of files skipped in this way
+is available with the -u option.
+
+Some file types are identified and unconditionally skipped without
+being reported by -u; these include .o, .a, and .so object files,
+various kinds of image files, and the .pyc/.pyo files produced by
+the Python interpreter.  All files and directories named with a
+leading dot are skipped.
+
+== OPTIONS ==
+-?::
+Display usage summary and quit.
+
+-c::
+Report a COCOMO II cost estimate. Use the coefficients for the
+"organic" project type, which is the best fot for most open-source
+projects.
+
+-i::
+Report file path, line count, and type for each individual path.
+
+-u::
+List paths of files thatr could not be classified into a type.
+
+-g::
+generate a picture of the commit graph in the DOT markup language
+used by the graphviz tools, rather than fast-exporting.
+
+-x::
+Take a comma-separated list of exclusion paths. If a directory is
+excluded, all paths beneath it are.
+
+== BUGS ==
+
+Lisp sources with a .l extension are rare but not unknown. These
+may be mistaken for Lex sources
+
+PHP #-comments taking up an entire line or following only whitespace
+on a line will be counted, not recgomized as comments and skipped.
+
+== HISTORY AND COMPATIBILITY ==
+
+The algorithms in this code originated with David A. Wheeler's
+*sloccount* utility.  (It is, however, more than an order of
+magnitude faster than sloccount.)
+
+Generally it will produce close to identical figures; the differences
+are mainly due to (a) better detection of some files sloccount left
+unclassified, and (b) some philosophical differences about the
+handling of multiline string literals in languages such as Python that
+have them.
+
+Notably, for individual C files you can expect it to produce identical
+counts.
+
+== REPORTING BUGS ==
+Report bugs to Eric S. Raymond <esr@thyrsus.com>.
