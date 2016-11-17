@@ -13,6 +13,50 @@ import "sort"
 import "strings"
 import "log"
 
+/*
+How to add support for a language to this program:
+
+All the language-specific information this program needs to know to do
+its job is the syntax of comments and string literals.  Generally,
+languages fall into one of the following groups:
+
+* C-like: C is the prototype. This code recognizes them by file
+  extension only.  These languages have two kinds of comment.  One is
+  a block comment delimited by two distinct strings and the second is
+  a winged comment introduced by a third string and terminated by
+  newline.  You can add support simply by appending an initializer to
+  the cLikes table.
+
+* Scripting languages have only winged comments, usually led with #.  This
+  code recognizes them by file extension, or by looking for a hashbang line
+  identifying the interpreter.  You can append an initializer to the
+  scriptingLanguages table specifying a name, an extension, a matching
+  string to look for in a hashbang line, the set of string quotes the
+  language uses, and the comment leader.
+
+* Generic languages have only winged comments, usually led with #.
+  This code recognizes them by file extension only.  You can append an
+  initializer to the genericLanguages table specifying a name, an
+  extension, string to look for in a hashbang line, and the comment
+  leader. For this group the set of string quotes the language uses
+  is assumed to include both single and double quote.
+
+* Pascal-likes use the (* *) block comment syntax.  This code
+  recognizes them by file extension only.  You can append an
+  initializer to the PascalLikes table specifying a name, an
+  extension, and a boolean saying whether the language uses { } as
+  additional pair of block comments.
+
+* Fortran-likes use various start-of-line characters as comment leaders.
+  This code recognizes them by file extension only.  You can append an
+  initializer to the fortranLikes table specifying a pair of regular
+  expressions; comments are recognized by matching the first and not
+  the second.
+
+You may add multiple entries with the same language name, but extensions
+must be unique across all tables.
+*/
+
 type SourceStat struct {
 	Path string
 	Language string
@@ -87,9 +131,9 @@ func init() {
 		{"c#", ".cs", "/*", "*/", "//"},
 		{"php", ".php", "/*", "*/", "//"},
 		{"go", ".go", "/*", "*/", "//"},
+		{"autotools", "config.h.in", "/*", "*/", "//"},
 		{"sql", ".sql", "/*", "*/", "--"},
 		{"haskell", ".hs", "{-", "-}", "--"},
-		{"autotools", "config.h.in", "/*", "*/", "//"},
 	}
 	scriptingLanguages = []scriptingLanguage{
 		// First line doesn't look like it handles Python
@@ -571,7 +615,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
 			stat.SLOC = genericCounter(ctx,
-				path, "", lang.eolcomment)
+				path, "'\"", lang.eolcomment)
 			break
 		}
 	}
