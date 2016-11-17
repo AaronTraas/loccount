@@ -229,7 +229,7 @@ const ANSIC_STYLE = 0
 const CPP_STYLE = 1
 
 // sloc_count - Count the SLOC in a C-family source file
-func sloc_count(ctx *countContext, path string) uint {
+func c_family_counter(ctx *countContext, path string) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
@@ -359,7 +359,7 @@ func C(ctx *countContext, path string) SourceStat {
 			stat.Language = lang.language
 			bufferSetup(ctx, path)
 			defer bufferTeardown(ctx)
-			stat.SLOC = sloc_count(ctx, path)
+			stat.SLOC = c_family_counter(ctx, path)
 		}
 	}
 	return stat
@@ -370,7 +370,7 @@ func C(ctx *countContext, path string) SourceStat {
 // We get to specify a set of possible string delimiters (normally
 // a singleton string containing single or double quote, or a doubleton
 // containing both). We also get to specify a comment leader.
-func generic_sloc_count(ctx *countContext, path string, stringdelims string, commentleader string) uint {
+func generic_counter(ctx *countContext, path string, stringdelims string, commentleader string) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
@@ -437,7 +437,7 @@ func generic_sloc_count(ctx *countContext, path string, stringdelims string, com
 }
 
 /* pascalLike - Handle Pascal and Modula 3 */
-func wirthian_sloc_count(ctx *countContext, path string, bracketcomments bool) uint {
+func wirthian_counter(ctx *countContext, path string, bracketcomments bool) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, or INCOMMENT */
@@ -497,7 +497,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		lang := scriptingLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
 			stat.Language = lang.name
-			stat.SLOC = generic_sloc_count(ctx,
+			stat.SLOC = generic_counter(ctx,
 				path, lang.stringdelims, lang.commentleader)
 			break
 		}
@@ -507,7 +507,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		lang := genericLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
-			stat.SLOC = generic_sloc_count(ctx,
+			stat.SLOC = generic_counter(ctx,
 				path, "", lang.commentleader)
 			break
 		}
@@ -517,7 +517,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		lang := pascalLikes[i]
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
-			stat.SLOC = wirthian_sloc_count(ctx,
+			stat.SLOC = wirthian_counter(ctx,
 				path, lang.bracketcomments)
 			break
 		}
