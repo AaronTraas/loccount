@@ -136,6 +136,7 @@ func init() {
 		{"autotools", "config.h.in", "/*", "*/", "//"},
 		{"sql", ".sql", "/*", "*/", "--"},
 		{"haskell", ".hs", "{-", "-}", "--"},
+		{"pl/1", ".pl1", "/*", "*/", ""},
 	}
 	scriptingLanguages = []scriptingLanguage{
 		// First line doesn't look like it handles Python
@@ -169,14 +170,18 @@ func init() {
 		{"lisp", ".lisp", ";"},
 		{"lisp", ".lsp", ";"},	// XLISP
 		{"lisp", ".cl", ";"},	// Common Lisp
-		{"cobol", "CBL", "*"},
-		{"cobol", "cbl", "*"},
+		{"elisp", ".el", ";"},	// Emacs Lisp
+		{"cobol", ".CBL", "*"},
+		{"cobol", ".cbl", "*"},
 		{"eiffel", ".e", "--"},
 		{"sather", ".sa", "--"},
 		{"lua", ".lua", "--"},
 		{"clu", ".clu", "%"},
 		{"rust", ".rs", "//"},
 		{"rust", ".rlib", "//"},
+		{"erlang", ".erl", "%"},
+		{"turing", ".t", "%"},
+		{"d", ".d", "//"},
 		// autoconf cruft - note the config.h-in entry under C-likes
 		{"autotools", "autogen.sh", "#"},
 		{"autotools", "configure.in", "#"},
@@ -194,6 +199,7 @@ func init() {
 		{"modula3", ".ig", false},
 		{"modula3", ".mg", false},
 		{"ml",      ".ml", false},
+		{"oberon",  ".mod", false},
 	}
 	fortranLikes = []fortranLike{
 		{"fortran90", ".f90",
@@ -357,7 +363,7 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 				c, err = getachar(ctx)
 				mode = INCOMMENT
 				comment_type = BLOCK_COMMENT
-			} else if (c == syntax.eolcomment[0]) && ispeek(ctx, syntax.eolcomment[1]) {
+			} else if (syntax.eolcomment != "") && (c == syntax.eolcomment[0]) && ispeek(ctx, syntax.eolcomment[1]) {
 				c, err = getachar(ctx)
 				mode = INCOMMENT
 				comment_type = TRAILING_COMMENT

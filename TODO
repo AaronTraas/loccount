@@ -27,7 +27,6 @@ here are languages I'd like to add support for specifically:
   (see below for a discussion of the issues with embedded scripts)
 + .pco -> Oracle preprocessed Cobol Code
 + .pfo -> Oracle preprocessed Fortran Code
-+ PL/1.
 + BASIC, including Visual Basic, Future Basic, GW-Basic, QBASIC, etc.
 + Improve Ocamlyacc, comments in yacc part are C-like, but I'm not sure
   about comment nesting. 

@@ -107,9 +107,9 @@ on a line will be counted, not recognized as comments and skipped.
 Eiffel indexing comments are counted as code, not text. (This is
 arguably a feature.)
 
-The languages MUMPS and occam are unsupported because the file
-extensions they use conflict with more-widely used ones (Objective-C
-and Fortran respectively).
+The languages MUMPS, occam, and Prolog are unsupported because the file
+extensions they use conflict with more-widely used ones (Objective-C,
+Fortran, and Perl respectively).
 
 Literate Haskell (.lhs) is not supported, nor is asm.
 (These omissions are regressions from sloccount).
