@@ -19,6 +19,7 @@ tests/ntpver 1 shell
 tests/packet.py 980 python
 tests/perl-filewrite 11 perl
 tests/ruby-hello 1 ruby
+tests/test.hs 8 haskell
 tests/upload 6 python
 tests/wokka.cs 5 c#
 tests/wscript 65 waf
