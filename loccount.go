@@ -14,7 +14,7 @@ import "strings"
 import "log"
 
 // Not yet supported from the sloccount list: asm, Cobol, exp, fortran,
-// Haskell, ML, Modula 3.
+// Haskell, ML.
 // Known problems:
 // * Lisp sources with a .l extension are rare but not unknown.
 // * PHP #-comments taking up an entire line will be counted.
@@ -52,6 +52,13 @@ type genericLanguage struct {
 	commentleader string
 }
 var genericLanguages []genericLanguage
+
+type pascalLike struct {
+	name string
+	suffix string
+	bracketcomments bool
+}
+var pascalLikes []pascalLike
 
 var neverInterestingByPrefix []string
 var neverInterestingByInfix []string
@@ -102,6 +109,14 @@ func init() {
 		{"lisp", ".lsp", ";"},	// XLISP
 		{"lisp", ".cl", ";"},	// Common Lisp
 	}
+	pascalLikes = []pascalLike{
+		{"pascal", ".pas", true},
+		{"modula3", ".i3", false},
+		{"modula3", ".m3", false},
+		{"modula3", ".ig", false},
+		{"modula3", ".mg", false},
+	}
+
 	neverInterestingByPrefix = []string{"."}
 	neverInterestingByInfix = []string{".so.", "/."}
 	neverInterestingBySuffix = []string{"~",
@@ -422,7 +437,7 @@ func generic_sloc_count(ctx *countContext, path string, stringdelims string, com
 }
 
 /* pascalLike - Handle Pascal and Modula 3 */
-func pascalLike(ctx *countContext, path string) uint {
+func wirthian_sloc_count(ctx *countContext, path string, bracketcomments bool) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, or INCOMMENT */
@@ -437,7 +452,7 @@ func pascalLike(ctx *countContext, path string) uint {
 		}
 
 		if mode == NORMAL {
-			if c == '{' {
+			if bracketcomments && c == '{' {
 				mode = INCOMMENT
 			} else if (c == '(') && ispeek(ctx, '*') {
 				c, err = getachar(ctx)
@@ -451,7 +466,7 @@ func pascalLike(ctx *countContext, path string) uint {
 				sawchar = false
 			}
 		} else { /* INCOMMENT mode */
-			if c == '}' {
+			if bracketcomments && c == '}' {
 				mode = NORMAL
 			} else if (c == '*') && ispeek(ctx, ')') {
 				c, err = getachar(ctx)
@@ -498,10 +513,13 @@ func Generic(ctx *countContext, path string) SourceStat {
 		}
 	}
 
-	if strings.HasSuffix(path, ".pas") {
-		stat.SLOC = pascalLike(ctx, path)
-		if stat.SLOC > 0 {
-			stat.Language = "pascal"
+	for i := range pascalLikes {
+		lang := pascalLikes[i]
+		if strings.HasSuffix(path, lang.suffix) {
+			stat.Language = lang.name
+			stat.SLOC = wirthian_sloc_count(ctx,
+				path, lang.bracketcomments)
+			break
 		}
 	}
 
