@@ -111,8 +111,12 @@ The languages MUMPS, occam, and Prolog are unsupported because the file
 extensions they use conflict with more-widely used ones (Objective-C,
 Fortran, and Perl respectively).
 
-Literate Haskell (.lhs) is not supported, nor is asm.
-(These omissions are regressions from sloccount).
+The asm counter assumes C-style block comment syntax and ";" winged
+comments. This is correct for Intel assemblers and some others, but
+not all.
+
+Literate Haskell (.lhs) is not supported.  (This is a regression from
+sloccount).
 
 == REPORTING BUGS ==
 Report bugs to Eric S. Raymond <esr@thyrsus.com>.

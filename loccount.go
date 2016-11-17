@@ -137,6 +137,7 @@ func init() {
 		{"sql", ".sql", "/*", "*/", "--"},
 		{"haskell", ".hs", "{-", "-}", "--"},
 		{"pl/1", ".pl1", "/*", "*/", ""},
+		{"asm", ".asm", "/*", "*/", ";"},
 	}
 	scriptingLanguages = []scriptingLanguage{
 		// First line doesn't look like it handles Python
