@@ -31,9 +31,9 @@ surface as a codebase changes over time.
 
 Languages supported are C, Yacc, Lex, C++, Objective-C, C#, PHP, Go,
 Python, Perl, csh, shell (which includes bash, dash, the Bourne shell,
-ksh, and other similar variants), sed, Ruby, Tcl, Awk, Ada, Lisp, Pascal,
-Modula-3, Fortran 90, and SQL. The program also emits counts for build
-recipes - Makefiles and waf scripts.
+ksh, and other similar variants), sed, Ruby, Tcl, Awk, Ada, Lisp,
+Haskell, Pascal, Modula-3, Fortran 90, and SQL. The program also emits
+counts for build recipes - Makefiles and waf scripts.
 
 Languages are recognized by file extension or filename pattern;
 executable filenames without an extension are mined for #! lines
@@ -41,11 +41,12 @@ identifying an interpreter.  Files that cannot be classified in
 this way are skipped, but a list of files skipped in this way
 is available with the -u option.
 
-Some file types are identified and unconditionally skipped without
-being reported by -u; these include .o, .a, and .so object files,
-various kinds of image files, and the .pyc/.pyo files produced by
-the Python interpreter.  All files and directories named with a
-leading dot are skipped.
+Some file types are identified and silently skipped without being
+reported by -u; these include .o, .a, and .so object files, various
+kinds of image files, and the .pyc/.pyo files produced by the Python
+interpreter.  All files and directories named with a leading dot are
+also silently skipped (in particular, this ignores metadata associated
+with versopn-control systems).
 
 == OPTIONS ==
 -?::

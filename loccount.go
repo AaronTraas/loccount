@@ -14,7 +14,7 @@ import "strings"
 import "log"
 
 // Not yet supported from the sloccount list: asm, Cobol, exp, fortran,
-// Haskell, ML.
+// ML.
 // Known problems:
 // * Lisp sources with a .l extension are rare but not unknown.
 // * PHP #-comments taking up an entire line will be counted.
@@ -82,6 +82,7 @@ func init() {
 		{"php", ".php", "/*", "*/", "//"},
 		{"go", ".go", "/*", "*/", "//"},
 		{"sql", ".sql", "/*", "*/", "--"},
+		{"haskell", ".hs", "{-", "-}", "--"},
 	}
 	scriptingLanguages = []scriptingLanguage{
 		// First line doesn't look like it handles Python
