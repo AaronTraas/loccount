@@ -34,6 +34,9 @@ type cLike struct {
 }
 var cLikes []cLike
 
+// We get to specify a set of possible string delimiters (normally
+// a singleton string containing single or double quote, or a doubleton
+// containing both). We also get to specify a comment leader.
 type scriptingLanguage struct {
 	name string
 	suffix string
@@ -366,11 +369,7 @@ func C(ctx *countContext, path string) SourceStat {
 	return stat
 }
 
-// generic_sloc_count - count SLOC in a generic language.
-//
-// We get to specify a set of possible string delimiters (normally
-// a singleton string containing single or double quote, or a doubleton
-// containing both). We also get to specify a comment leader.
+// generic_counter - count SLOC in a generic language.
 func generic_counter(ctx *countContext, path string, stringdelims string, eolcomment string) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
@@ -437,8 +436,8 @@ func generic_counter(ctx *countContext, path string, stringdelims string, eolcom
 	return sloc
 }
 
-/* pascalLike - Handle Pascal and Modula 3 */
-func wirthian_counter(ctx *countContext, path string, bracketcomments bool) uint {
+// wirthian_counter - Handle lanuages like Pascal and Modula 3
+func wirthian_counter(ctx *countContext, path string, syntax pascalLike) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, or INCOMMENT */
@@ -453,7 +452,7 @@ func wirthian_counter(ctx *countContext, path string, bracketcomments bool) uint
 		}
 
 		if mode == NORMAL {
-			if bracketcomments && c == '{' {
+			if syntax.bracketcomments && c == '{' {
 				mode = INCOMMENT
 			} else if (c == '(') && ispeek(ctx, '*') {
 				c, err = getachar(ctx)
@@ -467,7 +466,7 @@ func wirthian_counter(ctx *countContext, path string, bracketcomments bool) uint
 				sawchar = false
 			}
 		} else { /* INCOMMENT mode */
-			if bracketcomments && c == '}' {
+			if syntax.bracketcomments && c == '}' {
 				mode = NORMAL
 			} else if (c == '*') && ispeek(ctx, ')') {
 				c, err = getachar(ctx)
@@ -518,8 +517,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		lang := pascalLikes[i]
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
-			stat.SLOC = wirthian_counter(ctx,
-				path, lang.bracketcomments)
+			stat.SLOC = wirthian_counter(ctx, path, lang)
 			break
 		}
 	}
