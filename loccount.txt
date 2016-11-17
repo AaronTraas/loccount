@@ -32,7 +32,7 @@ surface as a codebase changes over time.
 Languages supported are C, Yacc, Lex, C++, Objective-C, C#, PHP, Go,
 Python, Perl, csh, shell (which includes bash, dash, the Bourne shell,
 ksh, and other similar variants), sed, Ruby, Tcl, Awk, Ada, Lisp,
-Haskell, Pascal, Modula-3, Eiffel, Sather, ML, Fortran 90, COBOL, and
+Haskell, Pascal, Modula-3, Eiffel, Sather, lua, ML, Fortran 90, COBOL, and
 SQL.
 
 The program also emits counts for build recipes - Makefiles, autoconf
@@ -80,7 +80,7 @@ excluded, all paths beneath it are.
 The algorithms in this code originated with David A. Wheeler's
 *sloccount* utility.  It is, however, more than an order of
 magnitude faster than sloccount, and handles some languages (notably
-Eiffel, Sather, and autotools) that sloccount does not.
+Eiffel, Sather, lua, CLU, and autotools) that sloccount does not.
 
 Generally it will produce close to identical figures; the differences
 are mainly due to (a) better detection of some files sloccount left

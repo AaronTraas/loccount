@@ -1,0 +1,13 @@
+% Should count as 11 lines, excluding this comment.
+start_up = proc()
+    outstream:stream := primary_output()
+    for s:string in get_hello_world() do
+        stream$putl(outstream,s)
+      end
+  end
+
+get_hello_world = iter() yields(string)
+    while (true) do
+        yield ("Hello, World!")
+      end
+  end

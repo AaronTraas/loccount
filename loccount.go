@@ -118,6 +118,8 @@ func init() {
 		{"cobol", "cbl", "*"},
 		{"eiffel", ".e", "--"},
 		{"sather", ".sa", "--"},
+		{"lua", ".lua", "--"},
+		{"clu", ".clu", "%"},
 		// autoconf cruft - note the config.h-in entry under C-likes
 		{"autotools", "autogen.sh", "#"},
 		{"autotools", "configure.in", "#"},
