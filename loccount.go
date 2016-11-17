@@ -62,6 +62,7 @@ var pascalLikes []pascalLike
 var neverInterestingByPrefix []string
 var neverInterestingByInfix []string
 var neverInterestingBySuffix []string
+var neverInterestingByBasename []string
 
 var cHeaderPriority []string
 
@@ -79,6 +80,7 @@ func init() {
 		{"go", ".go", "/*", "*/", "//"},
 		{"sql", ".sql", "/*", "*/", "--"},
 		{"haskell", ".hs", "{-", "-}", "--"},
+		{"autotools", "config.h.in", "/*", "*/", "//"},
 	}
 	scriptingLanguages = []scriptingLanguage{
 		// First line doesn't look like it handles Python
@@ -107,6 +109,8 @@ func init() {
 		{"makefile", ".mk", "#"},
 		{"makefile", "Makefile", "#"},
 		{"makefile", "makefile", "#"},
+		{"makefile", "Imakefile", "#"},
+		{"m4", ".m4", "#"},
 		{"lisp", ".lisp", ";"},
 		{"lisp", ".lsp", ";"},	// XLISP
 		{"lisp", ".cl", ";"},	// Common Lisp
@@ -114,6 +118,15 @@ func init() {
 		{"cobol", "cbl", "*"},
 		{"eiffel", ".e", "--"},
 		{"sather", ".sa", "--"},
+		// autoconf cruft - note the config.h-in entry under C-likes
+		{"autotools", "autogen.sh", "#"},
+		{"autotools", "configure.in", "#"},
+		{"autotools", "Makefile.in", "#"},
+		{"autotools", ".am", "#"},
+		{"autotools", ".ac", "#"},
+		{"autotools", ".mf", "#"},
+		// Scons
+		{"scons", "SConstruct", "#"},
 	}
 	pascalLikes = []pascalLike{
 		{"pascal", ".pas", true},
@@ -129,7 +142,11 @@ func init() {
 	neverInterestingBySuffix = []string{"~",
 		".a", ".la", ".o", ".so",
 		".gif", ".jpg", ".jpeg", ".ico",
-		".pyc", ".pyo"}
+		".pyc", ".pyo",
+	}
+	neverInterestingByBasename = []string{
+		"configure", "autom4te.cache", "config.log", "config.status",
+	}
 	cHeaderPriority = []string{"C", "C++", "Objective-C"}
 }
 
@@ -606,6 +623,11 @@ func filter(path string, info os.FileInfo, err error) error {
 			return err
 		}
 	}
+	for i := range neverInterestingByBasename {
+		if filepath.Base(path) == neverInterestingByBasename[i] {
+			return err
+		}
+	}
 	for i := range exclusions {
 		if path == exclusions[i] || strings.HasPrefix(path, exclusions[i]+"/") {
 			return err
@@ -615,6 +637,13 @@ func filter(path string, info os.FileInfo, err error) error {
 	/* has to come after the infix check for directory */
 	if isDirectory(path) {
 		return err
+	}
+
+	/* toss generated Makefiles */
+	if filepath.Base(path) == "Makefile" {
+		if _, err := os.Stat(path + ".in"); err == nil {
+			return err
+		}
 	}
 	
 	process(path)

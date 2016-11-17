@@ -33,8 +33,11 @@ Languages supported are C, Yacc, Lex, C++, Objective-C, C#, PHP, Go,
 Python, Perl, csh, shell (which includes bash, dash, the Bourne shell,
 ksh, and other similar variants), sed, Ruby, Tcl, Awk, Ada, Lisp,
 Haskell, Pascal, Modula-3, Eiffel, Sather, ML, Fortran 90, COBOL, and
-SQL. The program also emits counts for build recipes - Makefiles and
-waf scripts.
+SQL.
+
+The program also emits counts for build recipes - Makefiles, autoconf
+specifications, scons recipes, and waf scripts. Generated Makefiles
+are recognized and ignored.
 
 Languages are recognized by file extension or filename pattern;
 executable filenames without an extension are mined for #! lines
@@ -77,7 +80,7 @@ excluded, all paths beneath it are.
 The algorithms in this code originated with David A. Wheeler's
 *sloccount* utility.  It is, however, more than an order of
 magnitude faster than sloccount, and handles some languages (notably
-Eiffel and Sather) that sloccount does not.
+Eiffel, Sather, and autotools) that sloccount does not.
 
 Generally it will produce close to identical figures; the differences
 are mainly due to (a) better detection of some files sloccount left
