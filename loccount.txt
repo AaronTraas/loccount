@@ -84,14 +84,17 @@ The algorithms in this code originated with David A. Wheeler's
 magnitude faster than sloccount, and handles some languages (notably
 Go, Eiffel, Sather, lua, CLU, and autotools) that sloccount does not.
 
-Generally it will produce close to identical figures; the differences
-are mainly due to (a) better detection of some files sloccount left
-unclassified, and (b) some philosophical differences about the
-handling of multiline string literals in languages such as Python that
-have them.
+Generally it will produce close to identical figures to sloccount for
+a language supported by both tools; the differences are mainly due to
+(a) better detection of some files sloccount left unclassified, and
+(b) some philosophical differences about the handling of multiline
+string literals in languages such as Python that have them.
 
-Notably, for individual C files you can expect it to produce identical
-counts.
+Notably, for individual C files you can expect both tools to produce
+identical counts.
+
+The base salary used for cost estimation will differ between these
+tools depending on time of last release.
 
 == BUGS ==
 
