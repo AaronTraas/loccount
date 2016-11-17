@@ -632,7 +632,7 @@ func reportCocomo(sloc uint) {
 	const TIME_EXP = 1.05
 	const SCHED_MULT = 2.5
 	const SCHED_EXP = 0.38
-	const SALARY = 56286
+	const SALARY = 60384	// From payscale.com, late 2016
 	const OVERHEAD = 2.40
 	fmt.Printf("Total Physical Source Lines of Code (SLOC)                = %d\n", sloc)
 	person_months := TIME_MULT * math.Pow(float64(sloc)/1000, TIME_EXP)
