@@ -16,7 +16,7 @@ newline, and (b) is not composed solely of a comment or part of a
 comment.
 
 Optionally, this program can perform a cost estimation using the
-COCOMO II model. It uses the "organic"  profile of COCOMO II, which is
+COCOMO I model. It uses the "organic"  profile of COCOMO I, which is
 generally appropriate for open-source projects.
 
 SLOC figures should be used with caution.  While they do predict
