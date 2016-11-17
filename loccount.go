@@ -61,16 +61,16 @@ var cHeaderPriority []string
 
 func init() {
 	cLikes = []cLike{
-		{"C", ".c"},
-		{"C-header", ".h"},
-		{"Yacc", ".y"},
-		{"Lex", ".l"},
-		{"C++", ".cpp"},
-		{"C++", ".cxx"},
-		{"Objective-C", ".m"},
-		{"C#", ".cs"},
-		{"PHP", ".php"},
-		{"Go", ".go"},
+		{"ansic", ".c"},
+		{"c-header", ".h"},
+		{"yacc", ".y"},
+		{"lex", ".l"},
+		{"c++", ".cpp"},
+		{"c++", ".cxx"},
+		{"obj-c", ".m"},
+		{"c#", ".cs"},
+		{"php", ".php"},
+		{"go", ".go"},
 	}
 	scriptingLanguages = []scriptingLanguage{
 		// First line doesn't look like it handles Python
@@ -84,22 +84,23 @@ func init() {
 		// This is different from sloccount's behavior, which
 		// doesn't count multiline literals if they start at the
 		// beginning of a line (e.g. as in Python header comments).
-		{"Python", ".py", "python", "'\"", "#"},
+		{"python", ".py", "python", "'\"", "#"},
 		{"waf", "wscript", "waf", "'\"", "#"},
-		{"Perl", ".pl", "perl", "'\"", "#"},
-		{"C-shell", ".csh", "csh", "'\"", "#"},
+		{"perl", ".pl", "perl", "'\"", "#"},
+		{"csh", ".csh", "csh", "'\"", "#"},
 		{"shell", ".sh", "sh", "'\"", "#"},
-		{"Ruby", ".rb", "ruby", "'\"", "#"},
-		{"Awk", ".awk", "awk", "'\"", "#"},
+		{"ruby", ".rb", "ruby", "'\"", "#"},
+		{"awk", ".awk", "awk", "'\"", "#"},
+		{"sed", ".awk", "awk", "'\"", "#"},
 	}
 	genericLanguages = []genericLanguage{
-		{"Ada", ".ada", "--"},
-		{"Makefile", ".mk", "#"},
-		{"Makefile", "Makefile", "#"},
-		{"Makefile", "makefile", "#"},
-		{"Lisp", ".lisp", ";"},
-		{"Lisp", ".lsp", ";"},	// XLISP
-		{"Lisp", ".cl", ";"},	// Common Lisp
+		{"ada", ".ada", "--"},
+		{"makefile", ".mk", "#"},
+		{"makefile", "Makefile", "#"},
+		{"makefile", "makefile", "#"},
+		{"lisp", ".lisp", ";"},
+		{"lisp", ".lsp", ";"},	// XLISP
+		{"lisp", ".cl", ";"},	// Common Lisp
 	}
 	neverInterestingByPrefix = []string{"."}
 	neverInterestingByInfix = []string{".so.", "/."}
@@ -641,13 +642,13 @@ func main() {
 
 	// C headers may get reassigned based on what other languages
 	// are present in the tree
-	if counts["C-header"].linecount > 0 {
+	if counts["c-header"].linecount > 0 {
 		for i := range cHeaderPriority {
 			if counts[cHeaderPriority[i]].linecount > 0 {
 				var tmp = counts[cHeaderPriority[i]]
-				tmp.linecount += counts["C-header"].linecount
+				tmp.linecount += counts["c-header"].linecount
 				counts[cHeaderPriority[i]] = tmp
-				delete(counts, "C-header")
+				delete(counts, "c-header")
 				break
 			}
 		}

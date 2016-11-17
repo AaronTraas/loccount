@@ -31,7 +31,7 @@ surface as a codebase changes over time.
 
 Languages supported are C, Yacc, Lex, C++, Objective-C, C#, PHP, Go,
 Python, Perl, csh, shell (which includes bash, dash, the Bourne shell,
-ksh, and other similar variants), Ruby, Awk, Ada, Lisp, and Fortran
+ksh, and other similar variants), sed, Ruby, Awk, Ada, Lisp, and Fortran
 90. The program also emits counts for build recipes - Makefiles and waf
 scripts.
 
@@ -60,7 +60,7 @@ projects.
 Report file path, line count, and type for each individual path.
 
 -u::
-List paths of files thatr could not be classified into a type.
+List paths of files that could not be classified into a type.
 
 -g::
 generate a picture of the commit graph in the DOT markup language
