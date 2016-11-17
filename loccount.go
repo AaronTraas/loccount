@@ -69,7 +69,7 @@ var pipeline chan SourceStat
 // Data tables driving the recognition and counting of classes of languages.
 
 type cLike struct {
-	language string
+	name string
 	extension string
 	commentleader string
 	commenttrailer string
@@ -121,7 +121,7 @@ var cHeaderPriority []string
 
 func init() {
 	cLikes = []cLike{
-		{"ansic", ".c", "/*", "*/", "//"},
+		{"c", ".c", "/*", "*/", "//"},
 		{"c-header", ".h", "/*", "*/", "//"},
 		{"yacc", ".y", "/*", "*/", "//"},
 		{"lex", ".l", "/*", "*/", "//"},
@@ -451,7 +451,7 @@ func C(ctx *countContext, path string) SourceStat {
 	for i := range cLikes {
 		lang := cLikes[i]
 		if strings.HasSuffix(path, lang.extension) {
-			stat.Language = lang.language
+			stat.Language = lang.name
 			bufferSetup(ctx, path)
 			defer bufferTeardown(ctx)
 			stat.SLOC = c_family_counter(ctx, path, lang)
@@ -747,6 +747,52 @@ func reportCocomo(sloc uint) {
 	fmt.Printf(" (average salary = $%d/year, overhead = %2.2f).\n", SALARY, OVERHEAD)
 }
 
+func list_languages() {
+	var names []string
+	var lastlang string
+	for i := range cLikes {
+		lang := cLikes[i].name
+		if lang != lastlang {
+			names = append(names, lang)
+			lastlang = lang
+		}
+	}
+
+	for i := range scriptingLanguages {
+		lang := scriptingLanguages[i].name
+		if lang != lastlang {
+			names = append(names, lang)
+			lastlang = lang
+		}
+	}
+
+	for i := range genericLanguages {
+		lang := genericLanguages[i].name
+		if lang != lastlang {
+			names = append(names, lang)
+			lastlang = lang
+		}
+	}
+
+	for i := range pascalLikes {
+		lang := pascalLikes[i].name
+		if lang != lastlang {
+			names = append(names, lang)
+			lastlang = lang
+		}
+	}
+
+	for i := range fortranLikes {
+		lang := fortranLikes[i].name
+		if lang != lastlang {
+			names = append(names, lang)
+			lastlang = lang
+		}
+	}
+	sort.Strings(names)
+	fmt.Printf("%s\n", names)
+}
+
 type sortable []countRecord 
 func (a sortable) Len() int {return len(a)}
 func (a sortable) Swap(i int, j int)  { a[i], a[j] = a[j], a[i] }
@@ -769,42 +815,8 @@ func main() {
 		"list supported languages and exit")
 	flag.Parse()
 
-	var names []string
-	var lastlang string
 	if list {
-		for i := range scriptingLanguages {
-			lang := scriptingLanguages[i].name
-			if lang != lastlang {
-				names = append(names, lang)
-				lastlang = lang
-			}
-		}
-
-		for i := range genericLanguages {
-			lang := genericLanguages[i].name
-			if lang != lastlang {
-				names = append(names, lang)
-				lastlang = lang
-			}
-		}
-
-		for i := range pascalLikes {
-			lang := pascalLikes[i].name
-			if lang != lastlang {
-				names = append(names, lang)
-				lastlang = lang
-			}
-		}
-
-		for i := range fortranLikes {
-			lang := fortranLikes[i].name
-			if lang != lastlang {
-				names = append(names, lang)
-				lastlang = lang
-			}
-		}
-		sort.Strings(names)
-		fmt.Printf("%s\n", names)
+		list_languages()
 		return
 	}
 
