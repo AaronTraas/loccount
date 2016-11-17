@@ -94,11 +94,12 @@ func init() {
 		{"python", ".py", "python", "'\"", "#"},
 		{"waf", "wscript", "waf", "'\"", "#"},
 		{"perl", ".pl", "perl", "'\"", "#"},
+		{"tcl", ".tcl", "tcl", "'\"", "#"},	/* must be before sh */
 		{"csh", ".csh", "csh", "'\"", "#"},
 		{"shell", ".sh", "sh", "'\"", "#"},
 		{"ruby", ".rb", "ruby", "'\"", "#"},
 		{"awk", ".awk", "awk", "'\"", "#"},
-		{"sed", ".awk", "awk", "'\"", "#"},
+		{"sed", ".sed", "sed", "'\"", "#"},
 	}
 	genericLanguages = []genericLanguage{
 		{"ada", ".ada", "--"},

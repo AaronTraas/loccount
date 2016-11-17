@@ -12,6 +12,7 @@ tests/hello.m3 5 modula3
 tests/hello.pas 4 pascal
 tests/hello.rb 1 ruby
 tests/hello.sh 1 shell
+tests/hello.tcl 1 tcl
 tests/ntp_fp.h 254 c-header
 tests/ntpver 1 shell
 tests/packet.py 980 python
