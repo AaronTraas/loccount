@@ -174,6 +174,8 @@ func init() {
 		{"sather", ".sa", "--"},
 		{"lua", ".lua", "--"},
 		{"clu", ".clu", "%"},
+		{"rust", ".rs", "//"},
+		{"rust", ".rlib", "//"},
 		// autoconf cruft - note the config.h-in entry under C-likes
 		{"autotools", "autogen.sh", "#"},
 		{"autotools", "configure.in", "#"},
