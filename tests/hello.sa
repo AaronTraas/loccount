@@ -1,0 +1,6 @@
+-- Should count as 5 lines
+class HELLO_WORLD is
+   main is
+      #OUT+"Hello World\n";
+   end;
+end;

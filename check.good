@@ -8,12 +8,14 @@ tests/factorial.ml 8 ml
 tests/guide.awk 7 awk
 tests/hello.ada 5 ada
 tests/hello.cl 1 lisp
+tests/hello.e 12 eiffel
 tests/hello.f90 6 Fortran90
 tests/hello.lsp 3 lisp
 tests/hello.m 6 obj-c
 tests/hello.m3 5 modula3
 tests/hello.pas 4 pascal
 tests/hello.rb 1 ruby
+tests/hello.sa 5 sather
 tests/hello.sh 1 shell
 tests/hello.tcl 1 tcl
 tests/ntp_fp.h 254 c-header

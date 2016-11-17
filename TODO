@@ -3,8 +3,6 @@ a much longer TODO with many issues that have been solved by the Go port.
 
 Obviously, a general "TODO" is adding support for other computer languages;
 here are languages I'd like to add support for specifically:
-+ Eiffel.
-+ Sather (much like Eiffel).
 + CORBA IDL.
 + Forth.  Comments can start with "\" (backslash) and continue to end-of-line,
   or be surrounded by parens.  In both cases, they must be on word

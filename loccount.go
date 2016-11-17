@@ -112,6 +112,8 @@ func init() {
 		{"lisp", ".cl", ";"},	// Common Lisp
 		{"cobol", "CBL", "*"},
 		{"cobol", "cbl", "*"},
+		{"eiffel", ".e", "--"},
+		{"sather", ".sa", "--"},
 	}
 	pascalLikes = []pascalLike{
 		{"pascal", ".pas", true},
