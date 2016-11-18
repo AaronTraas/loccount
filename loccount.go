@@ -345,10 +345,6 @@ func hashbang(ctx *countContext, path string, langname string) bool {
 
 // C line counting algorithm by David A. Wheeler; Go code by ESR.
 
-/* Types of comments: */
-const BLOCK_COMMENT = 0
-const TRAILING_COMMENT = 1
-
 // c_family_counter - Count the SLOC in a C-family source file
 //
 // C++ headers get counted as C. This can only be fixed in postprocessing
@@ -358,6 +354,10 @@ const TRAILING_COMMENT = 1
 // to look like C comment starts. In theory we could fix this by requiring Lex
 // files to contain %%.
 func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
+	/* Types of comments: */
+	const BLOCK_COMMENT = 0
+	const TRAILING_COMMENT = 1
+
 	var sloc uint = 0
 	var sawchar bool = false         /* Did you see a char on this line? */
 	var mode int = NORMAL            /* NORMAL, INSTRING, or INCOMMENT */
