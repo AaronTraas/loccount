@@ -34,8 +34,8 @@ languages fall into one of the following groups:
   scriptingLanguages table specifying a name, an extension, a matching
   string to look for in a hashbang line, the set of string quotes the
   language uses, and the comment leader. You may additionally specify
-  a list of enclosure pairs for multiline literals, or the list {"<<"}
-  which means the language supports here-doc syntax.
+  a list of enclosure pairs for multiline literals. That list may 
+  begin with "<<", which means the language supports here-doc syntax.
 
 * Generic languages have only winged comments, usually led with #.
   This code recognizes them by file extension only.  You can append an
@@ -252,6 +252,27 @@ type countContext struct {
 	lastpath string
 }
 
+func (ctx *countContext) Setup(path string) bool {
+	if len(ctx.lastpath) > 0 && (ctx.lastpath == path) {
+		ctx.underlyingStream.Seek(0, 0)
+	} else {
+		var err error
+		ctx.underlyingStream, err = os.Open(path)
+		ctx.lastpath = path
+		if err != nil {
+			log.Println(err)
+			return false
+		}
+	}
+	ctx.rc = bufio.NewReader(ctx.underlyingStream)
+	ctx.line_number = 1
+	return true
+}
+
+func (ctx *countContext) teardown() {
+	ctx.underlyingStream.Close()
+}
+
 // consume - conditionally consume an expected string
 func (ctx *countContext) consume (expect []byte) bool {
 	s, err := ctx.rc.Peek(len(expect))
@@ -262,23 +283,15 @@ func (ctx *countContext) consume (expect []byte) bool {
 	return false
 }
 
-func peek(ctx *countContext, n int) []byte {
-	bytes, err := ctx.rc.Peek(n)
-	if err != nil {
-		panic("error while peeking")
-	}
-	return bytes
-}
-
-func ispeek(ctx *countContext, c byte) bool {
-	if c == peek(ctx, 1)[0] {
+func (ctx *countContext) ispeek(c byte) bool {
+	if s, err := ctx.rc.Peek(1); err == nil && s[0] == c {
 		return true
 	}
 	return false
 }
 
 // getachar - Get one character, tracking line number
-func getachar(ctx *countContext) (byte, error) {
+func (ctx *countContext) getachar() (byte, error) {
 	c, err := ctx.rc.ReadByte()
 	if err != nil && err != io.EOF {
 		panic("error while reading a character")
@@ -307,30 +320,6 @@ func contains(s string, c byte) bool {
 	return false
 }
 
-// The purpose of the following two functions is to set up context
-// so that we never have to open a source file more than once.
-
-func bufferSetup(ctx *countContext, path string) bool {
-	if len(ctx.lastpath) > 0 && (ctx.lastpath == path) {
-		ctx.underlyingStream.Seek(0, 0)
-	} else {
-		var err error
-		ctx.underlyingStream, err = os.Open(path)
-		ctx.lastpath = path
-		if err != nil {
-			log.Println(err)
-			return false
-		}
-	}
-	ctx.rc = bufio.NewReader(ctx.underlyingStream)
-	ctx.line_number = 1
-	return true
-}
-
-func bufferTeardown(ctx *countContext) {
-	ctx.underlyingStream.Close()
-}
-
 // hashbang - hunt for a specified string in the first line of an executable
 func hashbang(ctx *countContext, path string, langname string) bool {
 	fi, err := os.Stat(path)
@@ -338,7 +327,7 @@ func hashbang(ctx *countContext, path string, langname string) bool {
 	if err != nil && (fi.Mode() & 01111) == 0 {
 		return false
 	}
-	bufferSetup(ctx, path)
+	ctx.Setup(path)
 	s, err := ctx.rc.ReadString('\n')
 	return err == nil && strings.HasPrefix(s, "#!") && strings.Contains(s, langname)
 }
@@ -364,11 +353,11 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 	var comment_type int             /* BLOCK_COMMENT or TRAILING_COMMENT */
 	var startline uint
 
-	bufferSetup(ctx, path)
-	defer bufferTeardown(ctx)
+	ctx.Setup(path)
+	defer ctx.teardown()
 
 	for {
-		c, err := getachar(ctx)
+		c, err := ctx.getachar()
 		if err == io.EOF {
 			break
 		}
@@ -381,23 +370,23 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 			} else if c == '\'' {
 				/* Consume single-character 'xxxx' values */
 				sawchar = true
-				c, err = getachar(ctx)
+				c, err = ctx.getachar()
 				if c == '\\' {
-					c, err = getachar(ctx)
+					c, err = ctx.getachar()
 				}
 				for {
-					c, err = getachar(ctx)
+					c, err = ctx.getachar()
 					if (c == '\'') || (c == '\n') || (err == io.EOF) {
 						break
 					}
 				}
-			} else if (c == syntax.commentleader[0]) && ispeek(ctx, syntax.commentleader[1]) {
-				c, err = getachar(ctx)
+			} else if (c == syntax.commentleader[0]) && ctx.ispeek(syntax.commentleader[1]) {
+				c, err = ctx.getachar()
 				mode = INCOMMENT
 				comment_type = BLOCK_COMMENT
 				startline = ctx.line_number
-			} else if (syntax.eolcomment != "") && (c == syntax.eolcomment[0]) && ispeek(ctx, syntax.eolcomment[1]) {
-				c, err = getachar(ctx)
+			} else if (syntax.eolcomment != "") && (c == syntax.eolcomment[0]) && ctx.ispeek(syntax.eolcomment[1]) {
+				c, err = ctx.getachar()
 				mode = INCOMMENT
 				comment_type = TRAILING_COMMENT
 				startline = ctx.line_number
@@ -418,10 +407,10 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 			}
 			if c == '"' {
 				mode = NORMAL
-			} else if (c == '\\') && (ispeek(ctx, '"') || ispeek(ctx, '\\')) {
-				c, err = getachar(ctx)
-			} else if (c == '\\') && ispeek(ctx, '\n') {
-				c, err = getachar(ctx)
+			} else if (c == '\\') && (ctx.ispeek('"') || ctx.ispeek('\\')) {
+				c, err = ctx.getachar()
+			} else if (c == '\\') && ctx.ispeek('\n') {
+				c, err = ctx.getachar()
 			} else if (c == '\n') {
 				/*
                                 We found a bare newline in a string without
@@ -442,8 +431,8 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 			if (c == '\n') && (comment_type == TRAILING_COMMENT) {
 				mode = NORMAL
 			}
-			if (comment_type == BLOCK_COMMENT) && (c == syntax.commenttrailer[0]) && ispeek(ctx, syntax.commenttrailer[1]) {
-				c, err = getachar(ctx)
+			if (comment_type == BLOCK_COMMENT) && (c == syntax.commenttrailer[0]) && ctx.ispeek(syntax.commenttrailer[1]) {
+				c, err = ctx.getachar()
 				mode = NORMAL
 			}
 		}
@@ -487,8 +476,8 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 		stringdelims = stringdelims[1:]
 	}
 	
-	bufferSetup(ctx, path)
-	defer bufferTeardown(ctx)
+	ctx.Setup(path)
+	defer ctx.teardown()
 	
 	for {
 		input, err := ctx.rc.Peek(1)
@@ -579,11 +568,11 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 	var mode int = NORMAL              /* NORMAL, or INCOMMENT */
 	var startline uint
 
-	bufferSetup(ctx, path)
-	defer bufferTeardown(ctx)
+	ctx.Setup(path)
+	defer ctx.teardown()
 
 	for {
-		c, err := getachar(ctx)
+		c, err := ctx.getachar()
 		if err == io.EOF {
 			break
 		}
@@ -591,8 +580,8 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 		if mode == NORMAL {
 			if syntax.bracketcomments && c == '{' {
 				mode = INCOMMENT
-			} else if (c == '(') && ispeek(ctx, '*') {
-				c, err = getachar(ctx)
+			} else if (c == '(') && ctx.ispeek('*') {
+				c, err = ctx.getachar()
 				mode = INCOMMENT
 			} else if !isspace(c) {
 				sawchar = true
@@ -605,8 +594,8 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 		} else { /* INCOMMENT mode */
 			if syntax.bracketcomments && c == '}' {
 				mode = NORMAL
-			} else if (c == '*') && ispeek(ctx, ')') {
-				c, err = getachar(ctx)
+			} else if (c == '*') && ctx.ispeek(')') {
+				c, err = ctx.getachar()
 				mode = NORMAL
 			}
 		}
@@ -631,8 +620,8 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 func fortranCounter(ctx *countContext, path string, syntax fortranLike) uint {
 	var sloc uint
 
-	bufferSetup(ctx, path)
-	defer bufferTeardown(ctx)
+	ctx.Setup(path)
+	defer ctx.teardown()
 
 	re1, err := regexp.Compile("(?i:re)" + syntax.comment)
 	if err != nil {
