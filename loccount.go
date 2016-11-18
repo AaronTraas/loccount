@@ -490,6 +490,7 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 			// Do we see the start of a here-doc?
 			if heredocs && ctx.consume([]byte("<<")) {
 				sawchar = true
+				ctx.consume([]byte("-"))
 				awaiting, err = ctx.rc.ReadBytes('\n')
 				awaiting = []byte(strings.Trim(string(awaiting), " "))
 				if err != nil {
