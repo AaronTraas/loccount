@@ -487,13 +487,23 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 			panic("error while peeking")
 		}
 		if len(awaiting) == 0 {
+			// Ignore backslashed specials
+			if input[0] == '\\' {
+				sawchar = true
+				ctx.rc.Discard(1)
+				if ctx.consume([]byte("\n")) {
+					sloc++
+					sawchar = false
+				}
+			}
 			// Do we see the start of a here-doc?
 			if heredocs && ctx.consume([]byte("<<")) {
 				sawchar = true
-				ctx.consume([]byte("-"))
 				ender, err := ctx.rc.ReadString('\n')
-				// Perform reductions on the heredoc ender
-				ender = strings.Trim(ender, " ")
+				// Perform various reductions on the heredoc
+				// ender to deal with syntactic oddities in
+				// Perl, etc.
+				ender = strings.Trim(ender, " ;-")
 				if ender[0] == '\'' || ender[0] == '"' {
 					ender = ender[1:len(ender)-1]
 				}
