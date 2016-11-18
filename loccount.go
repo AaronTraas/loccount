@@ -350,18 +350,22 @@ const BLOCK_COMMENT = 0
 const TRAILING_COMMENT = 1
 
 // c_family_counter - Count the SLOC in a C-family source file
+//
+// C++ headers get counted as C. This can only be fixed in postprocessing
+// by noticing that there are no files with a C extension in the tree.
+//
+// Another minor issue is that it's possible for the antecedents in Lex rules
+// to look like C comment starts. In theory we could fix this by requiring Lex
+// files to contain %%.
 func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 	var sloc uint = 0
-	var sawchar bool = false           /* Did you see a char on this line? */
-	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
-	var comment_type int = BLOCK_COMMENT /* BLOCK_COMMENT or TRAILING_COMMENT */
+	var sawchar bool = false         /* Did you see a char on this line? */
+	var mode int = NORMAL            /* NORMAL, INSTRING, or INCOMMENT */
+	var comment_type int             /* BLOCK_COMMENT or TRAILING_COMMENT */
 	var startline uint
 
-	/*
-        The following implements a state machine with transitions; the
-        main state is "mode" and "comment_type", the transitions are
-	triggered by characters input.
-	*/
+	bufferSetup(ctx, path)
+	defer bufferTeardown(ctx)
 
 	for {
 		c, err := getachar(ctx)
@@ -468,28 +472,6 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 	}
 
 	return sloc
-}
-
-// C - recognize files from C-family languages and get linecounts from them.
-//
-// C++ headers get counted as C. This can only be fixed in postprocessing
-// by noticing that there are no files with a C extension in the tree.
-//
-// Another minor issue is that it's possible for the antecedents in Lex rules
-// to look like C comment starts. In theory we could fix this by requiring Lex
-// files to contain %%.
-func C(ctx *countContext, path string) SourceStat {
-	var stat SourceStat
-	for i := range cLikes {
-		lang := cLikes[i]
-		if strings.HasSuffix(path, lang.extension) {
-			stat.Language = lang.name
-			bufferSetup(ctx, path)
-			defer bufferTeardown(ctx)
-			stat.SLOC = c_family_counter(ctx, path, lang)
-		}
-	}
-	return stat
 }
 
 // genericCounter - count SLOC in a generic language.
@@ -676,6 +658,15 @@ func fortranCounter(ctx *countContext, path string, syntax fortranLike) uint {
 func Generic(ctx *countContext, path string) SourceStat {
 	var stat SourceStat
 
+	for i := range cLikes {
+		lang := cLikes[i]
+		if strings.HasSuffix(path, lang.extension) {
+			stat.Language = lang.name
+			stat.SLOC = c_family_counter(ctx, path, lang)
+			break
+		}
+	}
+
 	for i := range scriptingLanguages {
 		lang := scriptingLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
@@ -715,24 +706,6 @@ func Generic(ctx *countContext, path string) SourceStat {
 	}
 
 	return stat
-}
-
-// process - gather file statistics and suff them in the pipeline
-func process(path string) {
-	handlerList := []func(*countContext, string) SourceStat {
-		C,          /* also C++ */
-		Generic,    /* all others */
-	}
-	var st SourceStat
-	ctx := new(countContext)
-	for i := range handlerList {
-		st = handlerList[i](ctx, path)
-		if st.SLOC > 0 {
-			break
-		}
-	}
-	st.Path = path
-	pipeline <- st
 }
 
 func isDirectory(path string) (bool) {
@@ -783,8 +756,13 @@ func filter(path string, info os.FileInfo, err error) error {
 			return err
 		}
 	}
-	
-	process(path)
+
+	// Now the real work gets done
+	ctx := new(countContext)
+	st := Generic(ctx, path)
+	st.Path = path
+	pipeline <- st
+
 	return err
 }
 
