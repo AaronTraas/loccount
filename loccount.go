@@ -1,5 +1,6 @@
 package main
 
+import "bytes"
 import "bufio"
 import "fmt"
 import "flag"
@@ -86,9 +87,8 @@ type scriptingLanguage struct {
 	name string
 	suffix string
 	hashbang string
-	stringdelims string
 	eolcomment string
-	multiline []string
+	stringdelims []string
 }
 var scriptingLanguages []scriptingLanguage
 
@@ -145,19 +145,19 @@ func init() {
 		{"asm", ".S", "/*", "*/", ";"},
 	}
 	scriptingLanguages = []scriptingLanguage{
-		{"python", ".py", "python", "'\"", "#",
-			[]string{"\"\"\"", "\"\"\"", "'''", "'''"},
+		{"python", ".py", "python", "#",
+			[]string{"\"\"\"", "'''", "\"", "'"},
 		},
-		{"waf", "wscript", "waf", "'\"", "#",
-			[]string{"\"\"\"", "\"\"\"", "'''", "'''"},
+		{"waf", "wscript", "waf", "#",
+			[]string{"\"\"\"", "'''", "\"", "'"},
 		},
-		{"perl", ".pl", "perl", "'\"", "#", []string{"<<"}},
-		{"tcl", ".tcl", "tcl", "'\"", "#", nil},	/* must be before sh */
-		{"csh", ".csh", "csh", "'\"", "#", nil},
-		{"shell", ".sh", "sh", "'\"", "#", []string{"<<"}},
-		{"ruby", ".rb", "ruby", "'\"", "#", nil},
-		{"awk", ".awk", "awk", "'\"", "#", nil},
-		{"sed", ".sed", "sed", "'\"", "#", nil},
+		{"perl", ".pl", "perl", "#", []string{"<<", "\"", "'"}},
+		{"tcl", ".tcl", "tcl", "#", []string{"\"", "'"}},	/* must be before sh */
+		{"csh", ".csh", "csh", "#", []string{"\"", "'"}},
+		{"shell", ".sh", "sh", "#", []string{"<<", "\"", "'"}},
+		{"ruby", ".rb", "ruby", "#", []string{"\"", "'"}},
+		{"awk", ".awk", "awk", "#", []string{"\"", "'"}},
+		{"sed", ".sed", "sed", "#", []string{"\"", "'"}},
 	}
 	genericLanguages = []genericLanguage{
 		{"ada", ".ada", "--"},
@@ -252,16 +252,26 @@ type countContext struct {
 	lastpath string
 }
 
-func peek(ctx *countContext) byte {
-	bytes, err := ctx.rc.Peek(1)
+// consume - conditionally consume an expected string
+func (ctx *countContext) consume (expect []byte) bool {
+	s, err := ctx.rc.Peek(len(expect))
+	if err == nil && bytes.Equal(s, expect) {
+		ctx.rc.Discard(len(expect))
+		return true
+	}
+	return false
+}
+
+func peek(ctx *countContext, n int) []byte {
+	bytes, err := ctx.rc.Peek(n)
 	if err != nil {
 		panic("error while peeking")
 	}
-	return bytes[0]
+	return bytes
 }
 
 func ispeek(ctx *countContext, c byte) bool {
-	if c == peek(ctx) {
+	if c == peek(ctx, 1)[0] {
 		return true
 	}
 	return false
@@ -483,64 +493,86 @@ func C(ctx *countContext, path string) SourceStat {
 }
 
 // genericCounter - count SLOC in a generic language.
-func genericCounter(ctx *countContext, path string, stringdelims string, eolcomment string, multiline []string) uint {
+func genericCounter(ctx *countContext, path string, eolcomment string, stringdelims []string) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
-	var mode string = ""               /* NORMAL, INSTRING, or INCOMMENT */
-	var delimseen byte                 /* what string delimiter? */
+	var awaiting []byte	   /* what closer are we awaiting? */
 	var startline uint
-	//var heredocs bool
+	var heredocs bool
 
-	if multiline != nil && multiline[0] == "<<" {
-		//heredocs = true
-		multiline = multiline[1:]
+	if stringdelims != nil && stringdelims[0] == "<<" {
+		heredocs = true
+		stringdelims = stringdelims[1:]
 	}
 	
 	bufferSetup(ctx, path)
 	defer bufferTeardown(ctx)
 	
 	for {
-		c, err := getachar(ctx)
+		input, err := ctx.rc.Peek(1)
 		if err == io.EOF {
 			break
+		} else if err != nil {
+			panic("error while peeking")
 		}
-
-		if mode == "" {
-			if contains(stringdelims, c) {
+		if len(awaiting) == 0 {
+			// Do we see the start of a here-doc?
+			if heredocs && ctx.consume([]byte("<<")) {
 				sawchar = true
-				delimseen = c
-				mode = "'"
-				startline = ctx.line_number
-			} else if (c == eolcomment[0]) {
-				if len(eolcomment) == 1 {
-					mode = "#"
-					startline = ctx.line_number
-				} else {
-					c, err = getachar(ctx)
-					if err == nil && c == eolcomment[1] {
-						mode = "#"
-						startline = ctx.line_number
-					}
+				awaiting, err = ctx.rc.ReadBytes('\n')
+				if err != nil {
+					panic("panic while reading here-doc")
 				}
-			} else if !isspace(c) {
+				continue
+			}
+			// do we see a string delimiter?
+			for i := range stringdelims {
+				if ctx.consume([]byte(stringdelims[i]))  {
+					sawchar = true
+					awaiting = []byte(stringdelims[i])
+					startline = ctx.line_number
+					break
+				}
+			}
+			if len(awaiting) != 0 {
+				continue
+			}
+			// Do we see a winged comment
+			if ctx.consume([]byte(eolcomment)) {
+				ctx.rc.ReadBytes('\n')
+				if sawchar {
+					sloc++
+				}
+				sawchar = false
+				continue
+			}
+			// Ordinary character outside comment or string
+			if c, err := ctx.rc.ReadByte(); err == nil && !isspace(c) {
 				sawchar = true
+			} else if c == '\n' {
+				if sawchar {
+					sloc++
+				}
+				sawchar = false
 			}
-		} else if mode == "'" {
-			if c == delimseen {
-				mode = ""
-			} else if !isspace(c) {
-				sawchar = true
-			}
-		} else { /* comment mode */
-			if (c == '\n') {
-				mode = ""
-			}
-		}
-		if c == '\n' {
+		// Remaining cases all take place as we're awaiting a delimiter
+		} else if ctx.consume(awaiting) {
+			sawchar = true
+			awaiting = []byte{}
+			continue
+		} else if input[0] == '\n' {
 			if sawchar {
 				sloc++
 			}
 			sawchar = false
+			ctx.rc.Discard(1)
+		} else {
+			ctx.rc.Discard(1)
+			if !isspace(input[0]) {
+				// Questionable. We might not want to do this
+				// on, in particular, Python header comments.
+				sawchar = true
+			}
 		}
 	}
 
@@ -550,12 +582,9 @@ func genericCounter(ctx *countContext, path string, stringdelims string, eolcomm
 	}
 	sawchar = false
 
-	if mode == "#" {
-		log.Printf("\"%s\", line %d: ERROR - terminated in comment beginning here.\n",
-			path, startline)
-	} else if mode == "'" {
-		log.Printf("\"%s\", line %d: ERROR - terminated in string beginning here.\n",
-			path, startline)
+			if len(awaiting) != 0 {
+		log.Printf("\"%s\", line %d: ERROR - unterminated %s.\n",
+			path, startline, awaiting)
 	}
 
 	return sloc
@@ -652,7 +681,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
 			stat.Language = lang.name
 			stat.SLOC = genericCounter(ctx,
-				path, lang.stringdelims, lang.eolcomment, lang.multiline)
+				path, lang.eolcomment, lang.stringdelims)
 			break
 		}
 	}
@@ -662,7 +691,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
 			stat.SLOC = genericCounter(ctx,
-				path, "'\"", lang.eolcomment, nil)
+				path, lang.eolcomment, []string{"\"", "'"})
 			break
 		}
 	}
