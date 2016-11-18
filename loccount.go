@@ -511,6 +511,7 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 			// Do we see a winged comment
 			if ctx.consume([]byte(eolcomment)) {
 				ctx.rc.ReadBytes('\n')
+				ctx.line_number++
 				if sawchar {
 					sloc++
 				}
@@ -521,6 +522,7 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 			if c, err := ctx.rc.ReadByte(); err == nil && !isspace(c) {
 				sawchar = true
 			} else if c == '\n' {
+				ctx.line_number++
 				if sawchar {
 					sloc++
 				}
@@ -532,6 +534,7 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 			awaiting = []byte{}
 			continue
 		} else if input[0] == '\n' {
+			ctx.line_number++
 			if sawchar {
 				sloc++
 			}
