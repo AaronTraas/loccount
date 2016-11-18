@@ -32,7 +32,9 @@ languages fall into one of the following groups:
   identifying the interpreter.  You can append an initializer to the
   scriptingLanguages table specifying a name, an extension, a matching
   string to look for in a hashbang line, the set of string quotes the
-  language uses, and the comment leader.
+  language uses, and the comment leader. You may additionally specify
+  a list of enclosure pairs for multiline literals, or the list {"<<"}
+  which means the language supports here-doc syntax.
 
 * Generic languages have only winged comments, usually led with #.
   This code recognizes them by file extension only.  You can append an
@@ -86,6 +88,7 @@ type scriptingLanguage struct {
 	hashbang string
 	stringdelims string
 	eolcomment string
+	multiline []string
 }
 var scriptingLanguages []scriptingLanguage
 
@@ -142,26 +145,19 @@ func init() {
 		{"asm", ".S", "/*", "*/", ";"},
 	}
 	scriptingLanguages = []scriptingLanguage{
-		// First line doesn't look like it handles Python
-		// multiline string literals, but it actually does.
-		// The delimiters for them are ''' """ which get seen
-		// as an empty string followed by a string delimiter,
-		// or the reverse of that. Interior lines of a
-		// multiline literal get counted if they contain non-
-		// whitespace.
-		//
-		// This is different from sloccount's behavior, which
-		// doesn't count multiline literals if they start at the
-		// beginning of a line (e.g. as in Python header comments).
-		{"python", ".py", "python", "'\"", "#"},
-		{"waf", "wscript", "waf", "'\"", "#"},
-		{"perl", ".pl", "perl", "'\"", "#"},
-		{"tcl", ".tcl", "tcl", "'\"", "#"},	/* must be before sh */
-		{"csh", ".csh", "csh", "'\"", "#"},
-		{"shell", ".sh", "sh", "'\"", "#"},
-		{"ruby", ".rb", "ruby", "'\"", "#"},
-		{"awk", ".awk", "awk", "'\"", "#"},
-		{"sed", ".sed", "sed", "'\"", "#"},
+		{"python", ".py", "python", "'\"", "#",
+			[]string{"\"\"\"", "\"\"\"", "'''", "'''"},
+		},
+		{"waf", "wscript", "waf", "'\"", "#",
+			[]string{"\"\"\"", "\"\"\"", "'''", "'''"},
+		},
+		{"perl", ".pl", "perl", "'\"", "#", []string{"<<"}},
+		{"tcl", ".tcl", "tcl", "'\"", "#", nil},	/* must be before sh */
+		{"csh", ".csh", "csh", "'\"", "#", nil},
+		{"shell", ".sh", "sh", "'\"", "#", []string{"<<"}},
+		{"ruby", ".rb", "ruby", "'\"", "#", nil},
+		{"awk", ".awk", "awk", "'\"", "#", nil},
+		{"sed", ".sed", "sed", "'\"", "#", nil},
 	}
 	genericLanguages = []genericLanguage{
 		{"ada", ".ada", "--"},
@@ -487,13 +483,19 @@ func C(ctx *countContext, path string) SourceStat {
 }
 
 // genericCounter - count SLOC in a generic language.
-func genericCounter(ctx *countContext, path string, stringdelims string, eolcomment string) uint {
+func genericCounter(ctx *countContext, path string, stringdelims string, eolcomment string, multiline []string) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
-	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
+	var mode string = ""               /* NORMAL, INSTRING, or INCOMMENT */
 	var delimseen byte                 /* what string delimiter? */
 	var startline uint
+	//var heredocs bool
 
+	if multiline != nil && multiline[0] == "<<" {
+		//heredocs = true
+		multiline = multiline[1:]
+	}
+	
 	bufferSetup(ctx, path)
 	defer bufferTeardown(ctx)
 	
@@ -503,35 +505,35 @@ func genericCounter(ctx *countContext, path string, stringdelims string, eolcomm
 			break
 		}
 
-		if mode == NORMAL {
+		if mode == "" {
 			if contains(stringdelims, c) {
 				sawchar = true
 				delimseen = c
-				mode = INSTRING
+				mode = "'"
 				startline = ctx.line_number
 			} else if (c == eolcomment[0]) {
 				if len(eolcomment) == 1 {
-					mode = INCOMMENT
+					mode = "#"
 					startline = ctx.line_number
 				} else {
 					c, err = getachar(ctx)
 					if err == nil && c == eolcomment[1] {
-						mode = INCOMMENT
+						mode = "#"
 						startline = ctx.line_number
 					}
 				}
 			} else if !isspace(c) {
 				sawchar = true
 			}
-		} else if mode == INSTRING {
+		} else if mode == "'" {
 			if c == delimseen {
-				mode = NORMAL
+				mode = ""
 			} else if !isspace(c) {
 				sawchar = true
 			}
-		} else { /* INCOMMENT mode */
+		} else { /* comment mode */
 			if (c == '\n') {
-				mode = NORMAL
+				mode = ""
 			}
 		}
 		if c == '\n' {
@@ -548,10 +550,10 @@ func genericCounter(ctx *countContext, path string, stringdelims string, eolcomm
 	}
 	sawchar = false
 
-	if mode == INCOMMENT {
+	if mode == "#" {
 		log.Printf("\"%s\", line %d: ERROR - terminated in comment beginning here.\n",
 			path, startline)
-	} else if mode == INSTRING {
+	} else if mode == "'" {
 		log.Printf("\"%s\", line %d: ERROR - terminated in string beginning here.\n",
 			path, startline)
 	}
@@ -650,7 +652,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
 			stat.Language = lang.name
 			stat.SLOC = genericCounter(ctx,
-				path, lang.stringdelims, lang.eolcomment)
+				path, lang.stringdelims, lang.eolcomment, lang.multiline)
 			break
 		}
 	}
@@ -660,7 +662,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
 			stat.SLOC = genericCounter(ctx,
-				path, "'\"", lang.eolcomment)
+				path, "'\"", lang.eolcomment, nil)
 			break
 		}
 	}
