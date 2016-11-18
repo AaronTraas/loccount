@@ -308,6 +308,15 @@ func (ctx *countContext) getachar() (byte, error) {
 	return c, err
 }
 
+// Consume the remainder of a line, updating the line counter
+func (ctx *countContext) munchline() ([]byte, error) {
+	line, err := ctx.rc.ReadBytes('\n')
+	if err != nil {
+		ctx.line_number++
+	}
+	return line, err
+}
+
 func isspace(c byte) bool {
 	return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f'
 }
@@ -493,10 +502,7 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 				// Perform various reductions on the heredoc
 				// ender to deal with syntactic oddities in
 				// Perl, etc.
-				ender = strings.Trim(ender, " ;-")
-				if ender[0] == '\'' || ender[0] == '"' {
-					ender = ender[1:len(ender)-1]
-				}
+				ender = strings.Trim(ender, " '\";-\n")
 				awaiting = []byte(ender)
 				if err != nil {
 					panic("panic while reading here-doc")
@@ -517,8 +523,7 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 			}
 			// Do we see a winged comment
 			if ctx.consume([]byte(eolcomment)) {
-				ctx.rc.ReadBytes('\n')
-				ctx.line_number++
+				ctx.munchline()
 				if ctx.nonblank {
 					sloc++
 				}
@@ -644,7 +649,7 @@ func fortranCounter(ctx *countContext, path string, syntax fortranLike) uint {
 		panic("unexpected failure while building Fortran no-comment analyzer")
 	}
 	for {
-		line, err := ctx.rc.ReadBytes('\n')
+		line, err := ctx.munchline()
 		if err != nil {
 			break
 		}
