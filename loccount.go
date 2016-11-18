@@ -234,7 +234,7 @@ func init() {
 		"BUGS", "TODO", "COPYING", "MAINTAINERS", "NEWS",
 		"configure", "autom4te.cache", "config.log", "config.status",
 	}
-	cHeaderPriority = []string{"C", "C++", "Objective-C"}
+	cHeaderPriority = []string{"c", "c++", "obj-c"}
 }
 
 // Generic machinery for walking source text to count lines
@@ -491,6 +491,7 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 			if heredocs && ctx.consume([]byte("<<")) {
 				sawchar = true
 				awaiting, err = ctx.rc.ReadBytes('\n')
+				awaiting = []byte(strings.Trim(string(awaiting), " "))
 				if err != nil {
 					panic("panic while reading here-doc")
 				}
@@ -556,8 +557,8 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 	}
 	sawchar = false
 
-			if len(awaiting) != 0 {
-		log.Printf("\"%s\", line %d: ERROR - unterminated %s.\n",
+	if len(awaiting) != 0 {
+		log.Printf("\"%s\", line %d: ERROR - unterminated '%s'.\n",
 			path, startline, awaiting)
 	}
 
