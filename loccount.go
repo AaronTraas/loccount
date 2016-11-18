@@ -547,6 +547,9 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 			}
 			sawchar = false
 			ctx.rc.Discard(1)
+		} else if input[0] == '\\' {
+			sawchar = true
+			ctx.rc.Discard(2)
 		} else {
 			ctx.rc.Discard(1)
 			if !isspace(input[0]) {
