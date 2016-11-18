@@ -246,6 +246,7 @@ const INCOMMENT = 2
 
 type countContext struct {
 	line_number uint
+	nonblank bool			// Is current line nonblank?
 	last_char_was_newline bool
 	underlyingStream *os.File
 	rc *bufio.Reader
@@ -273,7 +274,7 @@ func (ctx *countContext) teardown() {
 	ctx.underlyingStream.Close()
 }
 
-// consume - conditionally consume an expected string
+// consume - conditionally consume an expected byte sequence
 func (ctx *countContext) consume (expect []byte) bool {
 	s, err := ctx.rc.Peek(len(expect))
 	if err == nil && bytes.Equal(s, expect) {
@@ -348,7 +349,6 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 	const TRAILING_COMMENT = 1
 
 	var sloc uint = 0
-	var sawchar bool = false         /* Did you see a char on this line? */
 	var mode int = NORMAL            /* NORMAL, INSTRING, or INCOMMENT */
 	var comment_type int             /* BLOCK_COMMENT or TRAILING_COMMENT */
 	var startline uint
@@ -364,12 +364,12 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 
 		if mode == NORMAL {
 			if c == '"' {
-				sawchar = true
+				ctx.nonblank = true
 				mode = INSTRING
 				startline = ctx.line_number
 			} else if c == '\'' {
 				/* Consume single-character 'xxxx' values */
-				sawchar = true
+				ctx.nonblank = true
 				c, err = ctx.getachar()
 				if c == '\\' {
 					c, err = ctx.getachar()
@@ -391,7 +391,7 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 				comment_type = TRAILING_COMMENT
 				startline = ctx.line_number
 			} else if !isspace(c) {
-				sawchar = true
+				ctx.nonblank = true
 			}
 		} else if mode == INSTRING {
 			/*
@@ -403,7 +403,7 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 			counted.
 			 */
 			if !isspace(c) {
-				sawchar = true
+				ctx.nonblank = true
 			}
 			if c == '"' {
 				mode = NORMAL
@@ -437,17 +437,17 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 			}
 		}
 		if c == '\n' {
-			if sawchar {
+			if ctx.nonblank {
 				sloc++
 			}
-			sawchar = false
+			ctx.nonblank = false
 		}
 	}
 	/* We're done with the file.  Handle EOF-without-EOL. */
-	if sawchar {
+	if ctx.nonblank {
 		sloc++
 	}
-	sawchar = false
+	ctx.nonblank = false
 	if (mode == INCOMMENT) && (comment_type == TRAILING_COMMENT) {
 		mode = NORMAL
 	}
@@ -466,7 +466,6 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 // genericCounter - count SLOC in a generic language.
 func genericCounter(ctx *countContext, path string, eolcomment string, stringdelims []string) uint {
 	var sloc uint = 0
-	var sawchar bool = false           /* Did you see a char on this line? */
 	var awaiting []byte	   /* what closer are we awaiting? */
 	var startline uint
 	var heredocs bool
@@ -489,16 +488,16 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 		if len(awaiting) == 0 {
 			// Ignore backslashed specials
 			if input[0] == '\\' {
-				sawchar = true
+				ctx.nonblank = true
 				ctx.rc.Discard(1)
 				if ctx.consume([]byte("\n")) {
 					sloc++
-					sawchar = false
+					ctx.nonblank = false
 				}
 			}
 			// Do we see the start of a here-doc?
 			if heredocs && ctx.consume([]byte("<<")) {
-				sawchar = true
+				ctx.nonblank = true
 				ender, err := ctx.rc.ReadString('\n')
 				// Perform various reductions on the heredoc
 				// ender to deal with syntactic oddities in
@@ -516,7 +515,7 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 			// do we see a string delimiter?
 			for i := range stringdelims {
 				if ctx.consume([]byte(stringdelims[i]))  {
-					sawchar = true
+					ctx.nonblank = true
 					awaiting = []byte(stringdelims[i])
 					startline = ctx.line_number
 					break
@@ -529,52 +528,52 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 			if ctx.consume([]byte(eolcomment)) {
 				ctx.rc.ReadBytes('\n')
 				ctx.line_number++
-				if sawchar {
+				if ctx.nonblank {
 					sloc++
 				}
-				sawchar = false
+				ctx.nonblank = false
 				continue
 			}
 			// Ordinary character outside comment or string
 			if c, err := ctx.rc.ReadByte(); err == nil && !isspace(c) {
-				sawchar = true
+				ctx.nonblank = true
 			} else if c == '\n' {
 				ctx.line_number++
-				if sawchar {
+				if ctx.nonblank {
 					sloc++
 				}
-				sawchar = false
+				ctx.nonblank = false
 			}
 		// Remaining cases all take place as we're awaiting a delimiter
 		} else if ctx.consume(awaiting) {
-			sawchar = true
+			ctx.nonblank = true
 			awaiting = []byte{}
 			continue
 		} else if input[0] == '\n' {
 			ctx.line_number++
-			if sawchar {
+			if ctx.nonblank {
 				sloc++
 			}
-			sawchar = false
+			ctx.nonblank = false
 			ctx.rc.Discard(1)
 		} else if input[0] == '\\' {
-			sawchar = true
+			ctx.nonblank = true
 			ctx.rc.Discard(2)
 		} else {
 			ctx.rc.Discard(1)
 			if !isspace(input[0]) {
 				// Questionable. We might not want to do this
 				// on, in particular, Python header comments.
-				sawchar = true
+				ctx.nonblank = true
 			}
 		}
 	}
 
 	/* We're done with the file.  Handle EOF-without-EOL. */
-	if sawchar {
+	if ctx.nonblank {
 		sloc++
 	}
-	sawchar = false
+	ctx.nonblank = false
 
 	if len(awaiting) != 0 {
 		log.Printf("\"%s\", line %d: ERROR - unterminated '%s'.\n",
@@ -587,7 +586,6 @@ func genericCounter(ctx *countContext, path string, eolcomment string, stringdel
 // pascalCounter - Handle lanuages like Pascal and Modula 3
 func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 	var sloc uint = 0
-	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, or INCOMMENT */
 	var startline uint
 
@@ -607,12 +605,12 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 				c, err = ctx.getachar()
 				mode = INCOMMENT
 			} else if !isspace(c) {
-				sawchar = true
+				ctx.nonblank = true
 			} else if c == '\n' {
-				if sawchar {
+				if ctx.nonblank {
 					sloc++
 				}
-				sawchar = false
+				ctx.nonblank = false
 			}
 		} else { /* INCOMMENT mode */
 			if syntax.bracketcomments && c == '}' {
@@ -624,10 +622,10 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 		}
 	}
 	/* We're done with the file.  Handle EOF-without-EOL. */
-	if sawchar {
+	if ctx.nonblank {
 		sloc++
 	}
-	sawchar = false
+	ctx.nonblank = false
 
 	if mode == INCOMMENT {
 		log.Printf("\"%s\", line %d: ERROR - terminated in comment beginning here.\n",
