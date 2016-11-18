@@ -349,6 +349,7 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
 	var comment_type int = BLOCK_COMMENT /* BLOCK_COMMENT or TRAILING_COMMENT */
+	var startline uint
 
 	/*
         The following implements a state machine with transitions; the
@@ -366,6 +367,7 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 			if c == '"' {
 				sawchar = true
 				mode = INSTRING
+				startline = ctx.line_number
 			} else if c == '\'' {
 				/* Consume single-character 'xxxx' values */
 				sawchar = true
@@ -383,10 +385,12 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 				c, err = getachar(ctx)
 				mode = INCOMMENT
 				comment_type = BLOCK_COMMENT
+				startline = ctx.line_number
 			} else if (syntax.eolcomment != "") && (c == syntax.eolcomment[0]) && ispeek(ctx, syntax.eolcomment[1]) {
 				c, err = getachar(ctx)
 				mode = INCOMMENT
 				comment_type = TRAILING_COMMENT
+				startline = ctx.line_number
 			} else if !isspace(c) {
 				sawchar = true
 			}
@@ -450,9 +454,11 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 	}
 
 	if mode == INCOMMENT {
-		log.Printf("ERROR - terminated in comment in %s\n", path)
+		log.Printf("\"%s\", line %d: ERROR - terminated in comment beginning here\n",
+			path, startline)
 	} else if mode == INSTRING {
-		log.Printf("ERROR - terminated in string in %s\n", path)
+		log.Printf("\"%s\", line %d: ERROR - terminated in string beginning here\n",
+			path, startline)
 	}
 
 	return sloc
@@ -486,6 +492,7 @@ func genericCounter(ctx *countContext, path string, stringdelims string, eolcomm
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, INSTRING, or INCOMMENT */
 	var delimseen byte                 /* what string delimiter? */
+	var startline uint
 
 	bufferSetup(ctx, path)
 	defer bufferTeardown(ctx)
@@ -501,13 +508,16 @@ func genericCounter(ctx *countContext, path string, stringdelims string, eolcomm
 				sawchar = true
 				delimseen = c
 				mode = INSTRING
+				startline = ctx.line_number
 			} else if (c == eolcomment[0]) {
 				if len(eolcomment) == 1 {
 					mode = INCOMMENT
+					startline = ctx.line_number
 				} else {
 					c, err = getachar(ctx)
 					if err == nil && c == eolcomment[1] {
 						mode = INCOMMENT
+						startline = ctx.line_number
 					}
 				}
 			} else if !isspace(c) {
@@ -539,9 +549,11 @@ func genericCounter(ctx *countContext, path string, stringdelims string, eolcomm
 	sawchar = false
 
 	if mode == INCOMMENT {
-		log.Printf("ERROR - terminated in comment in %s\n", path)
+		log.Printf("\"%s\", line %d: ERROR - terminated in comment beginning here.\n",
+			path, startline)
 	} else if mode == INSTRING {
-		log.Printf("ERROR - terminated in string in %s\n", path)
+		log.Printf("\"%s\", line %d: ERROR - terminated in string beginning here.\n",
+			path, startline)
 	}
 
 	return sloc
@@ -552,6 +564,7 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 	var sloc uint = 0
 	var sawchar bool = false           /* Did you see a char on this line? */
 	var mode int = NORMAL              /* NORMAL, or INCOMMENT */
+	var startline uint
 
 	bufferSetup(ctx, path)
 	defer bufferTeardown(ctx)
@@ -592,9 +605,11 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 	sawchar = false
 
 	if mode == INCOMMENT {
-		log.Printf("ERROR - terminated in comment in %s\n", path)
+		log.Printf("\"%s\", line %d: ERROR - terminated in comment beginning here.\n",
+			path, startline)
 	} else if mode == INSTRING {
-		log.Printf("ERROR - terminated in string in %s\n", path)
+		log.Printf("\"%s\", line %d: ERROR - terminated in string beginning here.\n",
+			path, startline)
 	}
 
 	return sloc
