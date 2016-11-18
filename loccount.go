@@ -312,15 +312,6 @@ func isspace(c byte) bool {
 	return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f'
 }
 
-func contains(s string, c byte) bool {
-	for i := range s {
-		if s[i] == c {
-			return true
-		}
-	}
-	return false
-}
-
 // hashbang - hunt for a specified string in the first line of an executable
 func hashbang(ctx *countContext, path string, langname string) bool {
 	fi, err := os.Stat(path)
