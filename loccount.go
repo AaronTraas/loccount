@@ -106,8 +106,8 @@ var podheader *regexp.Regexp
 type fortranLike struct {
 	name string
 	suffix string
-	comment string
-	nocomment string
+	comment *regexp.Regexp
+	nocomment *regexp.Regexp
 }
 var fortranLikes []fortranLike
 
@@ -195,17 +195,34 @@ func init() {
 		{"ml",      ".ml", false},
 		{"oberon",  ".mod", false},
 	}
+
+	var ferr error
+	f90comment, ferr := regexp.Compile("^([ \t]*!|[ \t]*$)")
+	if ferr != nil {
+		panic("unexpected failure while building f90 comment analyzer")
+	}
+	f90nocomment, ferr := regexp.Compile("^[ \t]*!(hpf|omp)[$]")
+	if ferr != nil {
+		panic("unexpected failure while building f90 no-comment analyzer")
+	}
+	f77comment, ferr := regexp.Compile("^([c*!]|[ \t]+!|[ \t]*$)")
+	if ferr != nil {
+		panic("unexpected failure while building f77 comment analyzer")
+	}
+	f77nocomment, ferr := regexp.Compile("^[c*!](hpf|omp)[$]")
+	if ferr != nil {
+		panic("unexpected failure while building f77 nocomment analyzer")
+	}
 	fortranLikes = []fortranLike{
-		{"fortran90", ".f90",
-			"^([ \t]*!|[ \t]*$)", "^[ \t]*!(hpf|omp)[$]"},
-		{"fortran", ".f",
-			"^([c*!]|[ \t]+!|[ \t]*$)", "^[c*!](hpf|omp)[$]"},
+		{"fortran90", ".f90", f90comment, f90nocomment},
+		{"fortran", ".f77", f77comment, f77nocomment},
+		{"fortran", ".f", f77comment, f77nocomment},
 	}
 
-	var err error
-	podheader, err = regexp.Compile("=[a-zA-Z]")
-	if err != nil {
-		panic(err)
+	var perr error
+	podheader, perr = regexp.Compile("=[a-zA-Z]")
+	if perr != nil {
+		panic(perr)
 	}
 	
 	neverInterestingByPrefix = []string{"."}
@@ -649,20 +666,12 @@ func fortranCounter(ctx *countContext, path string, syntax fortranLike) uint {
 	ctx.Setup(path)
 	defer ctx.teardown()
 
-	re1, err := regexp.Compile("(?i:re)" + syntax.comment)
-	if err != nil {
-		panic("unexpected failure while building Fortran comment analyzer")
-	}
-	re2, err := regexp.Compile("(?i:re)" + syntax.nocomment)
-	if err != nil {
-		panic("unexpected failure while building Fortran no-comment analyzer")
-	}
 	for {
 		line, err := ctx.munchline()
 		if err != nil {
 			break
 		}
-		if !(re1.Match(line) && !re2.Match(line)) {
+		if !(syntax.comment.Match(line) && !syntax.nocomment.Match(line)) {
 			sloc++
 		}
 	}
