@@ -200,7 +200,7 @@ func init() {
 		{"fortran", ".f",
 			"^([c*!]|[ \t]+!|[ \t]*$)", "^[c*!](hpf|omp)[$]"},
 	}
-	
+
 	neverInterestingByPrefix = []string{"."}
 	neverInterestingByInfix = []string{".so.", "/."}
 	neverInterestingBySuffix = []string{"~",
@@ -478,6 +478,81 @@ func genericCounter(ctx *countContext, path string, eolcomment string) uint {
 	return sloc
 }
 
+// perlCounter - count SLOC in Perl
+//
+// Physical lines of Perl are MUCH HARDER to count than you'd think.
+// Comments begin with "#".
+// Also, anything in a "perlpod" is a comment.
+// See perlpod(1) for more info; a perlpod starts with
+// \s*=command, can have more commands, and ends with \s*=cut.
+// Note that = followed by space is NOT a perlpod.
+// Although we ignore everything after __END__ in a file,
+// we will count everything after __DATA__; there's arguments for counting
+// and for not counting __DATA__.
+//
+// What's worse, "here" documents must be COUNTED AS CODE, even if
+// they're FORMATTED AS A PERLPOD.  Surely no one would do this, right?
+// Sigh... it can happen. See perl5.005_03/pod/splitpod.
+func perlCounter(ctx *countContext, path string) uint {
+	var sloc uint = 0
+	var heredoc string
+	var isinpod bool
+
+	ctx.Setup(path)
+	defer ctx.teardown()
+
+	podheader, err := regexp.Compile("=[a-zA-Z]")
+	if err != nil {
+		panic(err)
+	}
+	for {
+		line, err := ctx.munchline()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err)
+		}
+
+		// Delete trailing comments
+		i := bytes.Index(line, []byte("#"))
+		if i > -1 {
+			line = line[:i]
+		}
+
+		line = bytes.Trim(line, " \t\r\n")
+		
+		if heredoc != "" && strings.HasPrefix(string(line), heredoc) {
+			heredoc = ""    //finished here doc.
+		} else if i := bytes.Index(line, []byte("<<")); i > -1 { 
+			// Beginning of a here document.
+			heredoc = string(bytes.Trim(line[i:], "< \t\"';,"))
+		} else if len(heredoc) == 0 && bytes.HasPrefix(line, []byte("=cut")) {
+			// Ending a POD?
+			if !isinpod {
+				log.Printf("\"%s\", %d: cut without pod start\n",
+					path, ctx.line_number)
+			}
+			isinpod = false
+			continue  // Don't count the cut command.
+		} else if len(heredoc) == 0 && podheader.Match(line) {
+			// Starting or continuing a POD?
+			// Perlpods can have multiple contents, so
+			// it's okay if isinpod == true.  Note that
+			// =(space) isn't a POD; library file
+			// perl5db.pl does this!
+			isinpod = true
+		} else if bytes.HasPrefix(line, []byte("__END__")) {
+			// Stop processing this file on __END__.
+			break
+		}
+		if !isinpod && len(line) > 0 {
+			sloc++
+		}
+	}
+
+	return sloc
+}
+
 // pascalCounter - Handle lanuages like Pascal and Modula 3
 func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 	var sloc uint = 0
@@ -572,6 +647,11 @@ func Generic(ctx *countContext, path string) SourceStat {
 		}
 	}
 
+	if strings.HasSuffix(path, ".pl") || hashbang(ctx, path, "perl") {
+		stat.Language = "perl"
+		stat.SLOC = perlCounter(ctx, path)
+	}
+		
 	for i := range scriptingLanguages {
 		lang := scriptingLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
