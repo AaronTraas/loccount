@@ -101,6 +101,8 @@ type pascalLike struct {
 }
 var pascalLikes []pascalLike
 
+var podheader *regexp.Regexp
+
 type fortranLike struct {
 	name string
 	suffix string
@@ -108,7 +110,6 @@ type fortranLike struct {
 	nocomment string
 }
 var fortranLikes []fortranLike
-
 
 var neverInterestingByPrefix []string
 var neverInterestingByInfix []string
@@ -201,6 +202,12 @@ func init() {
 			"^([c*!]|[ \t]+!|[ \t]*$)", "^[c*!](hpf|omp)[$]"},
 	}
 
+	var err error
+	podheader, err = regexp.Compile("=[a-zA-Z]")
+	if err != nil {
+		panic(err)
+	}
+	
 	neverInterestingByPrefix = []string{"."}
 	neverInterestingByInfix = []string{".so.", "/."}
 	neverInterestingBySuffix = []string{"~",
@@ -478,6 +485,35 @@ func genericCounter(ctx *countContext, path string, eolcomment string) uint {
 	return sloc
 }
 
+func pythonCounter(ctx *countContext, path string) uint {
+	var sloc uint = 0
+
+	ctx.Setup(path)
+	defer ctx.teardown()
+
+	for {
+		line, err := ctx.munchline()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err)
+		}
+
+		// Delete trailing comments
+		i := bytes.Index(line, []byte("#"))
+		if i > -1 {
+			line = line[:i]
+		}
+
+		line = bytes.Trim(line, " \t\r\n")
+		
+		// FIXME: counting logc goes here
+	}
+
+	return sloc
+}
+
+
 // perlCounter - count SLOC in Perl
 //
 // Physical lines of Perl are MUCH HARDER to count than you'd think.
@@ -501,10 +537,6 @@ func perlCounter(ctx *countContext, path string) uint {
 	ctx.Setup(path)
 	defer ctx.teardown()
 
-	podheader, err := regexp.Compile("=[a-zA-Z]")
-	if err != nil {
-		panic(err)
-	}
 	for {
 		line, err := ctx.munchline()
 		if err == io.EOF {
@@ -647,9 +679,24 @@ func Generic(ctx *countContext, path string) SourceStat {
 		}
 	}
 
+	if strings.HasSuffix(path, ".py") || hashbang(ctx, path, "python") {
+		stat.Language = "python"
+		stat.SLOC = pythonCounter(ctx, path)
+	}
+		
 	if strings.HasSuffix(path, ".pl") || hashbang(ctx, path, "perl") {
 		stat.Language = "perl"
 		stat.SLOC = perlCounter(ctx, path)
+	}
+		
+	//if strings.HasSuffix(path, ".py") || hashbang(ctx, path, "python") {
+	//	stat.Language = "python"
+	//	stat.SLOC = pythonCounter(ctx, path)
+	//}
+		
+	if filepath.Base(path) == "wscript" {
+		stat.Language = "waf"
+		stat.SLOC = pythonCounter(ctx, path)
 	}
 		
 	for i := range scriptingLanguages {
