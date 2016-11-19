@@ -506,13 +506,16 @@ func pythonCounter(ctx *countContext, path string) uint {
 		}
 
 		line = bytes.Trim(line, " \t\r\n")
-		
-		// FIXME: counting logc goes here
+
+		// FIXME: Python counting
+
+		if len(line) > 0 {
+			sloc++
+		}
 	}
 
 	return sloc
 }
-
 
 // perlCounter - count SLOC in Perl
 //
@@ -688,11 +691,6 @@ func Generic(ctx *countContext, path string) SourceStat {
 		stat.Language = "perl"
 		stat.SLOC = perlCounter(ctx, path)
 	}
-		
-	//if strings.HasSuffix(path, ".py") || hashbang(ctx, path, "python") {
-	//	stat.Language = "python"
-	//	stat.SLOC = pythonCounter(ctx, path)
-	//}
 		
 	if filepath.Base(path) == "wscript" {
 		stat.Language = "waf"

@@ -80,15 +80,12 @@ excluded, all paths beneath it are.
 == HISTORY AND COMPATIBILITY ==
 
 The algorithms in this code originated with David A. Wheeler's
-*sloccount* utility.  It is, however, more than an order of magnitude
-faster than sloccount, and handles many languages that sloccount does
-not.
+*sloccount* utility.  It is, however, far faster than sloccount, and
+handles many languages that sloccount does not.
 
 Generally it will produce close to identical figures to sloccount for
 a language supported by both tools; the differences are mainly due to
-(a) better detection of some files sloccount left unclassified, and
-(b) some philosophical differences about the handling of multiline
-string literals in languages such as Python that have them.
+better detection of some files sloccount left unclassified.
 
 Notably, for individual C files you can expect both tools to produce
 identical counts.
