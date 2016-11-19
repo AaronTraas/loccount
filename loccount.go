@@ -80,15 +80,10 @@ type cLike struct {
 }
 var cLikes []cLike
 
-// We get to specify a set of possible string delimiters (normally
-// a singleton string containing single or double quote, or a doubleton
-// containing both). We also get to specify a comment leader.
 type scriptingLanguage struct {
 	name string
 	suffix string
 	hashbang string
-	eolcomment string
-	stringdelims []string
 }
 var scriptingLanguages []scriptingLanguage
 
@@ -145,19 +140,12 @@ func init() {
 		{"asm", ".S", "/*", "*/", ";"},
 	}
 	scriptingLanguages = []scriptingLanguage{
-		{"python", ".py", "python", "#",
-			[]string{"\"\"\"", "'''", "\"", "'"},
-		},
-		{"waf", "wscript", "waf", "#",
-			[]string{"\"\"\"", "'''", "\"", "'"},
-		},
-		{"perl", ".pl", "perl", "#", []string{"<<", "\"", "'"}},
-		{"tcl", ".tcl", "tcl", "#", []string{"\"", "'"}},	/* must be before sh */
-		{"csh", ".csh", "csh", "#", []string{"\"", "'"}},
-		{"shell", ".sh", "sh", "#", []string{"<<", "\"", "'"}},
-		{"ruby", ".rb", "ruby", "#", []string{"\"", "'"}},
-		{"awk", ".awk", "awk", "#", []string{"\"", "'"}},
-		{"sed", ".sed", "sed", "#", []string{"\"", "'"}},
+		{"tcl", ".tcl", "tcl"},	/* must be before sh */
+		{"csh", ".csh", "csh"},
+		{"shell", ".sh", "sh"},
+		{"ruby", ".rb", "ruby"},
+		{"awk", ".awk", "awk"},
+		{"sed", ".sed", "sed"},
 	}
 	genericLanguages = []genericLanguage{
 		{"ada", ".ada", "--"},
@@ -464,116 +452,27 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 }
 
 // genericCounter - count SLOC in a generic language.
-func genericCounter(ctx *countContext, path string, eolcomment string, stringdelims []string) uint {
+func genericCounter(ctx *countContext, path string, eolcomment string) uint {
 	var sloc uint = 0
-	var awaiting []byte	   /* what closer are we awaiting? */
-	var startline uint
-	var heredocs bool
 
-	if stringdelims != nil && stringdelims[0] == "<<" {
-		heredocs = true
-		stringdelims = stringdelims[1:]
-	}
-	
 	ctx.Setup(path)
 	defer ctx.teardown()
-	
+
 	for {
-		input, err := ctx.rc.Peek(1)
+		line, err := ctx.munchline()
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			panic("error while peeking")
+			panic(err)
 		}
-		if len(awaiting) == 0 {
-			// Ignore backslashed specials
-			if input[0] == '\\' {
-				ctx.nonblank = true
-				ctx.rc.Discard(1)
-				if ctx.consume([]byte("\n")) {
-					sloc++
-					ctx.nonblank = false
-				}
-			}
-			// Do we see the start of a here-doc?
-			if heredocs && ctx.consume([]byte("<<")) {
-				ctx.nonblank = true
-				ender, err := ctx.rc.ReadString('\n')
-				// Perform various reductions on the heredoc
-				// ender to deal with syntactic oddities in
-				// Perl, etc.
-				ender = strings.Trim(ender, " '\";-\n")
-				awaiting = []byte(ender)
-				if err != nil {
-					panic("panic while reading here-doc")
-				}
-				continue
-			}
-			// do we see a string delimiter?
-			for i := range stringdelims {
-				if ctx.consume([]byte(stringdelims[i]))  {
-					ctx.nonblank = true
-					awaiting = []byte(stringdelims[i])
-					startline = ctx.line_number
-					break
-				}
-			}
-			if len(awaiting) != 0 {
-				continue
-			}
-			// Do we see a winged comment
-			if ctx.consume([]byte(eolcomment)) {
-				ctx.munchline()
-				if ctx.nonblank {
-					sloc++
-				}
-				ctx.nonblank = false
-				continue
-			}
-			// Ordinary character outside comment or string
-			if c, err := ctx.rc.ReadByte(); err == nil && !isspace(c) {
-				ctx.nonblank = true
-			} else if c == '\n' {
-				ctx.line_number++
-				if ctx.nonblank {
-					sloc++
-				}
-				ctx.nonblank = false
-			}
-		// Remaining cases all take place as we're awaiting a delimiter
-		} else if ctx.consume(awaiting) {
-			ctx.nonblank = true
-			awaiting = []byte{}
-			continue
-		} else if input[0] == '\n' {
-			ctx.line_number++
-			if ctx.nonblank {
-				sloc++
-			}
-			ctx.nonblank = false
-			ctx.rc.Discard(1)
-		} else if input[0] == '\\' {
-			ctx.nonblank = true
-			ctx.rc.Discard(2)
-		} else {
-			ctx.rc.Discard(1)
-			if !isspace(input[0]) {
-				// Questionable. We might not want to do this
-				// on, in particular, Python header comments.
-				ctx.nonblank = true
-			}
+		i := bytes.Index(line, []byte(eolcomment))
+		if i > -1 {
+			line = line[:i]
 		}
-	}
-
-	/* We're done with the file.  Handle EOF-without-EOL. */
-	if ctx.nonblank {
-		sloc++
-	}
-	ctx.nonblank = false
-
-	if len(awaiting) != 0 {
-		log.Printf("\"%s\", line %d: ERROR - unterminated '%s'.\n",
-			path, startline, awaiting)
+		line = bytes.Trim(line, " \t\r\n")
+		if len(line) > 0 {
+			sloc++
+		}
 	}
 
 	return sloc
@@ -677,8 +576,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		lang := scriptingLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
 			stat.Language = lang.name
-			stat.SLOC = genericCounter(ctx,
-				path, lang.eolcomment, lang.stringdelims)
+			stat.SLOC = genericCounter(ctx, path, "#")
 			break
 		}
 	}
@@ -687,8 +585,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		lang := genericLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
-			stat.SLOC = genericCounter(ctx,
-				path, lang.eolcomment, []string{"\"", "'"})
+			stat.SLOC = genericCounter(ctx,	path, lang.eolcomment)
 			break
 		}
 	}
