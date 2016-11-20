@@ -74,6 +74,7 @@ type cLike struct {
 	commentleader string
 	commenttrailer string
 	eolcomment string
+	verifier func(*countContext, string) bool
 }
 var cLikes []cLike
 
@@ -122,25 +123,25 @@ var cHeaderPriority []string
 
 func init() {
 	cLikes = []cLike{
-		{"c", ".c", "/*", "*/", "//"},
-		{"c-header", ".h", "/*", "*/", "//"},
-		{"yacc", ".y", "/*", "*/", "//"},
-		{"lex", ".l", "/*", "*/", "//"},
-		{"c++", ".cpp", "/*", "*/", "//"},
-		{"c++", ".cxx", "/*", "*/", "//"},
-		{"java", ".java", "/*", "*/", "//"},
-		{"obj-c", ".m", "/*", "*/", "//"},
-		{"c#", ".cs", "/*", "*/", "//"},
-		{"php", ".php", "/*", "*/", "//"},
-		{"go", ".go", "/*", "*/", "//"},
-		{"swift", ".swift", "/*", "*/", "//"},
-		{"autotools", "config.h.in", "/*", "*/", "//"},
-		{"sql", ".sql", "/*", "*/", "--"},
-		{"haskell", ".hs", "{-", "-}", "--"},
-		{"pl/1", ".pl1", "/*", "*/", ""},
-		{"asm", ".asm", "/*", "*/", ";"},
-		{"asm", ".s", "/*", "*/", ";"},
-		{"asm", ".S", "/*", "*/", ";"},
+		{"c", ".c", "/*", "*/", "//", nil},
+		{"c-header", ".h", "/*", "*/", "//", nil},
+		{"yacc", ".y", "/*", "*/", "//", nil},
+		{"lex", ".l", "/*", "*/", "//", nil},
+		{"c++", ".cpp", "/*", "*/", "//", nil},
+		{"c++", ".cxx", "/*", "*/", "//", nil},
+		{"java", ".java", "/*", "*/", "//", nil},
+		{"obj-c", ".m", "/*", "*/", "//", really_is_objc},
+		{"c#", ".cs", "/*", "*/", "//", nil},
+		{"php", ".php", "/*", "*/", "//", nil},
+		{"go", ".go", "/*", "*/", "//", nil},
+		{"swift", ".swift", "/*", "*/", "//", nil},
+		{"autotools", "config.h.in", "/*", "*/", "//", nil},
+		{"sql", ".sql", "/*", "*/", "--", nil},
+		{"haskell", ".hs", "{-", "-}", "--", nil},
+		{"pl/1", ".pl1", "/*", "*/", "", nil},
+		{"asm", ".asm", "/*", "*/", ";", nil},
+		{"asm", ".s", "/*", "*/", ";", nil},
+		{"asm", ".S", "/*", "*/", ";", nil},
 	}
 
 	var err error
@@ -168,7 +169,6 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-
 
 	scriptingLanguages = []scriptingLanguage{
 		{"tcl", ".tcl", "tcl"},	/* must be before sh */
@@ -287,6 +287,7 @@ const INSTRING = 1
 const INCOMMENT = 2
 
 type countContext struct {
+	line []byte
 	line_number uint
 	nonblank bool			// Is current line nonblank?
 	last_char_was_newline bool
@@ -350,11 +351,70 @@ func (ctx *countContext) munchline() ([]byte, error) {
 	if err != nil {
 		ctx.line_number++
 	}
+	ctx.line = line
 	return line, err
+}
+
+// matchline - does a given regexp match the last line read?
+func (ctx *countContext) matchline(re string) bool {
+	cre, err := regexp.Compile(re)
+	if err != nil {
+		panic(fmt.Sprintf("unexpected failure %s while compiling %s", err, re))
+	}
+	return cre.Find(ctx.line) != nil
 }
 
 func isspace(c byte) bool {
 	return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f'
+}
+
+// Verifier functions for checking that files with disputed extensions
+// are actually of the types we think they are.
+
+// really_is_objc - returns TRUE if filename contents really are objective-C.
+func really_is_objc(ctx *countContext, path string) bool {
+	var is_objc bool = false   // Value to determine.
+	var brace_lines int        // Lines that begin/end with curly braces.
+	var plus_minus int         // Lines that begin with + or -.
+	var word_main int          // Did we find "main("?
+	var special bool = false   // Did we find a special Objective-C pattern?
+
+	ctx.setup(path)
+	defer ctx.teardown()
+
+	for {
+		_, err := ctx.munchline()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err)
+		}
+
+		if ctx.matchline("^\\s*[{}]") || ctx.matchline("[{}];?\\s*") {
+			brace_lines++
+		}
+		if ctx.matchline("^\\s*[+-]") {
+			plus_minus++
+		}
+		if ctx.matchline("\\bmain\\s*\\(") {// "main" followed by "("?
+			word_main++
+		} 
+		// Handle /usr/src/redhat/BUILD/egcs-1.1.2/gcc/objc/linking.m:
+		if ctx.matchline("(?i)^\\s*\\[object name\\];\\s*") {
+			special = true
+		}
+
+		if (brace_lines > 1) && ((plus_minus > 1) || word_main > 0 || special) {
+				is_objc = true
+		}
+
+	}
+
+	if debug > 0 {
+		log.Printf("obj-c verifier returned %t on %s\n", is_objc, path)
+	}
+
+	return is_objc
 }
 
 // hashbang - hunt for a specified string in the first line of an executable
@@ -390,6 +450,10 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 	var comment_type int             /* BLOCK_COMMENT or TRAILING_COMMENT */
 	var startline uint
 
+	if syntax.verifier != nil && !syntax.verifier(ctx, path) {
+		return 0
+	}
+	
 	ctx.setup(path)
 	defer ctx.teardown()
 
@@ -1007,6 +1071,8 @@ func main() {
 		"set debug level")
 	flag.Parse()
 
+	individual = individual || unclassified
+	
 	if list {
 		list_languages()
 		return
@@ -1055,7 +1121,7 @@ func main() {
 			if !unclassified && st.SLOC > 0 {
 				fmt.Printf("%s %d %s\n",
 					st.Path, st.SLOC, st.Language)
-			} else if unclassified {
+			} else if unclassified && st.SLOC == 0 {
 				// Not a recognized source type,
 				// nor anything we know to discard
 				fmt.Println(st.Path)
