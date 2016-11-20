@@ -101,6 +101,11 @@ type pascalLike struct {
 }
 var pascalLikes []pascalLike
 
+const dt = "\"\"\""
+const st = "'''"
+
+var dtriple, striple, dtrailer, strailer, dlonely, slonely *regexp.Regexp
+
 var podheader *regexp.Regexp
 
 type fortranLike struct {
@@ -140,6 +145,34 @@ func init() {
 		{"asm", ".s", "/*", "*/", ";"},
 		{"asm", ".S", "/*", "*/", ";"},
 	}
+
+	var err error
+	dtriple, err = regexp.Compile(dt + "." + dt)
+	if err != nil {
+		panic(err)
+	}
+	striple, err = regexp.Compile(st + "." + st)
+	if err != nil {
+		panic(err)
+	}
+	dlonely, err = regexp.Compile("^[ \t]*\"[^\"]+\"")
+	if err != nil {
+		panic(err)
+	}
+	slonely, err = regexp.Compile("^[ \t]*'[^']+'")
+	if err != nil {
+		panic(err)
+	}
+	strailer, err = regexp.Compile(".*" + st)
+	if err != nil {
+		panic(err)
+	}
+	dtrailer, err = regexp.Compile(".*" + dt)
+	if err != nil {
+		panic(err)
+	}
+
+
 	scriptingLanguages = []scriptingLanguage{
 		{"tcl", ".tcl", "tcl"},	/* must be before sh */
 		{"csh", ".csh", "csh"},
@@ -510,33 +543,6 @@ func pythonCounter(ctx *countContext, path string) uint {
 	ctx.Setup(path)
 	defer ctx.teardown()
 
-	const dt = "\"\"\""
-	const st = "'''"
-	dtriple, err := regexp.Compile(dt + "." + dt)
-	if err != nil {
-		panic(err)
-	}
-	striple, err := regexp.Compile(st + "." + st)
-	if err != nil {
-		panic(err)
-	}
-	dlonely, err := regexp.Compile("^[ \t]*\"[^\"]+\"")
-	if err != nil {
-		panic(err)
-	}
-	slonely, err := regexp.Compile("^[ \t]*'[^']+'")
-	if err != nil {
-		panic(err)
-	}
-	strailer, err := regexp.Compile(".*" + st)
-	if err != nil {
-		panic(err)
-	}
-	dtrailer, err := regexp.Compile(".*" + dt)
-	if err != nil {
-		panic(err)
-	}
-
 	triple_boundary := func(line []byte) bool {return bytes.Contains(line, []byte(dt)) || bytes.Contains(line, []byte(st))}
 	for {
 		line, err := ctx.munchline()
@@ -596,6 +602,7 @@ func pythonCounter(ctx *countContext, path string) uint {
 				}
 			}
 		}
+		line = bytes.Trim(line, " \t\r\n")
 		if !isincomment && len(line) > 0 {
 			sloc++
 		}
