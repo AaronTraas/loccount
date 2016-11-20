@@ -27,6 +27,7 @@ tests/hello.sh 1 shell
 tests/hello.tcl 1 tcl
 tests/ntp_fp.h 254 c-header
 tests/ntpver 1 shell
+tests/occam-hello.f 5 occam
 tests/oneliner.pl 1 perl
 tests/packet.py 849 python
 tests/perl-filewrite 11 perl

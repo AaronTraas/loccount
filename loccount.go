@@ -416,25 +416,33 @@ func really_is_objc(ctx *countContext, path string) bool {
 	return is_objc
 }
 
-// really_is_occam - returns TRUE if filename contents really are objective-C.
-func really_is_occam(ctx *countContext, path string) bool {
-	var is_occam bool = false   // Value to determine.
+
+func has_keywords(ctx *countContext, path string, lang string, tells []string) bool {
+	var matching bool = false   // Value to determine.
 
 	ctx.setup(path)
 	defer ctx.teardown()
 
 	for ctx.munchline() {
-		if ctx.matchline("--") || ctx.matchline("PROC") {
-			is_occam = true
-			break
+		for i := range tells {
+			if ctx.matchline(tells[i]) {
+				matching = true
+				break
+			}
 		}
 	}
 
 	if debug > 0 {
-		log.Printf("objc verifier returned %t on %s\n", is_occam, path)
+		log.Printf("%s verifier returned %t on %s\n",
+			lang, matching, path)
 	}
 
-	return is_occam
+	return matching
+}
+
+// really_is_occam - returns TRUE if filename contents really are occam.
+func really_is_occam(ctx *countContext, path string) bool {
+	return has_keywords(ctx, path, "occam", []string{"--", "PROC"})
 }
 
 // hashbang - hunt for a specified string in the first line of an executable
