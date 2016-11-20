@@ -26,19 +26,18 @@ languages fall into one of the following groups:
   a block comment delimited by two distinct strings and the second is
   a winged comment introduced by a third string and terminated by
   newline.  You can add support simply by appending an initializer to
-  the cLikes table.
+  the genericLanguages table.
+
+* Generic languages have only winged comments, usually led with #.
+  This code recognizes them by file extension only.  You can append an
+  initializer to the genericLanguages table specifying a name, an
+  extension, and the comment leader.
 
 * Scripting languages have only winged comments, usually led with #.
   This code recognizes them by file extension, or by looking for a
   hashbang line identifying the interpreter.  You can append an
   initializer to the scriptingLanguages table specifying a name, an
   extension, and a matching string to look for in a hashbang line.
-
-* Generic languages have only winged comments, usually led with #.
-  This code recognizes them by file extension only.  You can append an
-  initializer to the genericLanguages table specifying a name, an
-  extension, string to look for in a hashbang line, and the comment
-  leader.
 
 * Pascal-likes use the (* *) block comment syntax.  This code
   recognizes them by file extension only.  You can append an
@@ -68,7 +67,7 @@ var pipeline chan SourceStat
 
 // Data tables driving the recognition and counting of classes of languages.
 
-type cLike struct {
+type genericLanguage struct {
 	name string
 	extension string
 	commentleader string
@@ -76,7 +75,7 @@ type cLike struct {
 	eolcomment string
 	verifier func(*countContext, string) bool
 }
-var cLikes []cLike
+var genericLanguages []genericLanguage
 
 type scriptingLanguage struct {
 	name string
@@ -84,14 +83,6 @@ type scriptingLanguage struct {
 	hashbang string
 }
 var scriptingLanguages []scriptingLanguage
-
-type genericLanguage struct {
-	name string
-	suffix string
-	eolcomment string
-	verifier func(*countContext, string) bool
-}
-var genericLanguages []genericLanguage
 
 type pascalLike struct {
 	name string
@@ -123,7 +114,8 @@ var neverInterestingByBasename []string
 var cHeaderPriority []string
 
 func init() {
-	cLikes = []cLike{
+	genericLanguages = []genericLanguage{
+		/* C family */
 		{"c", ".c", "/*", "*/", "//", nil},
 		{"c-header", ".h", "/*", "*/", "//", nil},
 		{"yacc", ".y", "/*", "*/", "//", nil},
@@ -143,6 +135,44 @@ func init() {
 		{"asm", ".asm", "/*", "*/", ";", nil},
 		{"asm", ".s", "/*", "*/", ";", nil},
 		{"asm", ".S", "/*", "*/", ";", nil},
+		/* everything else */
+		{"ada", ".ada", "", "", "--", nil},
+		{"ada", ".adb", "", "", "--", nil},
+		{"ada", ".ads", "", "", "--", nil},
+		{"ada", ".pad", "", "", "--", nil},	// Oracle Ada preprocessoer.
+		{"makefile", ".mk", "", "", "#", nil},
+		{"makefile", "Makefile", "", "", "#", nil},
+		{"makefile", "makefile", "", "", "#", nil},
+		{"makefile", "Imakefile", "", "", "#", nil},
+		{"m4", ".m4", "", "", "#", nil},
+		{"lisp", ".lisp", "", "", ";", nil},
+		{"lisp", ".lsp", "", "", ";", nil},	// XLISP
+		{"lisp", ".cl", "", "", ";", nil},	// Common Lisp
+		{"scheme", ".scm", "", "", ";", nil},
+		{"elisp", ".el", "", "", ";", nil},	// Emacs Lisp
+		{"cobol", ".CBL", "", "", "*", nil},
+		{"cobol", ".cbl", "", "", "*", nil},
+		{"cobol", ".COB", "", "", "*", nil},
+		{"cobol", ".cob", "", "", "*", nil},
+		{"eiffel", ".e", "", "", "--", nil},
+		{"sather", ".sa", "", "", "--", nil},
+		{"lua", ".lua", "", "", "--", nil},
+		{"clu", ".clu", "", "", "%", nil},
+		{"rust", ".rs", "", "", "//", nil},
+		{"rust", ".rlib", "", "", "//", nil},
+		{"erlang", ".erl", "", "", "%", nil},
+		{"turing", ".t", "", "", "%", nil},
+		{"d", ".d", "", "", "//", nil},
+		{"occam", ".f", "", "", "//", really_is_occam},
+		// autoconf cruft - note the config.h-in entry under C-likes
+		{"autotools", "autogen.sh", "", "", "#", nil},
+		{"autotools", "configure.in", "", "", "#", nil},
+		{"autotools", "Makefile.in", "", "", "#", nil},
+		{"autotools", ".am", "", "", "#", nil},
+		{"autotools", ".ac", "", "", "#", nil},
+		{"autotools", ".mf", "", "", "#", nil},
+		// Scons
+		{"scons", "SConstruct", "", "", "#", nil},
 	}
 
 	var err error
@@ -178,45 +208,6 @@ func init() {
 		{"ruby", ".rb", "ruby"},
 		{"awk", ".awk", "awk"},
 		{"sed", ".sed", "sed"},
-	}
-	genericLanguages = []genericLanguage{
-		{"ada", ".ada", "--", nil},
-		{"ada", ".adb", "--", nil},
-		{"ada", ".ads", "--", nil},
-		{"ada", ".pad", "--", nil},	// Oracle Ada preprocessor.
-		{"makefile", ".mk", "#", nil},
-		{"makefile", "Makefile", "#", nil},
-		{"makefile", "makefile", "#", nil},
-		{"makefile", "Imakefile", "#", nil},
-		{"m4", ".m4", "#", nil},
-		{"lisp", ".lisp", ";", nil},
-		{"lisp", ".lsp", ";", nil},	// XLISP
-		{"lisp", ".cl", ";", nil},	// Common Lisp
-		{"scheme", ".scm", ";", nil},
-		{"elisp", ".el", ";", nil},	// Emacs Lisp
-		{"cobol", ".CBL", "*", nil},
-		{"cobol", ".cbl", "*", nil},
-		{"cobol", ".COB", "*", nil},
-		{"cobol", ".cob", "*", nil},
-		{"eiffel", ".e", "--", nil},
-		{"sather", ".sa", "--", nil},
-		{"lua", ".lua", "--", nil},
-		{"clu", ".clu", "%", nil},
-		{"rust", ".rs", "//", nil},
-		{"rust", ".rlib", "//", nil},
-		{"erlang", ".erl", "%", nil},
-		{"turing", ".t", "%", nil},
-		{"d", ".d", "//", nil},
-		{"occam", ".f", "//", really_is_occam},
-		// autoconf cruft - note the config.h-in entry under C-likes
-		{"autotools", "autogen.sh", "#", nil},
-		{"autotools", "configure.in", "#", nil},
-		{"autotools", "Makefile.in", "#", nil},
-		{"autotools", ".am", "#", nil},
-		{"autotools", ".ac", "#", nil},
-		{"autotools", ".mf", "#", nil},
-		// Scons
-		{"scons", "SConstruct", "#", nil},
 	}
 	pascalLikes = []pascalLike{
 		{"pascal", ".pas", true},
@@ -468,7 +459,7 @@ func hashbang(ctx *countContext, path string, langname string) bool {
 // Another minor issue is that it's possible for the antecedents in Lex rules
 // to look like C comment starts. In theory we could fix this by requiring Lex
 // files to contain %%.
-func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
+func c_family_counter(ctx *countContext, path string, syntax genericLanguage) uint {
 	/* Types of comments: */
 	const BLOCK_COMMENT = 0
 	const TRAILING_COMMENT = 1
@@ -825,10 +816,15 @@ func fortranCounter(ctx *countContext, path string, syntax fortranLike) uint {
 func Generic(ctx *countContext, path string) SourceStat {
 	var stat SourceStat
 
-	for i := range cLikes {
-		lang := cLikes[i]
+	for i := range genericLanguages {
+		lang := genericLanguages[i]
 		if strings.HasSuffix(path, lang.extension) {
-			stat.SLOC = c_family_counter(ctx, path, lang)
+			if len(lang.commentleader) > 0 {
+				stat.SLOC = c_family_counter(ctx, path, lang)
+			} else {
+				stat.SLOC = genericCounter(ctx, path,
+					lang.eolcomment, lang.verifier)
+			}
 			if stat.SLOC > 0 {
 				stat.Language = lang.name
 				return stat
@@ -860,17 +856,6 @@ func Generic(ctx *countContext, path string) SourceStat {
 			stat.Language = lang.name
 			stat.SLOC = genericCounter(ctx, path, "#", nil)
 			return stat
-		}
-	}
-
-	for i := range genericLanguages {
-		lang := genericLanguages[i]
-		if strings.HasSuffix(path, lang.suffix) {
-			stat.SLOC = genericCounter(ctx,	path, lang.eolcomment, lang.verifier)
-			if stat.SLOC > 0 {
-				stat.Language = lang.name
-				return stat
-			}
 		}
 	}
 
@@ -1016,8 +1001,8 @@ func reportCocomo(sloc uint) {
 func list_languages() {
 	var names []string
 	var lastlang string
-	for i := range cLikes {
-		lang := cLikes[i].name
+	for i := range genericLanguages {
+		lang := genericLanguages[i].name
 		if lang != lastlang {
 			names = append(names, lang)
 			lastlang = lang
@@ -1026,14 +1011,6 @@ func list_languages() {
 
 	for i := range scriptingLanguages {
 		lang := scriptingLanguages[i].name
-		if lang != lastlang {
-			names = append(names, lang)
-			lastlang = lang
-		}
-	}
-
-	for i := range genericLanguages {
-		lang := genericLanguages[i].name
 		if lang != lastlang {
 			names = append(names, lang)
 			lastlang = lang
