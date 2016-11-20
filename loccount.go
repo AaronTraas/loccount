@@ -300,7 +300,7 @@ type countContext struct {
 func (ctx *countContext) setup(path string) bool {
 	var err error
 	ctx.underlyingStream, err = os.Open(path)
-x	if err != nil {
+	if err != nil {
 		log.Println(err)
 		return false
 	}
@@ -759,23 +759,26 @@ func Generic(ctx *countContext, path string) SourceStat {
 		if strings.HasSuffix(path, lang.extension) {
 			stat.Language = lang.name
 			stat.SLOC = c_family_counter(ctx, path, lang)
-			break
+			return stat
 		}
 	}
 
 	if strings.HasSuffix(path, ".py") || hashbang(ctx, path, "python") {
 		stat.Language = "python"
 		stat.SLOC = pythonCounter(ctx, path)
+		return stat
 	}
 		
 	if strings.HasSuffix(path, ".pl") || hashbang(ctx, path, "perl") {
 		stat.Language = "perl"
 		stat.SLOC = perlCounter(ctx, path)
+		return stat
 	}
 		
 	if filepath.Base(path) == "wscript" {
 		stat.Language = "waf"
 		stat.SLOC = pythonCounter(ctx, path)
+		return stat
 	}
 		
 	for i := range scriptingLanguages {
@@ -783,7 +786,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
 			stat.Language = lang.name
 			stat.SLOC = genericCounter(ctx, path, "#")
-			break
+			return stat
 		}
 	}
 
@@ -792,7 +795,9 @@ func Generic(ctx *countContext, path string) SourceStat {
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
 			stat.SLOC = genericCounter(ctx,	path, lang.eolcomment)
-			break
+			if stat.SLOC > 0 {
+				return stat
+			}
 		}
 	}
 
@@ -801,7 +806,9 @@ func Generic(ctx *countContext, path string) SourceStat {
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
 			stat.SLOC = pascalCounter(ctx, path, lang)
-			break
+			if stat.SLOC > 0 {
+				return stat
+			}
 		}
 	}
 
@@ -810,7 +817,9 @@ func Generic(ctx *countContext, path string) SourceStat {
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
 			stat.SLOC = fortranCounter(ctx, path, lang)
-			break
+			if stat.SLOC > 0 {
+				return stat
+			}
 		}
 	}
 
