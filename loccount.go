@@ -28,21 +28,17 @@ languages fall into one of the following groups:
   newline.  You can add support simply by appending an initializer to
   the cLikes table.
 
-* Scripting languages have only winged comments, usually led with #.  This
-  code recognizes them by file extension, or by looking for a hashbang line
-  identifying the interpreter.  You can append an initializer to the
-  scriptingLanguages table specifying a name, an extension, a matching
-  string to look for in a hashbang line, the set of string quotes the
-  language uses, and the comment leader. You may additionally specify
-  a list of enclosure pairs for multiline literals. That list may 
-  begin with "<<", which means the language supports here-doc syntax.
+* Scripting languages have only winged comments, usually led with #.
+  This code recognizes them by file extension, or by looking for a
+  hashbang line identifying the interpreter.  You can append an
+  initializer to the scriptingLanguages table specifying a name, an
+  extension, and a matching string to look for in a hashbang line.
 
 * Generic languages have only winged comments, usually led with #.
   This code recognizes them by file extension only.  You can append an
   initializer to the genericLanguages table specifying a name, an
   extension, string to look for in a hashbang line, and the comment
-  leader. For this group the set of string quotes the language uses
-  is assumed to include both single and double quote.
+  leader.
 
 * Pascal-likes use the (* *) block comment syntax.  This code
   recognizes them by file extension only.  You can append an
@@ -50,11 +46,11 @@ languages fall into one of the following groups:
   extension, and a boolean saying whether the language uses { } as
   additional pair of block comments.
 
-* Fortran-likes use various start-of-line characters as comment leaders.
-  This code recognizes them by file extension only.  You can append an
-  initializer to the fortranLikes table specifying a pair of regular
-  expressions; comments are recognized by matching the first and not
-  the second.
+* Fortran-likes use various start-of-line characters as comment
+  leaders.  This code recognizes them by file extension only.  You can
+  append an initializer to the fortranLikes table specifying a pair of
+  (compiled) regular expressions; comments are recognized by matching
+  the first and not the second.
 
 You may add multiple entries with the same language name, but extensions
 must be unique across all tables.
