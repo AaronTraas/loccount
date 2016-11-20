@@ -295,20 +295,14 @@ type countContext struct {
 	last_char_was_newline bool
 	underlyingStream *os.File
 	rc *bufio.Reader
-	lastpath string
 }
 
-func (ctx *countContext) Setup(path string) bool {
-	if len(ctx.lastpath) > 0 && (ctx.lastpath == path) {
-		ctx.underlyingStream.Seek(0, 0)
-	} else {
-		var err error
-		ctx.underlyingStream, err = os.Open(path)
-		ctx.lastpath = path
-		if err != nil {
-			log.Println(err)
-			return false
-		}
+func (ctx *countContext) setup(path string) bool {
+	var err error
+	ctx.underlyingStream, err = os.Open(path)
+x	if err != nil {
+		log.Println(err)
+		return false
 	}
 	ctx.rc = bufio.NewReader(ctx.underlyingStream)
 	ctx.line_number = 1
@@ -373,7 +367,8 @@ func hashbang(ctx *countContext, path string, langname string) bool {
 	if err != nil && (fi.Mode() & 01111) == 0 {
 		return false
 	}
-	ctx.Setup(path)
+	ctx.setup(path)
+	defer ctx.teardown()
 	s, err := ctx.rc.ReadString('\n')
 	return err == nil && strings.HasPrefix(s, "#!") && strings.Contains(s, langname)
 }
@@ -398,7 +393,7 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 	var comment_type int             /* BLOCK_COMMENT or TRAILING_COMMENT */
 	var startline uint
 
-	ctx.Setup(path)
+	ctx.setup(path)
 	defer ctx.teardown()
 
 	for {
@@ -512,7 +507,7 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 func genericCounter(ctx *countContext, path string, eolcomment string) uint {
 	var sloc uint = 0
 
-	ctx.Setup(path)
+	ctx.setup(path)
 	defer ctx.teardown()
 
 	for {
@@ -540,7 +535,7 @@ func pythonCounter(ctx *countContext, path string) uint {
 	var isintriple bool	// A triple-quote is in effect.
 	var isincomment bool	// We are in a multiline (triple-quoted) comment.
 
-	ctx.Setup(path)
+	ctx.setup(path)
 	defer ctx.teardown()
 
 	triple_boundary := func(line []byte) bool {return bytes.Contains(line, []byte(dt)) || bytes.Contains(line, []byte(st))}
@@ -631,7 +626,7 @@ func perlCounter(ctx *countContext, path string) uint {
 	var heredoc string
 	var isinpod bool
 
-	ctx.Setup(path)
+	ctx.setup(path)
 	defer ctx.teardown()
 
 	for {
@@ -688,7 +683,7 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 	var mode int = NORMAL              /* NORMAL, or INCOMMENT */
 	var startline uint
 
-	ctx.Setup(path)
+	ctx.setup(path)
 	defer ctx.teardown()
 
 	for {
@@ -740,7 +735,7 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 func fortranCounter(ctx *countContext, path string, syntax fortranLike) uint {
 	var sloc uint
 
-	ctx.Setup(path)
+	ctx.setup(path)
 	defer ctx.teardown()
 
 	for {
