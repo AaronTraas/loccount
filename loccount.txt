@@ -60,6 +60,10 @@ Report a COCOMO II cost estimate. Use the coefficients for the
 "organic" project type, which is the best fot for most open-source
 projects.
 
+-d _n_::
+Set debug level. At > 0, displays various progress messages.  Mainly
+of interest to developers.
+
 -i::
 Report file path, line count, and type for each individual path.
 

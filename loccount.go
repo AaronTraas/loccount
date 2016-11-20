@@ -66,6 +66,7 @@ type SourceStat struct {
 	SLOC uint
 }
 
+var debug int
 var exclusions []string
 var pipeline chan SourceStat
 
@@ -833,14 +834,26 @@ func isDirectory(path string) (bool) {
 
 // filter - winnows out uninteresting paths before handing them to process
 func filter(path string, info os.FileInfo, err error) error {
+	if debug > 0 {
+		fmt.Printf("entering filter: %s\n", path)
+	}
 	for i := range neverInterestingByPrefix {
 		if strings.HasPrefix(path, neverInterestingByPrefix[i]) {
+			if debug > 0 {
+				fmt.Printf("prefix filter failed: %s\n", path)
+			}
 			return err
 		}
 	}
 	for i := range neverInterestingByInfix {
 		if strings.Contains(path, neverInterestingByInfix[i]) {
+			if debug > 0 {
+				fmt.Printf("infix filter failed: %s\n", path)
+			}
 			if isDirectory(path) {
+				if debug > 0 {
+					fmt.Printf("directory skipped: %s\n", path)
+				}
 				return filepath.SkipDir
 			} else {
 				return err
@@ -849,30 +862,49 @@ func filter(path string, info os.FileInfo, err error) error {
 	}
 	for i := range neverInterestingBySuffix {
 		if strings.HasSuffix(path, neverInterestingBySuffix[i]) {
+			if debug > 0 {
+				fmt.Printf("sufffix filter failed: %s\n", path)
+			}
 			return err
 		}
 	}
 	for i := range neverInterestingByBasename {
 		if filepath.Base(path) == neverInterestingByBasename[i] {
+			if debug > 0 {
+				fmt.Printf("basename filter failed: %s\n", path)
+			}
 			return err
 		}
 	}
 	for i := range exclusions {
 		if path == exclusions[i] || strings.HasPrefix(path, exclusions[i]+"/") {
+			if debug > 0 {
+				fmt.Printf("exclusion '%s' filter failed: %s\n", exclusions,path)
+			}
 			return err
 		}
 	}
 
 	/* has to come after the infix check for directory */
 	if isDirectory(path) {
+		if debug > 0 {
+			fmt.Printf("directory filter failed: %s\n", path)
+		}
 		return err
 	}
 
 	/* toss generated Makefiles */
 	if filepath.Base(path) == "Makefile" {
 		if _, err := os.Stat(path + ".in"); err == nil {
+		if debug > 0 {
+			fmt.Printf("generated-makefile filter failed: %s\n", path)
+		}
 			return err
 		}
+	}
+
+	if debug > 0 {
+		fmt.Printf("passed filter: %s\n", path)
 	}
 
 	// Now the real work gets done
@@ -975,6 +1007,8 @@ func main() {
 		"report Cocomo-model estimation")
 	flag.BoolVar(&list, "l", false,
 		"list supported languages and exit")
+	flag.IntVar(&debug, "d", 0,
+		"set debug level")
 	flag.Parse()
 
 	if list {
@@ -994,8 +1028,10 @@ func main() {
 		chandepth = runtime.NumCPU()
 	}
 	pipeline = make(chan SourceStat, chandepth) 
-	
-	exclusions = strings.Split(*excludePtr, ",")
+
+	if len(*excludePtr) > 0 {
+		exclusions = strings.Split(*excludePtr, ",")
+	}
 	roots := flag.Args()
 
 	go func() {
@@ -1014,7 +1050,11 @@ func main() {
 		if !more {
 			break
 		}
-
+		if debug > 0 {
+			fmt.Printf("from pipeline: %s %d %s\n",
+				st.Path, st.SLOC, st.Language)
+		}
+		
 		if individual {
 			if !unclassified && st.SLOC > 0 {
 				fmt.Printf("%s %d %s\n",
