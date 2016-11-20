@@ -83,6 +83,7 @@ type scriptingLanguage struct {
 	name string
 	suffix string
 	hashbang string
+	verifier func(*countContext, string) bool
 }
 var scriptingLanguages []scriptingLanguage
 
@@ -205,12 +206,13 @@ func init() {
 	}
 
 	scriptingLanguages = []scriptingLanguage{
-		{"tcl", ".tcl", "tcl"},	/* must be before sh */
-		{"csh", ".csh", "csh"},
-		{"shell", ".sh", "sh"},
-		{"ruby", ".rb", "ruby"},
-		{"awk", ".awk", "awk"},
-		{"sed", ".sed", "sed"},
+		{"tcl", ".tcl", "tcl", nil},	/* must be before sh */
+		{"csh", ".csh", "csh", nil},
+		{"shell", ".sh", "sh", nil},
+		{"ruby", ".rb", "ruby", nil},
+		{"awk", ".awk", "awk", nil},
+		{"sed", ".sed", "sed", nil},
+		{"expect", ".exp", "expect", really_is_expect},
 	}
 	pascalLikes = []pascalLike{
 		{"pascal", ".pas", true},
@@ -443,6 +445,64 @@ func really_is_occam(ctx *countContext, path string) bool {
 func really_is_lex(ctx *countContext, path string) bool {
 	return has_keywords(ctx, path, "lex", []string{"%{", "%%", "%}"})
 }
+
+// really_is_expect - filename, returns tue if its contents really are Expect.
+//
+// Many "exp" files (such as in Apache and Mesa) are just "export" data,
+// summarizing something else (e.g., its interface).
+// Sometimes (like in RPM) it's just misc. data.
+// Thus, we need to look at the file to determine
+// if it's really an "expect" file.
+// The heuristic is as follows: it's Expect _IF_ it:
+// 1. has "load_lib" command and either "#" comments or {}.
+// 2. {, }, and one of: proc, if, [...], expect
+func really_is_expect (ctx *countContext, path string) bool {
+	var is_expect = false      // Value to determine.
+
+	var begin_brace bool  // Lines that begin with curly braces.
+	var end_brace bool    // Lines that begin with curly braces.
+	var load_lib bool     // Lines with the Load_lib command.
+	var found_proc bool
+	var found_if bool
+	var found_brackets bool
+	var found_expect bool
+	var found_pound bool
+
+	if ctx.matchline("#") {
+		found_pound = true
+		// Delete trailing comments
+		i := bytes.Index(ctx.line, []byte("#"))
+		if i > -1 {
+			ctx.line = ctx.line[:i]
+		}
+	}
+		
+	if (ctx.matchline("^\\s*\\{")) { begin_brace = true}
+	if (ctx.matchline("\\{\\s*$")) { begin_brace = true}
+	if (ctx.matchline("^\\s*}")) { end_brace = true}
+	if (ctx.matchline("};?\\s*$")) { end_brace = true}
+	if (ctx.matchline("^\\s*load_lib\\s+\\S")) { load_lib = true}
+	if (ctx.matchline("^\\s*proc\\s")) { found_proc = true}
+	if (ctx.matchline("^\\s*if\\s")) { found_if = true}
+	if (ctx.matchline("\\[.*\\]")) { found_brackets = true}
+	if (ctx.matchline("^\\s*expect\\s")) { found_expect = true}
+
+
+	if load_lib && (found_pound || (begin_brace && end_brace)) {
+		is_expect = true
+	}
+	if begin_brace && end_brace &&
+		(found_proc || found_if || found_brackets || found_expect) {
+		is_expect = true
+	}
+
+	if debug > 0 {
+		log.Printf("expect verifier returned %t on %s\n", is_expect, path)
+	}
+
+	return is_expect
+}
+
 
 // hashbang - hunt for a specified string in the first line of an executable
 func hashbang(ctx *countContext, path string, langname string) bool {
