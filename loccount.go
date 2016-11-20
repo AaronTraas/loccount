@@ -346,13 +346,17 @@ func (ctx *countContext) getachar() (byte, error) {
 }
 
 // Consume the remainder of a line, updating the line counter
-func (ctx *countContext) munchline() ([]byte, error) {
+func (ctx *countContext) munchline() bool {
 	line, err := ctx.rc.ReadBytes('\n')
-	if err != nil {
+	if err == nil {
 		ctx.line_number++
+		ctx.line = line
+		return true
+	} else if err == io.EOF {
+		return false
+	} else {
+		panic(err)
 	}
-	ctx.line = line
-	return line, err
 }
 
 // matchline - does a given regexp match the last line read?
@@ -383,11 +387,8 @@ func really_is_objc(ctx *countContext, path string) bool {
 	defer ctx.teardown()
 
 	for {
-		_, err := ctx.munchline()
-		if err == io.EOF {
+		if !ctx.munchline() {
 			break
-		} else if err != nil {
-			panic(err)
 		}
 
 		if ctx.matchline("^\\s*[{}]") || ctx.matchline("[{}];?\\s*") {
@@ -572,18 +573,15 @@ func genericCounter(ctx *countContext, path string, eolcomment string) uint {
 	defer ctx.teardown()
 
 	for {
-		line, err := ctx.munchline()
-		if err == io.EOF {
+		if !ctx.munchline() {
 			break
-		} else if err != nil {
-			panic(err)
 		}
-		i := bytes.Index(line, []byte(eolcomment))
+		i := bytes.Index(ctx.line, []byte(eolcomment))
 		if i > -1 {
-			line = line[:i]
+			ctx.line = ctx.line[:i]
 		}
-		line = bytes.Trim(line, " \t\r\n")
-		if len(line) > 0 {
+		ctx.line = bytes.Trim(ctx.line, " \t\r\n")
+		if len(ctx.line) > 0 {
 			sloc++
 		}
 	}
@@ -601,56 +599,53 @@ func pythonCounter(ctx *countContext, path string) uint {
 
 	triple_boundary := func(line []byte) bool {return bytes.Contains(line, []byte(dt)) || bytes.Contains(line, []byte(st))}
 	for {
-		line, err := ctx.munchline()
-		if err == io.EOF {
+		if !ctx.munchline() {
 			break
-		} else if err != nil {
-			panic(err)
 		}
 
 		// Delete trailing comments
-		i := bytes.Index(line, []byte("#"))
+		i := bytes.Index(ctx.line, []byte("#"))
 		if i > -1 {
-			line = line[:i]
+			ctx.line = ctx.line[:i]
 		}
 
 		if !isintriple {  // Normal case:
-			// Ignore triple-quotes that begin & end on the line.
-			line = dtriple.ReplaceAllLiteral(line, []byte(""))
-			line = striple.ReplaceAllLiteral(line, []byte(""))
+			// Ignore triple-quotes that begin & end on the ctx.line.
+			ctx.line = dtriple.ReplaceAllLiteral(ctx.line, []byte(""))
+			ctx.line = striple.ReplaceAllLiteral(ctx.line, []byte(""))
 			// Delete lonely strings starting on BOL.
-			line = dlonely.ReplaceAllLiteral(line, []byte(""))
-			line = slonely.ReplaceAllLiteral(line, []byte(""))
+			ctx.line = dlonely.ReplaceAllLiteral(ctx.line, []byte(""))
+			ctx.line = slonely.ReplaceAllLiteral(ctx.line, []byte(""))
 			// Delete trailing comments
-			i := bytes.Index(line, []byte("#"))
+			i := bytes.Index(ctx.line, []byte("#"))
 			if i > -1 {
-				line = line[:i]
+				ctx.line = ctx.line[:i]
 			}
-			// Does multiline triple-quote begin here?
-			if triple_boundary(line) {
+			// Does multictx.line triple-quote begin here?
+			if triple_boundary(ctx.line) {
 		    		isintriple = true;
-				line = bytes.Trim(line, " \t\r\n")
+				ctx.line = bytes.Trim(ctx.line, " \t\r\n")
 				// It's a comment if at BOL.
-				if bytes.HasPrefix(line, []byte(dt)) || bytes.HasPrefix(line, []byte(st)){
+				if bytes.HasPrefix(ctx.line, []byte(dt)) || bytes.HasPrefix(ctx.line, []byte(st)){
 					isincomment = true
 				}
 			}
 		} else {  // we ARE in a triple.
-			if triple_boundary(line) {
+			if triple_boundary(ctx.line) {
 				if isincomment {
 					// Delete text if it's a comment (not if data)
-					line = dtrailer.ReplaceAllLiteral(line, []byte(""))
-					line = strailer.ReplaceAllLiteral(line, []byte(""))
+					ctx.line = dtrailer.ReplaceAllLiteral(ctx.line, []byte(""))
+					ctx.line = strailer.ReplaceAllLiteral(ctx.line, []byte(""))
 				} else {
 					// Leave something there to count.
-					line = dtrailer.ReplaceAllLiteral(line, []byte("x"))
-					line = strailer.ReplaceAllLiteral(line, []byte("x"))
+					ctx.line = dtrailer.ReplaceAllLiteral(ctx.line, []byte("x"))
+					ctx.line = strailer.ReplaceAllLiteral(ctx.line, []byte("x"))
 				}
 				// But wait!  Another triple might
-				// start on this line!  (see
+				// start on this ctx.line!  (see
 				// Python-1.5.2/Tools/freeze/makefreeze.py
 				// for an example)
-				if triple_boundary(line) {
+				if triple_boundary(ctx.line) {
 					// It did!  No change in state!
 				} else {
 					isintriple = false
@@ -658,8 +653,8 @@ func pythonCounter(ctx *countContext, path string) uint {
 				}
 			}
 		}
-		line = bytes.Trim(line, " \t\r\n")
-		if !isincomment && len(line) > 0 {
+		ctx.line = bytes.Trim(ctx.line, " \t\r\n")
+		if !isincomment && len(ctx.line) > 0 {
 			sloc++
 		}
 	}
@@ -691,27 +686,24 @@ func perlCounter(ctx *countContext, path string) uint {
 	defer ctx.teardown()
 
 	for {
-		line, err := ctx.munchline()
-		if err == io.EOF {
+		if !ctx.munchline() {
 			break
-		} else if err != nil {
-			panic(err)
 		}
 
 		// Delete trailing comments
-		i := bytes.Index(line, []byte("#"))
+		i := bytes.Index(ctx.line, []byte("#"))
 		if i > -1 {
-			line = line[:i]
+			ctx.line = ctx.line[:i]
 		}
 
-		line = bytes.Trim(line, " \t\r\n")
+		ctx.line = bytes.Trim(ctx.line, " \t\r\n")
 		
-		if heredoc != "" && strings.HasPrefix(string(line), heredoc) {
+		if heredoc != "" && strings.HasPrefix(string(ctx.line), heredoc) {
 			heredoc = ""    //finished here doc.
-		} else if i := bytes.Index(line, []byte("<<")); i > -1 { 
+		} else if i := bytes.Index(ctx.line, []byte("<<")); i > -1 { 
 			// Beginning of a here document.
-			heredoc = string(bytes.Trim(line[i:], "< \t\"';,"))
-		} else if len(heredoc) == 0 && bytes.HasPrefix(line, []byte("=cut")) {
+			heredoc = string(bytes.Trim(ctx.line[i:], "< \t\"';,"))
+		} else if len(heredoc) == 0 && bytes.HasPrefix(ctx.line, []byte("=cut")) {
 			// Ending a POD?
 			if !isinpod {
 				log.Printf("\"%s\", %d: cut without pod start\n",
@@ -719,18 +711,18 @@ func perlCounter(ctx *countContext, path string) uint {
 			}
 			isinpod = false
 			continue  // Don't count the cut command.
-		} else if len(heredoc) == 0 && podheader.Match(line) {
+		} else if len(heredoc) == 0 && podheader.Match(ctx.line) {
 			// Starting or continuing a POD?
 			// Perlpods can have multiple contents, so
 			// it's okay if isinpod == true.  Note that
 			// =(space) isn't a POD; library file
 			// perl5db.pl does this!
 			isinpod = true
-		} else if bytes.HasPrefix(line, []byte("__END__")) {
+		} else if bytes.HasPrefix(ctx.line, []byte("__END__")) {
 			// Stop processing this file on __END__.
 			break
 		}
-		if !isinpod && len(line) > 0 {
+		if !isinpod && len(ctx.line) > 0 {
 			sloc++
 		}
 	}
@@ -800,11 +792,10 @@ func fortranCounter(ctx *countContext, path string, syntax fortranLike) uint {
 	defer ctx.teardown()
 
 	for {
-		line, err := ctx.munchline()
-		if err != nil {
+		if !ctx.munchline() {
 			break
 		}
-		if !(syntax.comment.Match(line) && !syntax.nocomment.Match(line)) {
+		if !(syntax.comment.Match(ctx.line) && !syntax.nocomment.Match(ctx.line)) {
 			sloc++
 		}
 	}
