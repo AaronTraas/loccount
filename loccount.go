@@ -167,7 +167,7 @@ func init() {
 		{"rust", ".rs", "", "", "//", nil},
 		{"rust", ".rlib", "", "", "//", nil},
 		{"erlang", ".erl", "", "", "%", nil},
-		{"turing", ".t", "", "", "%", nil},
+		//{"turing", ".t", "", "", "%", nil},
 		{"d", ".d", "", "", "//", nil},
 		{"occam", ".f", "", "", "//", really_is_occam},
 		// autoconf cruft - note the config.h-in entry under C-likes
