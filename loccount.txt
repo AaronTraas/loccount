@@ -108,9 +108,9 @@ on a line will be counted, not recognized as comments and skipped.
 Eiffel indexing comments are counted as code, not text. (This is
 arguably a feature.)
 
-The languages MUMPS, occam, and Prolog are unsupported because the file
-extensions they use conflict with more-widely used ones (Objective-C,
-Fortran, and Perl respectively).
+The languages MUMPS and Prolog are unsupported because the file
+extensions they use conflict with more-widely used ones (Objective-C
+and Perl respectively).
 
 The asm counter assumes C-style block comment syntax and ";" winged
 comments. This is correct for Intel assemblers and some others, but

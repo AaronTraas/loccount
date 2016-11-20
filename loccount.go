@@ -89,6 +89,7 @@ type genericLanguage struct {
 	name string
 	suffix string
 	eolcomment string
+	verifier func(*countContext, string) bool
 }
 var genericLanguages []genericLanguage
 
@@ -179,42 +180,43 @@ func init() {
 		{"sed", ".sed", "sed"},
 	}
 	genericLanguages = []genericLanguage{
-		{"ada", ".ada", "--"},
-		{"ada", ".adb", "--"},
-		{"ada", ".ads", "--"},
-		{"ada", ".pad", "--"},	// Oracle Ada preprocessor.
-		{"makefile", ".mk", "#"},
-		{"makefile", "Makefile", "#"},
-		{"makefile", "makefile", "#"},
-		{"makefile", "Imakefile", "#"},
-		{"m4", ".m4", "#"},
-		{"lisp", ".lisp", ";"},
-		{"lisp", ".lsp", ";"},	// XLISP
-		{"lisp", ".cl", ";"},	// Common Lisp
-		{"scheme", ".scm", ";"},
-		{"elisp", ".el", ";"},	// Emacs Lisp
-		{"cobol", ".CBL", "*"},
-		{"cobol", ".cbl", "*"},
-		{"cobol", ".COB", "*"},
-		{"cobol", ".cob", "*"},
-		{"eiffel", ".e", "--"},
-		{"sather", ".sa", "--"},
-		{"lua", ".lua", "--"},
-		{"clu", ".clu", "%"},
-		{"rust", ".rs", "//"},
-		{"rust", ".rlib", "//"},
-		{"erlang", ".erl", "%"},
-		{"turing", ".t", "%"},
-		{"d", ".d", "//"},
+		{"ada", ".ada", "--", nil},
+		{"ada", ".adb", "--", nil},
+		{"ada", ".ads", "--", nil},
+		{"ada", ".pad", "--", nil},	// Oracle Ada preprocessor.
+		{"makefile", ".mk", "#", nil},
+		{"makefile", "Makefile", "#", nil},
+		{"makefile", "makefile", "#", nil},
+		{"makefile", "Imakefile", "#", nil},
+		{"m4", ".m4", "#", nil},
+		{"lisp", ".lisp", ";", nil},
+		{"lisp", ".lsp", ";", nil},	// XLISP
+		{"lisp", ".cl", ";", nil},	// Common Lisp
+		{"scheme", ".scm", ";", nil},
+		{"elisp", ".el", ";", nil},	// Emacs Lisp
+		{"cobol", ".CBL", "*", nil},
+		{"cobol", ".cbl", "*", nil},
+		{"cobol", ".COB", "*", nil},
+		{"cobol", ".cob", "*", nil},
+		{"eiffel", ".e", "--", nil},
+		{"sather", ".sa", "--", nil},
+		{"lua", ".lua", "--", nil},
+		{"clu", ".clu", "%", nil},
+		{"rust", ".rs", "//", nil},
+		{"rust", ".rlib", "//", nil},
+		{"erlang", ".erl", "%", nil},
+		{"turing", ".t", "%", nil},
+		{"d", ".d", "//", nil},
+		{"occam", ".f", "//", really_is_occam},
 		// autoconf cruft - note the config.h-in entry under C-likes
-		{"autotools", "autogen.sh", "#"},
-		{"autotools", "configure.in", "#"},
-		{"autotools", "Makefile.in", "#"},
-		{"autotools", ".am", "#"},
-		{"autotools", ".ac", "#"},
-		{"autotools", ".mf", "#"},
+		{"autotools", "autogen.sh", "#", nil},
+		{"autotools", "configure.in", "#", nil},
+		{"autotools", "Makefile.in", "#", nil},
+		{"autotools", ".am", "#", nil},
+		{"autotools", ".ac", "#", nil},
+		{"autotools", ".mf", "#", nil},
 		// Scons
-		{"scons", "SConstruct", "#"},
+		{"scons", "SConstruct", "#", nil},
 	}
 	pascalLikes = []pascalLike{
 		{"pascal", ".pas", true},
@@ -408,17 +410,38 @@ func really_is_objc(ctx *countContext, path string) bool {
 	}
 
 	if debug > 0 {
-		log.Printf("obj-c verifier returned %t on %s\n", is_objc, path)
+		log.Printf("objc verifier returned %t on %s\n", is_objc, path)
 	}
 
 	return is_objc
+}
+
+// really_is_occam - returns TRUE if filename contents really are objective-C.
+func really_is_occam(ctx *countContext, path string) bool {
+	var is_occam bool = false   // Value to determine.
+
+	ctx.setup(path)
+	defer ctx.teardown()
+
+	for ctx.munchline() {
+		if ctx.matchline("--") || ctx.matchline("PROC") {
+			is_occam = true
+			break
+		}
+	}
+
+	if debug > 0 {
+		log.Printf("objc verifier returned %t on %s\n", is_occam, path)
+	}
+
+	return is_occam
 }
 
 // hashbang - hunt for a specified string in the first line of an executable
 func hashbang(ctx *countContext, path string, langname string) bool {
 	fi, err := os.Stat(path)
 	// If it's not executable by somebody, don't read for hashbang
-	if err != nil && (fi.Mode() & 01111) == 0 {
+	if err != nil || (fi.Mode() & 01111) == 0 {
 		return false
 	}
 	ctx.setup(path)
@@ -562,9 +585,15 @@ func c_family_counter(ctx *countContext, path string, syntax cLike) uint {
 }
 
 // genericCounter - count SLOC in a generic language.
-func genericCounter(ctx *countContext, path string, eolcomment string) uint {
+func genericCounter(ctx *countContext,
+	path string, eolcomment string,
+	verifier func(*countContext, string) bool) uint {
 	var sloc uint = 0
 
+	if verifier != nil && !verifier(ctx, path) {
+		return 0
+	}
+	
 	ctx.setup(path)
 	defer ctx.teardown()
 
@@ -791,9 +820,11 @@ func Generic(ctx *countContext, path string) SourceStat {
 	for i := range cLikes {
 		lang := cLikes[i]
 		if strings.HasSuffix(path, lang.extension) {
-			stat.Language = lang.name
 			stat.SLOC = c_family_counter(ctx, path, lang)
-			return stat
+			if stat.SLOC > 0 {
+				stat.Language = lang.name
+				return stat
+			}
 		}
 	}
 
@@ -819,7 +850,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		lang := scriptingLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
 			stat.Language = lang.name
-			stat.SLOC = genericCounter(ctx, path, "#")
+			stat.SLOC = genericCounter(ctx, path, "#", nil)
 			return stat
 		}
 	}
@@ -827,9 +858,9 @@ func Generic(ctx *countContext, path string) SourceStat {
 	for i := range genericLanguages {
 		lang := genericLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) {
-			stat.Language = lang.name
-			stat.SLOC = genericCounter(ctx,	path, lang.eolcomment)
+			stat.SLOC = genericCounter(ctx,	path, lang.eolcomment, lang.verifier)
 			if stat.SLOC > 0 {
+				stat.Language = lang.name
 				return stat
 			}
 		}
