@@ -386,11 +386,7 @@ func really_is_objc(ctx *countContext, path string) bool {
 	ctx.setup(path)
 	defer ctx.teardown()
 
-	for {
-		if !ctx.munchline() {
-			break
-		}
-
+	for ctx.munchline() {
 		if ctx.matchline("^\\s*[{}]") || ctx.matchline("[{}];?\\s*") {
 			brace_lines++
 		}
@@ -406,7 +402,7 @@ func really_is_objc(ctx *countContext, path string) bool {
 		}
 
 		if (brace_lines > 1) && ((plus_minus > 1) || word_main > 0 || special) {
-				is_objc = true
+			is_objc = true
 		}
 
 	}
@@ -572,10 +568,7 @@ func genericCounter(ctx *countContext, path string, eolcomment string) uint {
 	ctx.setup(path)
 	defer ctx.teardown()
 
-	for {
-		if !ctx.munchline() {
-			break
-		}
+	for ctx.munchline() {
 		i := bytes.Index(ctx.line, []byte(eolcomment))
 		if i > -1 {
 			ctx.line = ctx.line[:i]
@@ -598,11 +591,7 @@ func pythonCounter(ctx *countContext, path string) uint {
 	defer ctx.teardown()
 
 	triple_boundary := func(line []byte) bool {return bytes.Contains(line, []byte(dt)) || bytes.Contains(line, []byte(st))}
-	for {
-		if !ctx.munchline() {
-			break
-		}
-
+	for ctx.munchline() {
 		// Delete trailing comments
 		i := bytes.Index(ctx.line, []byte("#"))
 		if i > -1 {
@@ -685,11 +674,7 @@ func perlCounter(ctx *countContext, path string) uint {
 	ctx.setup(path)
 	defer ctx.teardown()
 
-	for {
-		if !ctx.munchline() {
-			break
-		}
-
+	for ctx.munchline() {
 		// Delete trailing comments
 		i := bytes.Index(ctx.line, []byte("#"))
 		if i > -1 {
@@ -791,10 +776,7 @@ func fortranCounter(ctx *countContext, path string, syntax fortranLike) uint {
 	ctx.setup(path)
 	defer ctx.teardown()
 
-	for {
-		if !ctx.munchline() {
-			break
-		}
+	for ctx.munchline() {
 		if !(syntax.comment.Match(ctx.line) && !syntax.nocomment.Match(ctx.line)) {
 			sloc++
 		}
