@@ -224,6 +224,7 @@ func init() {
 		{"ml",      ".ml", false, nil},
 		{"oberon",  ".mod", false, nil},
 		{"pascal",  ".p", false, really_is_pascal},
+		{"pascal",  ".inc", false, really_is_pascal},
 	}
 
 	var ferr error
