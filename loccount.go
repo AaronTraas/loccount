@@ -121,7 +121,7 @@ func init() {
 		{"c", ".c", "/*", "*/", "//", nil},
 		{"c-header", ".h", "/*", "*/", "//", nil},
 		{"yacc", ".y", "/*", "*/", "//", nil},
-		{"lex", ".l", "/*", "*/", "//", nil},
+		{"lex", ".l", "/*", "*/", "//", really_is_lex},
 		{"c++", ".cpp", "/*", "*/", "//", nil},
 		{"c++", ".cxx", "/*", "*/", "//", nil},
 		{"java", ".java", "/*", "*/", "//", nil},
@@ -150,6 +150,7 @@ func init() {
 		{"lisp", ".lisp", "", "", ";", nil},
 		{"lisp", ".lsp", "", "", ";", nil},	// XLISP
 		{"lisp", ".cl", "", "", ";", nil},	// Common Lisp
+		{"lisp", ".l", "", "", ";", nil},	// Must be after lex
 		{"scheme", ".scm", "", "", ";", nil},
 		{"elisp", ".el", "", "", ";", nil},	// Emacs Lisp
 		{"cobol", ".CBL", "", "", "*", nil},
@@ -436,6 +437,11 @@ func has_keywords(ctx *countContext, path string, lang string, tells []string) b
 // really_is_occam - returns TRUE if filename contents really are occam.
 func really_is_occam(ctx *countContext, path string) bool {
 	return has_keywords(ctx, path, "occam", []string{"--", "PROC"})
+}
+
+// really_is_lex - returns TRUE if filename contents really are lex.
+func really_is_lex(ctx *countContext, path string) bool {
+	return has_keywords(ctx, path, "lex", []string{"%{", "%%", "%}"})
 }
 
 // hashbang - hunt for a specified string in the first line of an executable

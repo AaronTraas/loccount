@@ -25,12 +25,14 @@ tests/hello.rb 1 ruby
 tests/hello.sa 5 sather
 tests/hello.sh 1 shell
 tests/hello.tcl 1 tcl
+tests/lisp-hello.l 1 lisp
 tests/ntp_fp.h 254 c-header
 tests/ntpver 1 shell
 tests/occam-hello.f 5 occam
 tests/oneliner.pl 1 perl
 tests/packet.py 849 python
 tests/perl-filewrite 11 perl
+tests/pilotconv.l 36 lex
 tests/ruby-hello 1 ruby
 tests/test.hs 8 haskell
 tests/upload 6 python

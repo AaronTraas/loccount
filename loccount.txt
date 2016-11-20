@@ -99,9 +99,6 @@ tools depending on time of last release.
 
 == BUGS ==
 
-Lisp sources with a .l extension are rare but not unknown. These
-will be mistaken for Lex sources.
-
 PHP #-comments taking up an entire line or following only whitespace
 on a line will be counted, not recognized as comments and skipped.
 
