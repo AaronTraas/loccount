@@ -504,10 +504,40 @@ func genericCounter(ctx *countContext, path string, eolcomment string) uint {
 
 func pythonCounter(ctx *countContext, path string) uint {
 	var sloc uint = 0
+	var isintriple bool	// A triple-quote is in effect.
+	var isincomment bool	// We are in a multiline (triple-quoted) comment.
 
 	ctx.Setup(path)
 	defer ctx.teardown()
 
+	const dt = "\"\"\""
+	const st = "'''"
+	dtriple, err := regexp.Compile(dt + "." + dt)
+	if err != nil {
+		panic(err)
+	}
+	striple, err := regexp.Compile(st + "." + st)
+	if err != nil {
+		panic(err)
+	}
+	dlonely, err := regexp.Compile("^[ \t]*\"[^\"]+\"")
+	if err != nil {
+		panic(err)
+	}
+	slonely, err := regexp.Compile("^[ \t]*'[^']+'")
+	if err != nil {
+		panic(err)
+	}
+	strailer, err := regexp.Compile(".*" + st)
+	if err != nil {
+		panic(err)
+	}
+	dtrailer, err := regexp.Compile(".*" + dt)
+	if err != nil {
+		panic(err)
+	}
+
+	triple_boundary := func(line []byte) bool {return bytes.Contains(line, []byte(dt)) || bytes.Contains(line, []byte(st))}
 	for {
 		line, err := ctx.munchline()
 		if err == io.EOF {
@@ -522,11 +552,51 @@ func pythonCounter(ctx *countContext, path string) uint {
 			line = line[:i]
 		}
 
-		line = bytes.Trim(line, " \t\r\n")
-
-		// FIXME: Python counting
-
-		if len(line) > 0 {
+		if !isintriple {  // Normal case:
+			// Ignore triple-quotes that begin & end on the line.
+			line = dtriple.ReplaceAllLiteral(line, []byte(""))
+			line = striple.ReplaceAllLiteral(line, []byte(""))
+			// Delete lonely strings starting on BOL.
+			line = dlonely.ReplaceAllLiteral(line, []byte(""))
+			line = slonely.ReplaceAllLiteral(line, []byte(""))
+			// Delete trailing comments
+			i := bytes.Index(line, []byte("#"))
+			if i > -1 {
+				line = line[:i]
+			}
+			// Does multiline triple-quote begin here?
+			if triple_boundary(line) {
+		    		isintriple = true;
+				line = bytes.Trim(line, " \t\r\n")
+				// It's a comment if at BOL.
+				if bytes.HasPrefix(line, []byte(dt)) || bytes.HasPrefix(line, []byte(st)){
+					isincomment = true
+				}
+			}
+		} else {  // we ARE in a triple.
+			if triple_boundary(line) {
+				if isincomment {
+					// Delete text if it's a comment (not if data)
+					line = dtrailer.ReplaceAllLiteral(line, []byte(""))
+					line = strailer.ReplaceAllLiteral(line, []byte(""))
+				} else {
+					// Leave something there to count.
+					line = dtrailer.ReplaceAllLiteral(line, []byte("x"))
+					line = strailer.ReplaceAllLiteral(line, []byte("x"))
+				}
+				// But wait!  Another triple might
+				// start on this line!  (see
+				// Python-1.5.2/Tools/freeze/makefreeze.py
+				// for an example)
+				if triple_boundary(line) {
+					// It did!  No change in state!
+				} else {
+					isintriple = false
+					isincomment = false
+				}
+			}
+		}
+		if !isincomment && len(line) > 0 {
 			sloc++
 		}
 	}
