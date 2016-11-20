@@ -26,14 +26,16 @@ languages fall into one of the following groups:
   a block comment delimited by two distinct strings and the second is
   a winged comment introduced by a third string and terminated by
   newline.  You can add support simply by appending an initializer to
-  the genericLanguages table.
+  the genericLanguages table; any entry with a nonempty comment leader
+  invokes C-like parsing.
 
 * Generic languages have only winged comments, usually led with #.
   This code recognizes them by file extension only.  You can append an
   initializer to the genericLanguages table specifying a name, an
-  extension, and the comment leader.
+  extension, and the winged-comment leader.  Any entry with empty
+  commentleader and trailer strings gets generic parsing.
 
-* Scripting languages have only winged comments, usually led with #.
+* Scripting languages have only winged comments, always led with #.
   This code recognizes them by file extension, or by looking for a
   hashbang line identifying the interpreter.  You can append an
   initializer to the scriptingLanguages table specifying a name, an
