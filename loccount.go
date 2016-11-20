@@ -91,6 +91,7 @@ type pascalLike struct {
 	name string
 	suffix string
 	bracketcomments bool
+	verifier func(*countContext, string) bool
 }
 var pascalLikes []pascalLike
 
@@ -215,13 +216,14 @@ func init() {
 		{"expect", ".exp", "expect", really_is_expect},
 	}
 	pascalLikes = []pascalLike{
-		{"pascal", ".pas", true},
-		{"modula3", ".i3", false},
-		{"modula3", ".m3", false},
-		{"modula3", ".ig", false},
-		{"modula3", ".mg", false},
-		{"ml",      ".ml", false},
-		{"oberon",  ".mod", false},
+		{"pascal", ".pas", true, nil},
+		{"modula3", ".i3", false, nil},
+		{"modula3", ".m3", false, nil},
+		{"modula3", ".ig", false, nil},
+		{"modula3", ".mg", false, nil},
+		{"ml",      ".ml", false, nil},
+		{"oberon",  ".mod", false, nil},
+		{"pascal",  ".p", false, really_is_pascal},
 	}
 
 	var ferr error
@@ -357,6 +359,15 @@ func (ctx *countContext) munchline() bool {
 	}
 }
 
+// Consume the remainder of a line, updating the line counter
+func (ctx *countContext) drop(excise string) bool {
+	cre, err := regexp.Compile(excise)
+	if err != nil {
+		panic(fmt.Sprintf("unexpected failure %s while compiling %s", err, excise))
+	}
+	return cre.ReplaceAllLiteral(ctx.line, []byte("")) != nil
+}
+
 // matchline - does a given regexp match the last line read?
 func (ctx *countContext) matchline(re string) bool {
 	cre, err := regexp.Compile(re)
@@ -468,25 +479,29 @@ func really_is_expect (ctx *countContext, path string) bool {
 	var found_expect bool
 	var found_pound bool
 
-	if ctx.matchline("#") {
-		found_pound = true
-		// Delete trailing comments
-		i := bytes.Index(ctx.line, []byte("#"))
-		if i > -1 {
-			ctx.line = ctx.line[:i]
-		}
-	}
-		
-	if (ctx.matchline("^\\s*\\{")) { begin_brace = true}
-	if (ctx.matchline("\\{\\s*$")) { begin_brace = true}
-	if (ctx.matchline("^\\s*}")) { end_brace = true}
-	if (ctx.matchline("};?\\s*$")) { end_brace = true}
-	if (ctx.matchline("^\\s*load_lib\\s+\\S")) { load_lib = true}
-	if (ctx.matchline("^\\s*proc\\s")) { found_proc = true}
-	if (ctx.matchline("^\\s*if\\s")) { found_if = true}
-	if (ctx.matchline("\\[.*\\]")) { found_brackets = true}
-	if (ctx.matchline("^\\s*expect\\s")) { found_expect = true}
+	ctx.setup(path)
+	defer ctx.teardown()
 
+	for ctx.munchline() {
+		if ctx.matchline("#") {
+			found_pound = true
+			// Delete trailing comments
+			i := bytes.Index(ctx.line, []byte("#"))
+			if i > -1 {
+				ctx.line = ctx.line[:i]
+			}
+		}
+
+		if (ctx.matchline("^\\s*\\{")) { begin_brace = true}
+		if (ctx.matchline("\\{\\s*$")) { begin_brace = true}
+		if (ctx.matchline("^\\s*}")) { end_brace = true}
+		if (ctx.matchline("};?\\s*$")) { end_brace = true}
+		if (ctx.matchline("^\\s*load_lib\\s+\\S")) { load_lib = true}
+		if (ctx.matchline("^\\s*proc\\s")) { found_proc = true}
+		if (ctx.matchline("^\\s*if\\s")) { found_if = true}
+		if (ctx.matchline("\\[.*\\]")) { found_brackets = true}
+		if (ctx.matchline("^\\s*expect\\s")) { found_expect = true}
+	}
 
 	if load_lib && (found_pound || (begin_brace && end_brace)) {
 		is_expect = true
@@ -503,6 +518,122 @@ func really_is_expect (ctx *countContext, path string) bool {
 	return is_expect
 }
 
+
+// really-is-pascal - returns  true if filename contents really are Pascal.
+func really_is_pascal (ctx *countContext, path string) bool {
+// This isn't as obvious as it seems.
+// Many ".p" files are Perl files
+// (such as /usr/src/redhat/BUILD/ispell-3.1/dicts/czech/glob.p),
+// others are C extractions
+// (such as /usr/src/redhat/BUILD/linux/include/linux/umsdos_fs.p
+// and some files in linuxconf).
+// However, test files in "p2c" really are Pascal, for example.
+
+// Note that /usr/src/redhat/BUILD/ucd-snmp-4.1.1/ov/bitmaps/UCD.20.p
+// is actually C code.  The heuristics determine that they're not Pascal,
+// but because it ends in ".p" it's not counted as C code either.
+// I believe this is actually correct behavior, because frankly it
+// looks like it's automatically generated (it's a bitmap expressed as code).
+// Rather than guess otherwise, we don't include it in a list of
+// source files.  Let's face it, someone who creates C files ending in ".p"
+// and expects them to be counted by default as C files in SLOCCount needs
+// their head examined.  I suggest examining their head
+// with a sucker rod (see syslogd(8) for more on sucker rods).
+
+// This heuristic counts as Pascal such files such as:
+//  /usr/src/redhat/BUILD/teTeX-1.0/texk/web2c/tangleboot.p
+// Which is hand-generated.  We don't count woven documents now anyway,
+// so this is justifiable.
+
+// The heuristic is as follows: it's Pascal _IF_ it has all of the following
+// (ignoring {...} and (*...*) comments):
+// 1. "^..program NAME" or "^..unit NAME",
+// 2. "procedure", "function", "^..interface", or "^..implementation",
+// 3. a "begin", and
+// 4. it ends with "end.",
+//
+// Or it has all of the following:
+// 1. "^..module NAME" and
+// 2. it ends with "end.".
+//
+// Or it has all of the following:
+// 1. "^..program NAME",
+// 2. a "begin", and
+// 3. it ends with "end.".
+//
+// The "end." requirements in particular filter out non-Pascal.
+//
+// Note (jgb): this does not detect Pascal main files in fpc, like
+// fpc-1.0.4/api/test/testterminfo.pas, which does not have "program" in
+// it
+	var is_pascal bool      // Value to determine.
+
+	var has_program bool
+	var has_unit bool
+	var has_module bool
+	var has_procedure_or_function bool
+	var has_begin bool
+	var found_terminating_end bool
+
+	ctx.setup(path)
+	defer ctx.teardown()
+
+	for ctx.munchline() {
+		// Ignore {...} comments on this line; imperfect, but effective.
+		ctx.drop("\\{.*?\\}")
+		// Ignore (*...*) comments on this line; imperfect but effective.
+		ctx.drop("\\(\\*.*\\*\\)")
+
+		if ctx.matchline("(?i)\\bprogram\\s+[A-Za-z]")  {
+			has_program = true
+		}
+		if ctx.matchline("(?i)\\bunit\\s+[A-Za-z]")     {
+			has_unit = true
+		}
+		if ctx.matchline("(?i)\\bmodule\\s+[A-Za-z]")   {
+			has_module = true
+		}
+		if ctx.matchline("(?i)\\bprocedure\\b")         {
+			has_procedure_or_function  = true
+		}
+		if ctx.matchline("(?i)\\bfunction\\b")          {
+			has_procedure_or_function  = true
+		}
+		if ctx.matchline("(?i)^\\s*interface\\s+")      {
+			has_procedure_or_function  = true
+		}
+		if ctx.matchline("(?i)^\\s*implementation\\s+") {
+			has_procedure_or_function  = true
+		}
+		if ctx.matchline("(?i)\\bbegin\\b") {
+			has_begin  = true
+		}
+		// Originally dw said: "This heuristic fails if there
+		// are multi-line comments after "end."; I haven't
+		// seen that in real Pascal programs:"
+		// But jgb found there are a good quantity of them in
+		// Debian, specially in fpc (at the end of a lot of
+		// files there is a multiline comment with the
+		// changelog for the file).  Therefore, assume Pascal
+		// if "end." appears anywhere in the file.
+		if ctx.matchline("(?i)end\\.\\s*$") {
+			found_terminating_end = true
+		}
+	}
+
+	// Okay, we've examined the entire file looking for clues;
+	// let's use those clues to determine if it's really Pascal:
+	is_pascal = (((has_unit || has_program) && has_procedure_or_function &&
+		has_begin && found_terminating_end ) ||
+		(has_module && found_terminating_end ) ||
+		(has_program && has_begin && found_terminating_end))
+
+	if debug > 0 {
+		log.Printf("pascal verifier returned %t on %s\n", is_pascal, path)
+	}
+
+	return is_pascal
+}
 
 // hashbang - hunt for a specified string in the first line of an executable
 func hashbang(ctx *countContext, path string, langname string) bool {
@@ -817,6 +948,10 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 	var mode int = NORMAL              /* NORMAL, or INCOMMENT */
 	var startline uint
 
+	if syntax.verifier != nil && !syntax.verifier(ctx, path) {
+		return 0
+	}
+	
 	ctx.setup(path)
 	defer ctx.teardown()
 
