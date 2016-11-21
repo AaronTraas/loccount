@@ -208,7 +208,8 @@ func init() {
 	}
 
 	scriptingLanguages = []scriptingLanguage{
-		{"tcl", ".tcl", "tcl", nil},	/* must be before sh */
+		{"tcl", ".tcl", "tcl", nil},	/* before sh, because tclsh */
+		{"tcl", ".tcl", "wish", nil},
 		{"csh", ".csh", "csh", nil},
 		{"shell", ".sh", "sh", nil},
 		{"ruby", ".rb", "ruby", nil},
@@ -650,7 +651,13 @@ func was_generated_automatically(ctx *countContext, path string, eolcomment stri
 	ctx.setup(path)
 	defer ctx.teardown()
 
-	re := "(\\*|" + eolcomment + ").*(" + generated +")"
+	// Avoid blowing up if the comment leader is "*" (as in COBOL). 
+	if eolcomment == "*" {
+		eolcomment = ""
+	} else {
+		eolcomment = "|" + eolcomment
+	}
+	re := "(\\*" + eolcomment + ").*(" + generated +")"
 	cre, err := regexp.Compile(re)
 	if err != nil {
 		panic(fmt.Sprintf("unexpected failure while building %s", re))
@@ -1094,7 +1101,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		return stat
 	}
 		
-	if strings.HasSuffix(path, ".pl") || hashbang(ctx, path, "perl") {
+	if strings.HasSuffix(path, ".pl") || strings.HasSuffix(path, ".pm") || hashbang(ctx, path, "perl") {
 		if autofilter("#") {
 			return stat
 		}
