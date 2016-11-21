@@ -133,6 +133,10 @@ func init() {
 	// with verifiers should go first, and (b) there should be at most one
 	// entry without a verifier (because any second and later ones will be
 	// pre-empted by it).
+	//
+	// All entries for a given language should be in a contiguous span,
+	// otherwise the primtive duplicate director in listLanguages will
+	// be foild.
 	genericLanguages = []genericLanguage{
 		/* C family */
 		{"c", ".c", "/*", "*/", "//", nil},
@@ -1311,7 +1315,7 @@ func reportCocomo(sloc uint) {
 	fmt.Printf(" (average salary = $%d/year, overhead = %2.2f).\n", SALARY, OVERHEAD)
 }
 
-func list_languages() []string {
+func listLanguages() []string {
 	var names []string = []string{"python", "waf", "perl"}
 	var lastlang string
 	for i := range genericLanguages {
@@ -1349,7 +1353,7 @@ func list_languages() []string {
 	return names
 }
 
-func list_extensions() {
+func listExtensions() {
 	extensions := map[string][]string{
 		"python": []string{".py"},
 		"waf": []string{"waf"},
@@ -1374,7 +1378,7 @@ func list_extensions() {
 		lang := fortranLikes[i]
 		extensions[lang.name] = append(extensions[lang.name], lang.suffix)  
 	}
-	names := list_languages()
+	names := listLanguages()
 	for i := range names {
 		fmt.Printf("%s: %v\n", names[i], extensions[names[i]])
 	}
@@ -1414,10 +1418,10 @@ func main() {
 		fmt.Printf("loccount %.1f\n", version)
 		return
 	} else if list {
-		fmt.Printf("%s\n", list_languages())
+		fmt.Printf("%s\n", listLanguages())
 		return
 	} else if extensions {
-		list_extensions()
+		listExtensions()
 		return
 	}
 
