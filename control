@@ -15,7 +15,7 @@ XBS-Repository-URL: https://gitlab.com/esr/loccount
 
 XBS-HTML-Target: index.html
 
-XBS-Logo: ascii-logo.png
+XBS-Logo: loccount-logo.png
 
 XBS-VC-Tag-Template: %(version)s
 

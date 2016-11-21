@@ -19,7 +19,7 @@ testbuild: loccount
 	./loccount -i tests >check.good
 
 SOURCES = README COPYING control loccount.go loccount.txt \
-		Makefile TODO tally.png check.good tests/
+		Makefile TODO loccount-logo.png check.good tests/
 
 .SUFFIXES: .html .txt .1
 
