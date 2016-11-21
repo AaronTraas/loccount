@@ -6,7 +6,6 @@ tests/csh-lookup 6 csh
 tests/delegate.d 18 d
 tests/dirlist.pl 8 perl
 tests/factorial.ml 8 ml
-tests/factorial.t 15 turing
 tests/guide.awk 7 awk
 tests/hello.ada 5 ada
 tests/hello.cl 1 lisp
