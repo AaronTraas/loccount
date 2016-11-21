@@ -1151,7 +1151,12 @@ func Generic(ctx *countContext, path string) SourceStat {
 
 func isDirectory(path string) (bool) {
 	fileInfo, err := os.Stat(path)
-	return err == nil && fileInfo.IsDir()
+	return err == nil && fileInfo.Mode().IsDir()
+}
+
+func isRegular(path string) (bool) {
+	fileInfo, err := os.Stat(path)
+	return err == nil && fileInfo.Mode().IsRegular()
 }
 
 // filter - winnows out uninteresting paths before handing them to process
@@ -1208,9 +1213,9 @@ func filter(path string, info os.FileInfo, err error) error {
 	}
 
 	/* has to come after the infix check for directory */
-	if isDirectory(path) {
+	if !isRegular(path) {
 		if debug > 0 {
-			fmt.Printf("directory filter failed: %s\n", path)
+			fmt.Printf("regular-file filter failed: %s\n", path)
 		}
 		return err
 	}
