@@ -5,7 +5,7 @@
 loccount - count lines of code in a source tree and perform cost estimation
 
 == SYNOPSIS ==
-*loccount* [-c] [-i] [-l] [-u] [-x pathlist] [-?] file-or-dir
+*loccount* [-c] [-i] [-l] [-u] [-x pathlist] [-V] [-?] file-or-dir
 
 == DESCRIPTION ==
 
@@ -81,33 +81,38 @@ used by the graphviz tools, rather than fast-exporting.
 Take a comma-separated list of exclusion paths. If a directory is
 excluded, all paths beneath it are.
 
+-V::
+Show program version and exit.
+
 == HISTORY AND COMPATIBILITY ==
 
 The algorithms in this code originated with David A. Wheeler's
-*sloccount* utility.  It is, however, far faster than sloccount, and
-handles many languages that sloccount does not.
+*sloccount* utility, version 2.26 of 2004.  It is, however, faster
+than sloccount, and handles many languages that sloccount does not.
 
-Generally it will produce close to identical figures to sloccount for
-a language supported by both tools; the differences are mainly due to
-better detection of some files sloccount left unclassified.
+Generally it will produce identical figures to sloccount for a
+language supported by both tools; the differences in whole-tree
+reports will mainly be due to better detection of some files sloccount
+left unclassified. Notably, for individual C, Python, and Perl files
+you can expect both tools to produce identical counts.
 
-Notably, for individual C files you can expect both tools to produce
-identical counts.
+A few of sloccount's tests have been simplified in cases where the
+complexity came from a rare or edge case that the author judges to
+have become extinct since 2004.
 
 The base salary used for cost estimation will differ between these
 tools depending on time of last release.
 
 == BUGS ==
 
+The sloccount logic for treating multiple argument directories as different
+projects has not been reproduced. This may change in a future release.
+
 PHP #-comments taking up an entire line or following only whitespace
 on a line will be counted, not recognized as comments and skipped.
 
 Eiffel indexing comments are counted as code, not text. (This is
 arguably a feature.)
-
-The languages MUMPS and Prolog are unsupported because the file
-extensions they use conflict with more-widely used ones (Objective-C
-and Perl respectively).
 
 The asm counter assumes C-style block comment syntax and ";" winged
 comments. This is correct for Intel assemblers and some others, but

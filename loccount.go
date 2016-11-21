@@ -14,6 +14,8 @@ import "sort"
 import "strings"
 import "log"
 
+const version float32 = 1.0
+
 /*
 How to add support for a language to this program:
 
@@ -170,6 +172,7 @@ func init() {
 		//{"turing", ".t", "", "", "%", nil},
 		{"d", ".d", "", "", "//", nil},
 		{"occam", ".f", "", "", "//", really_is_occam},
+		{"prolog", ".pl", "", "", "%", really_is_prolog},
 		// autoconf cruft - note the config.h-in entry under C-likes
 		{"autotools", "autogen.sh", "", "", "#", nil},
 		{"autotools", "configure.in", "", "", "#", nil},
@@ -461,6 +464,23 @@ func really_is_occam(ctx *countContext, path string) bool {
 // really_is_lex - returns TRUE if filename contents really are lex.
 func really_is_lex(ctx *countContext, path string) bool {
 	return has_keywords(ctx, path, "lex", []string{"%{", "%%", "%}"})
+}
+
+// really_is_prolog - returns TRUE if filename contents really are prolog.
+// Without this check, Perl files will be falsely identified.
+func really_is_prolog(ctx *countContext, path string) bool {
+	ctx.setup(path)
+	defer ctx.teardown()
+
+	for ctx.munchline() {
+		if bytes.HasPrefix(ctx.line, []byte("#")) {
+			return false
+		} else if ctx.matchline("\\$[[:alpha]]") {
+			return false
+		}
+	}
+
+	return true
 }
 
 // really_is_expect - filename, returns tue if its contents really are Expect.
@@ -1323,6 +1343,7 @@ func main() {
 	var unclassified bool
 	var list bool
 	var cocomo bool
+	var showversion bool
 	excludePtr := flag.String("x", "",
 		"paths and directories to exclude")
 	flag.BoolVar(&individual, "i", false,
@@ -1335,14 +1356,19 @@ func main() {
 		"list supported languages and exit")
 	flag.IntVar(&debug, "d", 0,
 		"set debug level")
+	flag.BoolVar(&showversion, "V", false,
+		"report version and exil")
 	flag.Parse()
 
-	individual = individual || unclassified
-	
-	if list {
+	if showversion {
+		fmt.Printf("loccount %.1f\n", version)
+		return
+	} else if list {
 		list_languages()
 		return
 	}
+
+	individual = individual || unclassified
 
 	// For maximum performance, make the pipeline be as deep as the
 	// number of processor we have available, that way the machine will
