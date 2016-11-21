@@ -74,7 +74,7 @@ var pipeline chan SourceStat
 
 type genericLanguage struct {
 	name string
-	extension string
+	suffix string
 	commentleader string
 	commenttrailer string
 	eolcomment string
@@ -1098,7 +1098,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 
 	for i := range genericLanguages {
 		lang := genericLanguages[i]
-		if strings.HasSuffix(path, lang.extension) {
+		if strings.HasSuffix(path, lang.suffix) {
 			if autofilter(lang.eolcomment) {
 				return stat
 			} else if len(lang.commentleader) > 0 {
@@ -1297,7 +1297,7 @@ func reportCocomo(sloc uint) {
 	fmt.Printf(" (average salary = $%d/year, overhead = %2.2f).\n", SALARY, OVERHEAD)
 }
 
-func list_languages() {
+func list_languages() []string {
 	var names []string = []string{"python", "waf", "perl"}
 	var lastlang string
 	for i := range genericLanguages {
@@ -1332,7 +1332,38 @@ func list_languages() {
 		}
 	}
 	sort.Strings(names)
-	fmt.Printf("%s\n", names)
+	return names
+}
+
+func list_extensions() {
+	extensions := map[string][]string{
+		"python": []string{".py"},
+		"waf": []string{"waf"},
+		"perl": []string{"pl", "pm"},
+	}
+	for i := range genericLanguages {
+		lang := genericLanguages[i]
+		extensions[lang.name] = append(extensions[lang.name], lang.suffix)  
+	}
+
+	for i := range scriptingLanguages {
+		lang := scriptingLanguages[i]
+		extensions[lang.name] = append(extensions[lang.name], lang.suffix)  
+	}
+
+	for i := range pascalLikes {
+		lang := pascalLikes[i]
+		extensions[lang.name] = append(extensions[lang.name], lang.suffix)  
+	}
+
+	for i := range fortranLikes {
+		lang := fortranLikes[i]
+		extensions[lang.name] = append(extensions[lang.name], lang.suffix)  
+	}
+	names := list_languages()
+	for i := range names {
+		fmt.Printf("%s: %v\n", names[i], extensions[names[i]])
+	}
 }
 
 type sortable []countRecord 
@@ -1344,6 +1375,7 @@ func main() {
 	var individual bool
 	var unclassified bool
 	var list bool
+	var extensions bool
 	var cocomo bool
 	var showversion bool
 	excludePtr := flag.String("x", "",
@@ -1356,6 +1388,8 @@ func main() {
 		"report Cocomo-model estimation")
 	flag.BoolVar(&list, "l", false,
 		"list supported languages and exit")
+	flag.BoolVar(&extensions, "e", false,
+		"list extensions associated with each language and exit")
 	flag.IntVar(&debug, "d", 0,
 		"set debug level")
 	flag.BoolVar(&showversion, "V", false,
@@ -1366,7 +1400,10 @@ func main() {
 		fmt.Printf("loccount %.1f\n", version)
 		return
 	} else if list {
-		list_languages()
+		fmt.Printf("%s\n", list_languages())
+		return
+	} else if extensions {
+		list_extensions()
 		return
 	}
 

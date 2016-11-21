@@ -5,7 +5,7 @@
 loccount - count lines of code in a source tree and perform cost estimation
 
 == SYNOPSIS ==
-*loccount* [-c] [-i] [-l] [-u] [-x pathlist] [-V] [-?] file-or-dir
+*loccount* [-c] [-e] [-i] [-l] [-u] [-x pathlist] [-V] [-?] file-or-dir
 
 == DESCRIPTION ==
 
@@ -27,12 +27,14 @@ languages can have very different complexity per line.
 
 With these qualifications, SLOC does have some other uses. It
 is quite effective for tracking changes in complexity and attack
-surface as a codebase changes over time.
+surface as a codebase evolves over time.
 
 All languages in common use on Unix-like operating systems are supported.
 For a full list of supported languages, run "loccount -l". Note that
-"shell" includes bash, dash, ksh, and other similar variants descended
-from the Bourne shell.
+(1) "shell" includes bash, dash, ksh, and other similar variants descended
+from the Bourne shell, and (2) the language "c-header" is a marker for
+C-style include (.h) files which will be assigned to the dominant
+C-family language in a report (if there is one).
 
 The program also emits counts for build recipes - Makefiles, autoconf
 specifications, scons recipes, and waf scripts. Generated Makefiles
@@ -63,6 +65,9 @@ projects.
 -d _n_::
 Set debug level. At > 0, displays various progress messages.  Mainly
 of interest to developers.
+
+-e::
+Show the association between languages and file extensions.
 
 -i::
 Report file path, line count, and type for each individual path.
