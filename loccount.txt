@@ -98,8 +98,10 @@ than sloccount, and handles many languages that sloccount does not.
 Generally it will produce identical figures to sloccount for a
 language supported by both tools; the differences in whole-tree
 reports will mainly be due to better detection of some files sloccount
-left unclassified. Notably, for individual C, Python, and Perl files
-you can expect both tools to produce identical counts.
+left unclassified. Notably, for individual C and Perl files
+you can expect both tools to produce identical counts. However,
+Python counts are different, because sloccount does not recognize
+and ignore single-quote multiline literals.
 
 A few of sloccount's tests have been simplified in cases where the
 complexity came from a rare or edge case that the author judges to
