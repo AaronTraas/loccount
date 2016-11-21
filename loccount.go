@@ -173,6 +173,7 @@ func init() {
 		{"d", ".d", "", "", "//", nil},
 		{"occam", ".f", "", "", "//", really_is_occam},
 		{"prolog", ".pl", "", "", "%", really_is_prolog},
+		{"mumps", ".m", "", "", ";", nil},
 		// autoconf cruft - note the config.h-in entry under C-likes
 		{"autotools", "autogen.sh", "", "", "#", nil},
 		{"autotools", "configure.in", "", "", "#", nil},

@@ -7,6 +7,7 @@ tests/delegate.d 18 d
 tests/dirlist.pl 8 perl
 tests/factorial.ml 8 ml
 tests/guide.awk 7 awk
+tests/hanoi.pl 15 prolog
 tests/hello.ada 5 ada
 tests/hello.cl 1 lisp
 tests/hello.clu 11 clu
@@ -25,6 +26,7 @@ tests/hello.sa 5 sather
 tests/hello.sh 1 shell
 tests/hello.tcl 1 tcl
 tests/lisp-hello.l 1 lisp
+tests/mumps-hello.m 3 mumps
 tests/ntp_fp.h 254 c-header
 tests/ntpver 1 shell
 tests/occam-hello.f 5 occam
