@@ -1,0 +1,9 @@
+= README for loccount =
+
+loccount is a re-implementation of David A. Wheeler's sloccount tool
+in Go.  It is faster and handles more different languages. Because
+it's one source file in Go, it is easier to maintain and extend than the
+multi-file, multi-language implemention of the original.
+
+The algorithms are largely unchanged and can be expected to produce
+identical numbers for languages supported by both tools.

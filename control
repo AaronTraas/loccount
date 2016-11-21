@@ -1,0 +1,21 @@
+# This is not a real Debian control file, though the syntax is compatible.
+# It's project metadata for the shipper tool
+
+Package: loccount
+
+Description: Count source lines of code in a project.
+ This is a faster implementation (in Go) of David A. Wheeler's sloccount tool.
+ It handles a wider spread of languages, as well.
+
+#XBS-Destinations: freshcode
+
+Homepage: http://www.catb.org/~esr/ascii
+
+XBS-Repository-URL: https://gitlab.com/esr/loccount
+
+XBS-HTML-Target: index.html
+
+XBS-Logo: ascii-logo.png
+
+XBS-VC-Tag-Template: %(version)s
+

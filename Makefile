@@ -18,6 +18,9 @@ check: loccount
 testbuild: loccount
 	./loccount -i tests >check.good
 
+SOURCES = README control loccount.go loccount.txt \
+		Makefile TODO tally.png check.good tests/
+
 .SUFFIXES: .html .txt .1
 
 # Requires asciidoc and xsltproc/docbook stylesheets.
@@ -26,3 +29,19 @@ testbuild: loccount
 .txt.html:
 	a2x --doctype manpage --format xhtml -D . $<
 	rm -f docbook-xsl.css
+
+VERS=$(shell sed <loccount.go -n -e '/.*version.*= *\(.*\)/s//\1/p')
+
+version:
+	@echo $(VERS)
+
+loccount-$(VERS).tar.gz: $(SOURCES) loccount.1
+	tar --transform='s:^:loccount-$(VERS)/:' --show-transformed-names -cvzf loccount-$(VERS).tar.gz $(SOURCES) loccount.1
+
+dist: loccount-$(VERS).tar.gz
+
+release: loccount-$(VERS).tar.gz loccount.html
+	shipper version=$(VERS) | sh -e -x
+
+refresh: loccount.html
+	shipper -N -w version=$(VERS) | sh -e -x
