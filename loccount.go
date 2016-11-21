@@ -122,21 +122,34 @@ var cHeaderPriority []string
 var generated string
 
 func init() {
+	// For speed, try to put more common languages and extensions
+	// earlier in this list.
+	//
+	// Verifiers are expensive, so try to put extensions that need them
+	// after extensions that don't. But remember that you don't pay the
+	// overhead for a verifier unless the extension matches.
+	//
+	// If you have mutiple entries for an extension, (a) all the entries
+	// with verifiers should go first, and (b) there should be at most one
+	// entry without a verifier (because any second and later ones will be
+	// pre-empted by it).
 	genericLanguages = []genericLanguage{
 		/* C family */
 		{"c", ".c", "/*", "*/", "//", nil},
 		{"c-header", ".h", "/*", "*/", "//", nil},
+		{"c-header", ".hpp", "/*", "*/", "//", nil},
+		{"c-header", ".hxx", "/*", "*/", "//", nil},
 		{"yacc", ".y", "/*", "*/", "//", nil},
 		{"lex", ".l", "/*", "*/", "//", really_is_lex},
 		{"c++", ".cpp", "/*", "*/", "//", nil},
 		{"c++", ".cxx", "/*", "*/", "//", nil},
+		{"c++", ".cc", "/*", "*/", "//", nil},
 		{"java", ".java", "/*", "*/", "//", nil},
 		{"obj-c", ".m", "/*", "*/", "//", really_is_objc},
 		{"c#", ".cs", "/*", "*/", "//", nil},
 		{"php", ".php", "/*", "*/", "//", nil},
 		{"go", ".go", "/*", "*/", "//", nil},
 		{"swift", ".swift", "/*", "*/", "//", nil},
-		{"autotools", "config.h.in", "/*", "*/", "//", nil},
 		{"sql", ".sql", "/*", "*/", "--", nil},
 		{"haskell", ".hs", "{-", "-}", "--", nil},
 		{"pl/1", ".pl1", "/*", "*/", "", nil},
@@ -156,7 +169,7 @@ func init() {
 		{"lisp", ".lisp", "", "", ";", nil},
 		{"lisp", ".lsp", "", "", ";", nil},	// XLISP
 		{"lisp", ".cl", "", "", ";", nil},	// Common Lisp
-		{"lisp", ".l", "", "", ";", nil},	// Must be after lex
+		{"lisp", ".l", "", "", ";", nil},
 		{"scheme", ".scm", "", "", ";", nil},
 		{"elisp", ".el", "", "", ";", nil},	// Emacs Lisp
 		{"cobol", ".CBL", "", "", "*", nil},
@@ -175,7 +188,8 @@ func init() {
 		{"occam", ".f", "", "", "//", really_is_occam},
 		{"prolog", ".pl", "", "", "%", really_is_prolog},
 		{"mumps", ".m", "", "", ";", nil},
-		// autoconf cruft - note the config.h-in entry under C-likes
+		// autoconf cruft
+		{"autotools", "config.h.in", "/*", "*/", "//", nil},
 		{"autotools", "autogen.sh", "", "", "#", nil},
 		{"autotools", "configure.in", "", "", "#", nil},
 		{"autotools", "Makefile.in", "", "", "#", nil},
@@ -224,14 +238,14 @@ func init() {
 	}
 	pascalLikes = []pascalLike{
 		{"pascal", ".pas", true, nil},
+		{"pascal", ".p", true, really_is_pascal},
+		{"pascal", ".inc", true, really_is_pascal},
 		{"modula3", ".i3", false, nil},
 		{"modula3", ".m3", false, nil},
 		{"modula3", ".ig", false, nil},
 		{"modula3", ".mg", false, nil},
 		{"ml",      ".ml", false, nil},
 		{"oberon",  ".mod", false, nil},
-		{"pascal",  ".p", false, really_is_pascal},
-		{"pascal",  ".inc", false, really_is_pascal},
 	}
 
 	var ferr error
