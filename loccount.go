@@ -1296,7 +1296,7 @@ func reportCocomo(sloc uint) {
 }
 
 func list_languages() {
-	var names []string
+	var names []string = []string{"python", "waf", "perl"}
 	var lastlang string
 	for i := range genericLanguages {
 		lang := genericLanguages[i].name
