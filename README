@@ -7,3 +7,6 @@ multi-file, multi-language implemention of the original.
 
 The algorithms are largely unchanged and can be expected to produce
 identical numbers for languages supported by both tools.
+
+You can run a self-test with 'make check'.  The sample sources are in
+the test/ subdirectory.

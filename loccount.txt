@@ -47,11 +47,11 @@ this way are skipped, but a list of files skipped in this way
 is available with the -u option.
 
 Some file types are identified and silently skipped without being
-reported by -u; these include .o, .a, and .so object files, various
-kinds of image and audio files, and the .pyc/.pyo files produced by
-the Python interpreter.  All files and directories named with a
-leading dot are also silently skipped (in particular, this ignores
-metadata associated with version-control systems).
+reported by -u; these include symlinks, .o, .a, and .so object files,
+various kinds of image and audio files, and the .pyc/.pyo files
+produced by the Python interpreter.  All files and directories named
+with a leading dot are also silently skipped (in particular, this
+ignores metadata associated with version-control systems).
 
 == OPTIONS ==
 -?::
