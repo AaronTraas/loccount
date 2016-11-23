@@ -152,6 +152,11 @@ func init() {
 		{"obj-c", ".m", "/*", "*/", "//", really_is_objc},
 		{"c#", ".cs", "/*", "*/", "//", nil},
 		{"php", ".php", "/*", "*/", "//", nil},
+		{"php3", ".php", "/*", "*/", "//", nil},
+		{"php4", ".php", "/*", "*/", "//", nil},
+		{"php5", ".php", "/*", "*/", "//", nil},
+		{"php6", ".php", "/*", "*/", "//", nil},
+		{"php7", ".php", "/*", "*/", "//", nil},
 		{"go", ".go", "/*", "*/", "//", nil},
 		{"swift", ".swift", "/*", "*/", "//", nil},
 		{"sql", ".sql", "/*", "*/", "--", nil},
@@ -250,6 +255,9 @@ func init() {
 		{"modula3", ".ig", false, nil},
 		{"modula3", ".mg", false, nil},
 		{"ml",      ".ml", false, nil},
+		{"mli",      ".ml", false, nil},
+		{"mll",      ".ml", false, nil},
+		{"mly",      ".ml", false, nil},
 		{"oberon",  ".mod", false, nil},
 	}
 
@@ -298,10 +306,11 @@ func init() {
 		".au", ".wav", ".ogg",
 	}
 	neverInterestingByBasename = []string{
-		"README", "Readme", "readme", "README.tk", "Changelog",
-		"ChangeLog", "Repository", "CHANGES", "Changes",
+		"README", "Readme", "readme", "README.tk", "README.md",
+		"Changelog", "ChangeLog", "Repository", "CHANGES", "Changes",
 		"BUGS", "TODO", "COPYING", "MAINTAINERS", "NEWS",
 		"configure", "autom4te.cache", "config.log", "config.status",
+		"lex.yy.c", "lex.yy.cc", "y.code.c", "y.tab.c", "y.tab.h",
 	}
 	cHeaderPriority = []string{"c", "c++", "obj-c"}
 
@@ -1150,7 +1159,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		return stat
 	}
 		
-	if strings.HasSuffix(path, ".pl") || strings.HasSuffix(path, ".pm") || hashbang(ctx, path, "perl") {
+	if strings.HasSuffix(path, ".pl") || strings.HasSuffix(path, ".pm")|| strings.HasSuffix(path, ".ph") || hashbang(ctx, path, "perl") {
 		if autofilter("#") {
 			return stat
 		}
