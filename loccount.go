@@ -505,6 +505,8 @@ func really_is_prolog(ctx *countContext, path string) bool {
 
 // really_is_expect - filename, returns tue if its contents really are Expect.
 //
+// dwheeler had this to say:
+//
 // Many "exp" files (such as in Apache and Mesa) are just "export" data,
 // summarizing something else (e.g., its interface).
 // Sometimes (like in RPM) it's just misc. data.
@@ -567,6 +569,9 @@ func really_is_expect (ctx *countContext, path string) bool {
 
 // really-is-pascal - returns  true if filename contents really are Pascal.
 func really_is_pascal (ctx *countContext, path string) bool {
+//
+// dwheeler had this to say:
+//
 // This isn't as obvious as it seems.
 // Many ".p" files are Perl files
 // (such as /usr/src/redhat/BUILD/ispell-3.1/dicts/czech/glob.p),
@@ -574,7 +579,7 @@ func really_is_pascal (ctx *countContext, path string) bool {
 // (such as /usr/src/redhat/BUILD/linux/include/linux/umsdos_fs.p
 // and some files in linuxconf).
 // However, test files in "p2c" really are Pascal, for example.
-
+//
 // Note that /usr/src/redhat/BUILD/ucd-snmp-4.1.1/ov/bitmaps/UCD.20.p
 // is actually C code.  The heuristics determine that they're not Pascal,
 // but because it ends in ".p" it's not counted as C code either.
@@ -585,7 +590,7 @@ func really_is_pascal (ctx *countContext, path string) bool {
 // and expects them to be counted by default as C files in SLOCCount needs
 // their head examined.  I suggest examining their head
 // with a sucker rod (see syslogd(8) for more on sucker rods).
-
+//
 // This heuristic counts as Pascal such files such as:
 //  /usr/src/redhat/BUILD/teTeX-1.0/texk/web2c/tangleboot.p
 // Which is hand-generated.  We don't count woven documents now anyway,
