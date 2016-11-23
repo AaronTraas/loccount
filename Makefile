@@ -6,7 +6,7 @@ loccount:
 
 clean:
 	go clean
-	rm -f loccount.html loccount.1
+	rm -f *.html *.1
 
 install:
 	go install

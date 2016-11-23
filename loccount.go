@@ -192,6 +192,7 @@ func init() {
 		{"occam", ".f", "", "", "//", really_is_occam},
 		{"prolog", ".pl", "", "", "%", really_is_prolog},
 		{"mumps", ".m", "", "", ";", nil},
+		{"pop11", ".p", "", "", ";", really_is_pop11},
 		// autoconf cruft
 		{"autotools", "config.h.in", "/*", "*/", "//", nil},
 		{"autotools", "autogen.sh", "", "", "#", nil},
@@ -484,6 +485,11 @@ func really_is_occam(ctx *countContext, path string) bool {
 // really_is_lex - returns TRUE if filename contents really are lex.
 func really_is_lex(ctx *countContext, path string) bool {
 	return has_keywords(ctx, path, "lex", []string{"%{", "%%", "%}"})
+}
+
+// really_is_pop11 - returns TRUE if filename contents really are pop11.
+func really_is_pop11(ctx *countContext, path string) bool {
+	return has_keywords(ctx, path, "pop11", []string{"define", "printf"})
 }
 
 // really_is_prolog - returns TRUE if filename contents really are prolog.

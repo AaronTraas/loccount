@@ -6,6 +6,7 @@ tests/csh-lookup 6 csh
 tests/delegate.d 18 d
 tests/dirlist.pl 8 perl
 tests/factorial.ml 8 ml
+tests/gcd.p 10 pop11
 tests/guide.awk 7 awk
 tests/hanoi.pl 15 prolog
 tests/hello.ada 5 ada
