@@ -799,12 +799,12 @@ func c_family_counter(ctx *countContext, path string, syntax genericLanguage) ui
 						break
 					}
 				}
-			} else if (c == syntax.commentleader[0]) && ctx.ispeek(syntax.commentleader[1]) {
+			} else if (c == syntax.commentleader[0]) && (ctx.ispeek(syntax.commentleader[1])) {
 				c, err = ctx.getachar()
 				mode = INCOMMENT
 				comment_type = BLOCK_COMMENT
 				startline = ctx.line_number
-			} else if (syntax.eolcomment != "") && (c == syntax.eolcomment[0]) && ctx.ispeek(syntax.eolcomment[1]) {
+			} else if (syntax.eolcomment != "") && c == syntax.eolcomment[0] && (len(syntax.eolcomment) > 1 && ctx.ispeek(syntax.eolcomment[1])) {
 				c, err = ctx.getachar()
 				mode = INCOMMENT
 				comment_type = TRAILING_COMMENT
