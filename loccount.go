@@ -186,7 +186,7 @@ func init() {
 		{"cobol", ".COB", "", "", "*", nil},
 		{"cobol", ".cob", "", "", "*", nil},
 		{"eiffel", ".e", "", "", "--", nil},
-		{"sather", ".sa", "", "", "--", nil},
+		{"sather", ".sa", "", "", "--", really_is_sather},
 		{"lua", ".lua", "", "", "--", nil},
 		{"clu", ".clu", "", "", "%", nil},
 		{"rust", ".rs", "", "", "//", nil},
@@ -499,6 +499,11 @@ func really_is_lex(ctx *countContext, path string) bool {
 // really_is_pop11 - returns TRUE if filename contents really are pop11.
 func really_is_pop11(ctx *countContext, path string) bool {
 	return has_keywords(ctx, path, "pop11", []string{"define", "printf"})
+}
+
+// really_is_sather - returns TRUE if filename contents really are sather.
+func really_is_sather(ctx *countContext, path string) bool {
+	return has_keywords(ctx, path, "sather", []string{"class"})
 }
 
 // really_is_prolog - returns TRUE if filename contents really are prolog.
