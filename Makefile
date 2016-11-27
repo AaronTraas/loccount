@@ -1,14 +1,14 @@
 # Makefile for loccount
 # You must have the Go compiler and tools installed to build this software.
 
-loccount:
+loccount: loccount.go
 	go build
 
 clean:
 	go clean
 	rm -f *.html *.1
 
-install:
+install: loccount
 	go install
 
 check: loccount 
