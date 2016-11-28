@@ -491,6 +491,7 @@ type countContext struct {
 	line []byte
 	line_number uint
 	nonblank bool			// Is current line nonblank?
+	lexfile bool			// Do we see lex directives?
 	last_char_was_newline bool
 	underlyingStream *os.File
 	rc *bufio.Reader
@@ -949,11 +950,11 @@ func c_family_counter(ctx *countContext, path string, syntax genericLanguage) ui
 		}
 
 		if mode == NORMAL {
-			if c == '"' {
+			if !ctx.lexfile && c == '"' {
 				ctx.nonblank = true
 				mode = INSTRING
 				startline = ctx.line_number
-			} else if c == '\'' {
+			} else if !ctx.lexfile && c == '\'' {
 				/* Consume single-character 'xxxx' values */
 				ctx.nonblank = true
 				c, err = ctx.getachar()
@@ -1027,6 +1028,10 @@ func c_family_counter(ctx *countContext, path string, syntax genericLanguage) ui
 				sloc++
 			}
 			ctx.nonblank = false
+			if ctx.consume([]byte("%")) {
+				ctx.lexfile = true
+				ctx.nonblank = true
+			}
 		}
 	}
 	/* We're done with the file.  Handle EOF-without-EOL. */
