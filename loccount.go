@@ -278,7 +278,7 @@ var fortranLikes []fortranLike
 var neverInterestingByPrefix []string
 var neverInterestingByInfix []string
 var neverInterestingBySuffix []string
-var neverInterestingByBasename []string
+var neverInterestingByBasename map[string]bool
 
 var cHeaderPriority []string
 var generated string
@@ -467,12 +467,15 @@ func init() {
 		".gz", ".bz2", ".Z", ".tgz", ".zip",
 		".au", ".wav", ".ogg",
 	}
-	neverInterestingByBasename = []string{
-		"README", "Readme", "readme", "README.tk", "README.md",
-		"Changelog", "ChangeLog", "Repository", "CHANGES", "Changes",
-		"BUGS", "TODO", "COPYING", "MAINTAINERS", "NEWS",
-		"configure", "autom4te.cache", "config.log", "config.status",
-		"lex.yy.c", "lex.yy.cc", "y.code.c", "y.tab.c", "y.tab.h",
+	neverInterestingByBasename = map[string]bool{
+		"readme":true, "readme.tk":true, "readme.md":true,
+		"changelog":true, "repository":true, "changes":true,
+		"bugs":true, "todo":true, "copying":true, "maintainers":true,
+		"news":true,
+		"configure":true, "autom4te.cache":true, "config.log":true,
+		"config.status":true,
+		"lex.yy.c":true, "lex.yy.cc":true,
+		"y.code.c":true, "y.tab.c":true, "y.tab.h":true,
 	}
 	cHeaderPriority = []string{"c", "c++", "obj-c"}
 
@@ -1432,13 +1435,11 @@ func filter(path string, info os.FileInfo, err error) error {
 			return err
 		}
 	}
-	for i := range neverInterestingByBasename {
-		if filepath.Base(path) == neverInterestingByBasename[i] {
-			if debug > 0 {
-				fmt.Printf("basename filter failed: %s\n", path)
-			}
-			return err
+	if  neverInterestingByBasename[strings.ToLower(filepath.Base(path))] {
+		if debug > 0 {
+			fmt.Printf("basename filter failed: %s\n", path)
 		}
+		return err
 	}
 	for i := range exclusions {
 		if path == exclusions[i] || strings.HasPrefix(path, exclusions[i]+"/") {

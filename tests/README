@@ -1,0 +1,3 @@
+These files are regression ests for loccount.
+
+*This* file should be ignored, failing the neverInterestingByBasename fillter.
