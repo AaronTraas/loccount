@@ -12,11 +12,11 @@ install: loccount
 	go install
 
 check: loccount 
-	@./loccount -i tests | diff -u check.good -
+	@(./loccount -i tests; ./loccount -u tests) | diff -u check.good -
 	@echo "No output is good news"
 
 testbuild: loccount
-	./loccount -i tests >check.good
+	@(./loccount -i tests; ./loccount -u tests) >check.good
 
 SOURCES = README COPYING NEWS control loccount.go loccount.txt \
 		Makefile TODO loccount-logo.png check.good tests/

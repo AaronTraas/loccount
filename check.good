@@ -42,3 +42,6 @@ tests/test.hs 8 haskell
 tests/upload 6 python
 tests/wokka.cs 5 c#
 tests/wscript 65 waf
+tests/factorial.t
+tests/test1.lhs
+tests/test2.lhs
