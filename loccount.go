@@ -15,6 +15,7 @@ import "sort"
 import "strings"
 import "log"
 import "sync"
+import "runtime/pprof"
 
 const version float32 = 1.0
 
@@ -1584,6 +1585,8 @@ func (a sortable) Len() int {return len(a)}
 func (a sortable) Swap(i int, j int)  { a[i], a[j] = a[j], a[i] }
 func (a sortable) Less(i, j int) bool { return -a[i].linecount < -a[j].linecount }
 
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+
 func main() {
 	var individual bool
 	var unclassified bool
@@ -1609,6 +1612,14 @@ func main() {
 		"report version and exil")
 	flag.Parse()
 
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 	if showversion {
 		fmt.Printf("loccount %.1f\n", version)
 		return
