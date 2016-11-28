@@ -454,21 +454,23 @@ func init() {
 	
 	neverInterestingByPrefix = []string{"."}
 	neverInterestingByInfix = []string{".so.", "/."}
-	neverInterestingBySuffix = map[string]bool{"~":true,
-		".a":true, ".la":true, ".o":true, ".so":true,
-		".gif":true, ".jpg":true, ".jpeg":true, ".ico":true,
-		".xpm":true, ".xbm":true, ".bmp":true,
-		".ps":true, ".pdf":true, ".eps":true,
-		".tfm":true, ".ttf":true, ".bdf":true, ".afm":true,
-		".fig":true, ".pic":true,
-		".pyc":true, ".pyo":true, ".elc":true,
-		".1":true, ".2":true, ".3":true, ".4":true, ".5":true,
-		".6":true, ".7":true, ".8":true, ".n":true, ".man":true,
-		".html":true, ".htm":true, ".sgml":true, ".xml":true,
-		".txt":true, ".tex":true, ".texi":true,
-		".po":true,
-		".gz":true, ".bz2":true, ".Z":true, ".tgz":true, ".zip":true,
-		".au":true, ".wav":true, ".ogg":true,
+	ignoreSuffixes := []string{"~",
+		".a", ".la", ".o", ".so", ".ko",
+		".gif", ".jpg", ".jpeg", ".ico", ".xpm", ".xbm", ".bmp",
+		".ps", ".pdf", ".eps",
+		".tfm", ".ttf", ".bdf", ".afm",
+		".fig", ".pic",
+		".pyc", ".pyo", ".elc",
+		".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".n", ".man",
+		".html", ".htm", ".sgml", ".xml",
+		".txt", ".tex", ".texi",
+		".po",
+		".gz", ".bz2", ".Z", ".tgz", ".zip",
+		".au", ".wav", ".ogg",
+	}
+	neverInterestingBySuffix = make(map[string]bool)
+	for i := range ignoreSuffixes {
+		neverInterestingBySuffix[ignoreSuffixes[i]] = true
 	}
 	neverInterestingByBasename = map[string]bool{
 		"readme":true, "readme.tk":true, "readme.md":true,
