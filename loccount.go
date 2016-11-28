@@ -14,6 +14,7 @@ import "runtime"
 import "sort"
 import "strings"
 import "log"
+import "sync"
 
 const version float32 = 1.0
 
@@ -59,6 +60,167 @@ languages fall into one of the following groups:
 You may add multiple entries with the same language name, but extensions
 must be unique across all tables.
 */
+
+// Following code swiped from Michael T. Jones's "walk" package.
+// It's a parallelized implementation of tree-walking that's
+// faster than the version in the system filepath library. 
+
+type VisitData struct {
+	path string
+	info os.FileInfo
+}
+
+// WalkFunc is the type of the function called for each file or directory
+// visited by Walk. The path argument contains the argument to Walk as a
+// prefix; that is, if Walk is called with "dir", which is a directory
+// containing the file "a", the walk function will be called with argument
+// "dir/a". The info argument is the os.FileInfo for the named path.
+//
+// If there was a problem walking to the file or directory named by path, the
+// incoming error will describe the problem and the function can decide how
+// to handle that error (and Walk will not descend into that directory). If
+// an error is returned, processing stops. The sole exception is that if path
+// is a directory and the function returns the special value SkipDir, the
+// contents of the directory are skipped and processing continues as usual on
+// the next file.
+type WalkFunc func(path string, info os.FileInfo, err error) error
+
+type WalkState struct {
+	walkFn     WalkFunc
+	v          chan VisitData // files to be processed
+	active     sync.WaitGroup // number of files to process
+	lock       sync.RWMutex
+	firstError error // accessed using lock
+}
+
+func (ws *WalkState) terminated() bool {
+	ws.lock.RLock()
+	done := ws.firstError != nil
+	ws.lock.RUnlock()
+	return done
+}
+
+func (ws *WalkState) setTerminated(err error) {
+	ws.lock.Lock()
+	if ws.firstError == nil {
+		ws.firstError = err
+	}
+	ws.lock.Unlock()
+	return
+}
+
+func (ws *WalkState) visitChannel() {
+	for file := range ws.v {
+		ws.visitFile(file)
+		ws.active.Add(-1)
+	}
+}
+
+// readDirNames reads the directory named by dirname and returns
+// a sorted list of directory entries.
+func readDirNames(dirname string) ([]string, error) {
+	f, err := os.Open(dirname)
+	if err != nil {
+		return nil, err
+	}
+	names, err := f.Readdirnames(-1)
+	f.Close()
+	if err != nil {
+		return nil, err
+	}
+	sort.Strings(names) // omit sort to save 1-2%
+	return names, nil
+}
+
+func (ws *WalkState) visitFile(file VisitData) {
+	if ws.terminated() {
+		return
+	}
+
+	err := ws.walkFn(file.path, file.info, nil)
+	if err != nil {
+		if !(file.info.IsDir() && err == filepath.SkipDir) {
+			ws.setTerminated(err)
+		}
+		return
+	}
+
+	if !file.info.IsDir() {
+		return
+	}
+
+	names, err := readDirNames(file.path)
+	if err != nil {
+		err = ws.walkFn(file.path, file.info, err)
+		if err != nil {
+			ws.setTerminated(err)
+		}
+		return
+	}
+
+	here := file.path
+	for _, name := range names {
+		file.path = filepath.Join(here, name)
+		file.info, err = os.Lstat(file.path)
+		if err != nil {
+			err = ws.walkFn(file.path, file.info, err)
+			if err != nil && (!file.info.IsDir() || err != filepath.SkipDir) {
+				ws.setTerminated(err)
+				return
+			}
+		} else {
+			switch file.info.IsDir() {
+			case true:
+				ws.active.Add(1) // presume channel send will succeed
+				select {
+				case ws.v <- file:
+					// push directory info to queue for concurrent traversal
+				default:
+					// undo increment when send fails and handle now
+					ws.active.Add(-1)
+					ws.visitFile(file)
+				}
+			case false:
+				err = ws.walkFn(file.path, file.info, nil)
+				if err != nil {
+					ws.setTerminated(err)
+					return
+				}
+			}
+		}
+	}
+}
+
+// Walk walks the file tree rooted at root, calling walkFn for each file or
+// directory in the tree, including root. All errors that arise visiting files
+// and directories are filtered by walkFn. The files are walked in a random
+// order. Walk does not follow symbolic links.
+
+func Walk(root string, walkFn WalkFunc) error {
+	info, err := os.Lstat(root)
+	if err != nil {
+		return walkFn(root, nil, err)
+	}
+
+	ws := &WalkState{
+		walkFn: walkFn,
+		v:      make(chan VisitData, 1024),
+	}
+	defer close(ws.v)
+
+	ws.active.Add(1)
+	ws.v <- VisitData{root, info}
+
+	walkers := 16
+	for i := 0; i < walkers; i++ {
+		go ws.visitChannel()
+	}
+	ws.active.Wait()
+
+	return ws.firstError
+}
+
+// Swiped code ends here
 
 type SourceStat struct {
 	Path string
@@ -1470,7 +1632,9 @@ func main() {
 
 	go func() {
 		for i := range roots {
-			filepath.Walk(roots[i], filter)
+			// The system filepath.Walk() works here,
+			// but is slower.
+			Walk(roots[i], filter)
 		}
 		close(pipeline)
 	}()
