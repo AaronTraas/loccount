@@ -448,7 +448,7 @@ func init() {
 	}
 
 	var perr error
-	podheader, perr = regexp.Compile("=[a-zA-Z]")
+	podheader, perr = regexp.Compile("^=[a-zA-Z]")
 	if perr != nil {
 		panic(perr)
 	}
