@@ -14,3 +14,12 @@ literals in sloccount 2.26.
 
 You can run a self-test with 'make check'.  The sample sources are in
 the test/ subdirectory.
+
+You can profile this code with, e.g.
+
+loccount -cpuprofile /tmp/loc.prof .
+
+go tool pprof loccount /tmp/loc.prof
+
+"top20" is a useful command to starrt with in viewing results.
+
