@@ -1410,6 +1410,13 @@ func filter(path string, info os.FileInfo, err error) error {
 	if debug > 0 {
 		fmt.Printf("entering filter: %s\n", path)
 	}
+	suffix := filepath.Ext(path)
+	if suffix != "" && neverInterestingBySuffix[suffix] {
+		if debug > 0 {
+			fmt.Printf("suffix filter failed: %s\n", path)
+		}
+		return err
+	}
 	for i := range neverInterestingByPrefix {
 		if strings.HasPrefix(path, neverInterestingByPrefix[i]) {
 			if debug > 0 {
@@ -1433,14 +1440,8 @@ func filter(path string, info os.FileInfo, err error) error {
 			}
 		}
 	}
-	suffix := filepath.Ext(path)
-	if suffix != "" && neverInterestingBySuffix[suffix] {
-		if debug > 0 {
-			fmt.Printf("suffix filter failed: %s\n", path)
-		}
-		return err
-	}
-	if  neverInterestingByBasename[strings.ToLower(filepath.Base(path))] {
+	basename := filepath.Base(path)
+	if  neverInterestingByBasename[strings.ToLower(basename)] {
 		if debug > 0 {
 			fmt.Printf("basename filter failed: %s\n", path)
 		}
@@ -1464,7 +1465,7 @@ func filter(path string, info os.FileInfo, err error) error {
 	}
 
 	/* toss generated Makefiles */
-	if filepath.Base(path) == "Makefile" {
+	if basename == "Makefile" {
 		if _, err := os.Stat(path + ".in"); err == nil {
 		if debug > 0 {
 			fmt.Printf("generated-makefile filter failed: %s\n", path)
