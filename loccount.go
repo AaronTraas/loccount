@@ -1596,6 +1596,7 @@ func main() {
 	var list bool
 	var extensions bool
 	var cocomo bool
+	var json bool
 	var showversion bool
 	excludePtr := flag.String("x", "",
 		"paths and directories to exclude")
@@ -1611,6 +1612,8 @@ func main() {
 		"list extensions associated with each language and exit")
 	flag.IntVar(&debug, "d", 0,
 		"set debug level")
+	flag.BoolVar(&json, "j", false,
+		"dump statistics in JSON format")
 	flag.BoolVar(&showversion, "V", false,
 		"report version and exil")
 	flag.Parse()
@@ -1730,11 +1733,18 @@ func main() {
 	sort.Sort(summary)
 	for i := range summary {
 		r := summary[i]
-		fmt.Printf("%-12s %7d (%2.2f%%) in %d files\n",
-			r.language,
-			r.linecount,
-			float64(r.linecount) * 100.0 / float64(totals.linecount),
-			r.filecount)
+		if json {
+			fmt.Printf("{\"language\":\"%s\", \"linecount\":%d, \"filecount\":%d}\n",
+				r.language,
+				r.linecount,
+				r.filecount)
+		} else {
+			fmt.Printf("%-12s %7d (%2.2f%%) in %d files\n",
+				r.language,
+				r.linecount,
+				float64(r.linecount) * 100.0 / float64(totals.linecount),
+				r.filecount)
+		}
 	}
 
 	if (cocomo) {

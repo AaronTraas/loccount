@@ -72,6 +72,9 @@ Show the association between languages and file extensions.
 -i::
 Report file path, line count, and type for each individual path.
 
+-j::
+Dump the results as self-describing JSON records for for postprocessing.
+
 -l::
 List supported languages and exit.
 
