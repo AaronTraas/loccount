@@ -312,6 +312,7 @@ func init() {
 		{"c++", ".cxx", "/*", "*/", "//", nil},
 		{"c++", ".cc", "/*", "*/", "//", nil},
 		{"java", ".java", "/*", "*/", "//", nil},
+		{"javascript", ".js", "/*", "*/", "//", nil},
 		{"obj-c", ".m", "/*", "*/", "//", really_is_objc},
 		{"c#", ".cs", "/*", "*/", "//", nil},
 		{"php", ".php", "/*", "*/", "//", nil},
@@ -333,6 +334,7 @@ func init() {
 		{"ada", ".adb", "", "", "--", nil},
 		{"ada", ".ads", "", "", "--", nil},
 		{"ada", ".pad", "", "", "--", nil},	// Oracle Ada preprocessoer.
+		{"css", ".css", "/*", "*/", "", nil},
 		{"makefile", ".mk", "", "", "#", nil},
 		{"makefile", "Makefile", "", "", "#", nil},
 		{"makefile", "makefile", "", "", "#", nil},
