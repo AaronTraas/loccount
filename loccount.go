@@ -30,9 +30,10 @@ languages fall into one of the following groups:
   extension only.  These languages have two kinds of comment.  One is
   a block comment delimited by two distinct strings and the second is
   a winged comment introduced by a third string and terminated by
-  newline.  You can add support simply by appending an initializer to
-  the genericLanguages table; any entry with a nonempty comment leader
-  invokes C-like parsing.
+  newline.  The following bool signals whether newlines are permitted
+  in strings.  You can add support simply by appending an initializer
+  to the genericLanguages table; any entry with a nonempty comment
+  leader invokes C-like parsing.
 
 * Generic languages have only winged comments, usually led with #.
   This code recognizes them by file extension only.  You can append an
@@ -241,6 +242,7 @@ type genericLanguage struct {
 	commentleader string
 	commenttrailer string
 	eolcomment string
+	longstrings bool
 	verifier func(*countContext, string) bool
 }
 var genericLanguages []genericLanguage
@@ -299,80 +301,80 @@ func init() {
 	//
 	// All entries for a given language should be in a contiguous span,
 	// otherwise the primtive duplicate director in listLanguages will
-	// be foild.
+	// be foiled.
 	genericLanguages = []genericLanguage{
 		/* C family */
-		{"c", ".c", "/*", "*/", "//", nil},
-		{"c-header", ".h", "/*", "*/", "//", nil},
-		{"c-header", ".hpp", "/*", "*/", "//", nil},
-		{"c-header", ".hxx", "/*", "*/", "//", nil},
-		{"yacc", ".y", "/*", "*/", "//", nil},
-		{"lex", ".l", "/*", "*/", "//", really_is_lex},
-		{"c++", ".cpp", "/*", "*/", "//", nil},
-		{"c++", ".cxx", "/*", "*/", "//", nil},
-		{"c++", ".cc", "/*", "*/", "//", nil},
-		{"java", ".java", "/*", "*/", "//", nil},
-		{"javascript", ".js", "/*", "*/", "//", nil},
-		{"obj-c", ".m", "/*", "*/", "//", really_is_objc},
-		{"c#", ".cs", "/*", "*/", "//", nil},
-		{"php", ".php", "/*", "*/", "//", nil},
-		{"php3", ".php", "/*", "*/", "//", nil},
-		{"php4", ".php", "/*", "*/", "//", nil},
-		{"php5", ".php", "/*", "*/", "//", nil},
-		{"php6", ".php", "/*", "*/", "//", nil},
-		{"php7", ".php", "/*", "*/", "//", nil},
-		{"go", ".go", "/*", "*/", "//", nil},
-		{"swift", ".swift", "/*", "*/", "//", nil},
-		{"sql", ".sql", "/*", "*/", "--", nil},
-		{"haskell", ".hs", "{-", "-}", "--", nil},
-		{"pl/1", ".pl1", "/*", "*/", "", nil},
+		{"c", ".c", "/*", "*/", "//", false, nil},
+		{"c-header", ".h", "/*", "*/", "//", false, nil},
+		{"c-header", ".hpp", "/*", "*/", "//", false, nil},
+		{"c-header", ".hxx", "/*", "*/", "//", false, nil},
+		{"yacc", ".y", "/*", "*/", "//", false, nil},
+		{"lex", ".l", "/*", "*/", "//", false, really_is_lex},
+		{"c++", ".cpp", "/*", "*/", "//", false, nil},
+		{"c++", ".cxx", "/*", "*/", "//", false, nil},
+		{"c++", ".cc", "/*", "*/", "//", false, nil},
+		{"java", ".java", "/*", "*/", "//", false, nil},
+		{"javascript", ".js", "/*", "*/", "//", false, nil},
+		{"obj-c", ".m", "/*", "*/", "//", false, really_is_objc},
+		{"c#", ".cs", "/*", "*/", "//", false, nil},
+		{"php", ".php", "/*", "*/", "//", false, nil},
+		{"php3", ".php", "/*", "*/", "//", false, nil},
+		{"php4", ".php", "/*", "*/", "//", false, nil},
+		{"php5", ".php", "/*", "*/", "//", false, nil},
+		{"php6", ".php", "/*", "*/", "//", false, nil},
+		{"php7", ".php", "/*", "*/", "//", false, nil},
+		{"go", ".go", "/*", "*/", "//", false, nil},
+		{"swift", ".swift", "/*", "*/", "//", false, nil},
+		{"sql", ".sql", "/*", "*/", "--", true, nil},
+		{"haskell", ".hs", "{-", "-}", "--", false, nil},
+		{"pl/1", ".pl1", "/*", "*/", "", false, nil},
 		/* everything else */
-		{"asm", ".asm", "", "", ";", nil},
-		{"asm", ".s", "", "", ";", nil},
-		{"asm", ".S", "", "", ";", nil},
-		{"ada", ".ada", "", "", "--", nil},
-		{"ada", ".adb", "", "", "--", nil},
-		{"ada", ".ads", "", "", "--", nil},
-		{"ada", ".pad", "", "", "--", nil},	// Oracle Ada preprocessoer.
-		{"css", ".css", "/*", "*/", "", nil},
-		{"makefile", ".mk", "", "", "#", nil},
-		{"makefile", "Makefile", "", "", "#", nil},
-		{"makefile", "makefile", "", "", "#", nil},
-		{"makefile", "Imakefile", "", "", "#", nil},
-		{"m4", ".m4", "", "", "#", nil},
-		{"lisp", ".lisp", "", "", ";", nil},
-		{"lisp", ".lsp", "", "", ";", nil},	// XLISP
-		{"lisp", ".cl", "", "", ";", nil},	// Common Lisp
-		{"lisp", ".l", "", "", ";", nil},
-		{"scheme", ".scm", "", "", ";", nil},
-		{"elisp", ".el", "", "", ";", nil},	// Emacs Lisp
-		{"cobol", ".CBL", "", "", "*", nil},
-		{"cobol", ".cbl", "", "", "*", nil},
-		{"cobol", ".COB", "", "", "*", nil},
-		{"cobol", ".cob", "", "", "*", nil},
-		{"eiffel", ".e", "", "", "--", nil},
-		{"sather", ".sa", "", "", "--", really_is_sather},
-		{"lua", ".lua", "", "", "--", nil},
-		{"clu", ".clu", "", "", "%", nil},
-		{"rust", ".rs", "", "", "//", nil},
-		{"rust", ".rlib", "", "", "//", nil},
-		{"erlang", ".erl", "", "", "%", nil},
-		//{"turing", ".t", "", "", "%", nil},
-		{"d", ".d", "", "", "//", nil},
-		{"occam", ".f", "", "", "//", really_is_occam},
-		{"prolog", ".pl", "", "", "%", really_is_prolog},
-		{"mumps", ".m", "", "", ";", nil},
-		{"pop11", ".p", "", "", ";", really_is_pop11},
+		{"asm", ".asm", "", "", ";", false, nil},
+		{"asm", ".s", "", "", ";", false, nil},
+		{"asm", ".S", "", "", ";", false, nil},
+		{"ada", ".ada", "", "", "--", false, nil},
+		{"ada", ".adb", "", "", "--", false, nil},
+		{"ada", ".ads", "", "", "--", false, nil},
+		{"ada", ".pad", "", "", "--", false, nil},	// Oracle Ada preprocessoer.
+		{"css", ".css", "/*", "*/", "", false, nil},
+		{"makefile", ".mk", "", "", "#", false, nil},
+		{"makefile", "Makefile", "", "", "#", false, nil},
+		{"makefile", "makefile", "", "", "#", false, nil},
+		{"makefile", "Imakefile", "", "", "#", false, nil},
+		{"m4", ".m4", "", "", "#", false, nil},
+		{"lisp", ".lisp", "", "", ";", false, nil},
+		{"lisp", ".lsp", "", "", ";", false, nil},	// XLISP
+		{"lisp", ".cl", "", "", ";", false, nil},	// Common Lisp
+		{"lisp", ".l", "", "", ";", false, nil},
+		{"scheme", ".scm", "", "", ";", false, nil},
+		{"elisp", ".el", "", "", ";", false, nil},	// Emacs Lisp
+		{"cobol", ".CBL", "", "", "*", false, nil},
+		{"cobol", ".cbl", "", "", "*", false, nil},
+		{"cobol", ".COB", "", "", "*", false, nil},
+		{"cobol", ".cob", "", "", "*", false, nil},
+		{"eiffel", ".e", "", "", "--", false, nil},
+		{"sather", ".sa", "", "", "--", false, really_is_sather},
+		{"lua", ".lua", "", "", "--", false, nil},
+		{"clu", ".clu", "", "", "%", false, nil},
+		{"rust", ".rs", "", "", "//", false, nil},
+		{"rust", ".rlib", "", "", "//", false, nil},
+		{"erlang", ".erl", "", "", "%", false, nil},
+		//{"turing", ".t", "", "", "%", false, nil},
+		{"d", ".d", "", "", "//", false, nil},
+		{"occam", ".f", "", "", "//", false, really_is_occam},
+		{"prolog", ".pl", "", "", "%", false, really_is_prolog},
+		{"mumps", ".m", "", "", ";", false, nil},
+		{"pop11", ".p", "", "", ";", false, really_is_pop11},
 		// autoconf cruft
-		{"autotools", "config.h.in", "/*", "*/", "//", nil},
-		{"autotools", "autogen.sh", "", "", "#", nil},
-		{"autotools", "configure.in", "", "", "#", nil},
-		{"autotools", "Makefile.in", "", "", "#", nil},
-		{"autotools", ".am", "", "", "#", nil},
-		{"autotools", ".ac", "", "", "#", nil},
-		{"autotools", ".mf", "", "", "#", nil},
+		{"autotools", "config.h.in", "/*", "*/", "//", false, nil},
+		{"autotools", "autogen.sh", "", "", "#", false, nil},
+		{"autotools", "configure.in", "", "", "#", false, nil},
+		{"autotools", "Makefile.in", "", "", "#", false, nil},
+		{"autotools", ".am", "", "", "#", false, nil},
+		{"autotools", ".ac", "", "", "#", false, nil},
+		{"autotools", ".mf", "", "", "#", false, nil},
 		// Scons
-		{"scons", "SConstruct", "", "", "#", nil},
+		{"scons", "SConstruct", "", "", "#", false, nil},
 	}
 
 	var err error
@@ -1009,7 +1011,7 @@ func c_family_counter(ctx *countContext, path string, syntax genericLanguage) ui
 				c, err = ctx.getachar()
 			} else if (c == '\\') && ctx.ispeek('\n') {
 				c, err = ctx.getachar()
-			} else if (c == '\n') {
+			} else if (c == '\n' && !syntax.longstrings) {
 				/*
                                 We found a bare newline in a string without
 				preceding backslash.
