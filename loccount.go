@@ -65,7 +65,7 @@ must be unique across all tables.
 
 // Following code swiped from Michael T. Jones's "walk" package.
 // It's a parallelized implementation of tree-walking that's
-// faster than the version in the system filepath library. 
+// faster than the version in the system filepath library.
 
 type VisitData struct {
 	path string
@@ -225,9 +225,9 @@ func Walk(root string, walkFn WalkFunc) error {
 // Swiped code ends here
 
 type SourceStat struct {
-	Path string
+	Path     string
 	Language string
-	SLOC uint
+	SLOC     uint
 }
 
 var debug int
@@ -237,30 +237,33 @@ var pipeline chan SourceStat
 // Data tables driving the recognition and counting of classes of languages.
 
 type genericLanguage struct {
-	name string
-	suffix string
-	commentleader string
+	name           string
+	suffix         string
+	commentleader  string
 	commenttrailer string
-	eolcomment string
-	eolwarn bool
-	verifier func(*countContext, string) bool
+	eolcomment     string
+	eolwarn        bool
+	verifier       func(*countContext, string) bool
 }
+
 var genericLanguages []genericLanguage
 
 type scriptingLanguage struct {
-	name string
-	suffix string
+	name     string
+	suffix   string
 	hashbang string
 	verifier func(*countContext, string) bool
 }
+
 var scriptingLanguages []scriptingLanguage
 
 type pascalLike struct {
-	name string
-	suffix string
+	name            string
+	suffix          string
 	bracketcomments bool
-	verifier func(*countContext, string) bool
+	verifier        func(*countContext, string) bool
 }
+
 var pascalLikes []pascalLike
 
 const dt = "\"\"\""
@@ -271,11 +274,12 @@ var dtriple, striple, dtrailer, strailer, dlonely, slonely *regexp.Regexp
 var podheader *regexp.Regexp
 
 type fortranLike struct {
-	name string
-	suffix string
-	comment *regexp.Regexp
+	name      string
+	suffix    string
+	comment   *regexp.Regexp
 	nocomment *regexp.Regexp
 }
+
 var fortranLikes []fortranLike
 
 var neverInterestingByPrefix []string
@@ -335,7 +339,7 @@ func init() {
 		{"ada", ".ada", "", "", "--", true, nil},
 		{"ada", ".adb", "", "", "--", true, nil},
 		{"ada", ".ads", "", "", "--", true, nil},
-		{"ada", ".pad", "", "", "--", true, nil},	// Oracle Ada preprocessoer.
+		{"ada", ".pad", "", "", "--", true, nil}, // Oracle Ada preprocessoer.
 		{"css", ".css", "/*", "*/", "", true, nil},
 		{"makefile", ".mk", "", "", "#", true, nil},
 		{"makefile", "Makefile", "", "", "#", true, nil},
@@ -343,12 +347,12 @@ func init() {
 		{"makefile", "Imakefile", "", "", "#", true, nil},
 		{"m4", ".m4", "", "", "#", true, nil},
 		{"lisp", ".lisp", "", "", ";", true, nil},
-		{"lisp", ".lsp", "", "", ";", true, nil},	// XLISP
-		{"lisp", ".cl", "", "", ";", true, nil},	// Common Lisp
+		{"lisp", ".lsp", "", "", ";", true, nil}, // XLISP
+		{"lisp", ".cl", "", "", ";", true, nil},  // Common Lisp
 		{"lisp", ".l", "", "", ";", true, nil},
 		{"scheme", ".scm", "", "", ";", true, nil},
-		{"elisp", ".el", "", "", ";", true, nil},	// Emacs Lisp
-		{"clojure", ".clj", "", "", ";", true, nil},        // Clojure
+		{"elisp", ".el", "", "", ";", true, nil},    // Emacs Lisp
+		{"clojure", ".clj", "", "", ";", true, nil}, // Clojure
 		{"clojure", ".cljc", "", "", ";", true, nil},
 		{"clojurescript", ".cljs", "", "", ";", true, nil},
 		{"cobol", ".CBL", "", "", "*", true, nil},
@@ -407,7 +411,7 @@ func init() {
 	}
 
 	scriptingLanguages = []scriptingLanguage{
-		{"tcl", ".tcl", "tcl", nil},	/* before sh, because tclsh */
+		{"tcl", ".tcl", "tcl", nil}, /* before sh, because tclsh */
 		{"tcl", ".tcl", "wish", nil},
 		{"csh", ".csh", "csh", nil},
 		{"shell", ".sh", "sh", nil},
@@ -424,11 +428,11 @@ func init() {
 		{"modula3", ".m3", false, nil},
 		{"modula3", ".ig", false, nil},
 		{"modula3", ".mg", false, nil},
-		{"ml",      ".ml", false, nil},
-		{"mli",      ".ml", false, nil},
-		{"mll",      ".ml", false, nil},
-		{"mly",      ".ml", false, nil},
-		{"oberon",  ".mod", false, nil},
+		{"ml", ".ml", false, nil},
+		{"mli", ".ml", false, nil},
+		{"mll", ".ml", false, nil},
+		{"mly", ".ml", false, nil},
+		{"oberon", ".mod", false, nil},
 	}
 
 	var ferr error
@@ -459,7 +463,7 @@ func init() {
 	if perr != nil {
 		panic(perr)
 	}
-	
+
 	neverInterestingByPrefix = []string{"."}
 	neverInterestingByInfix = []string{".so.", "/."}
 	ignoreSuffixes := []string{"~",
@@ -481,14 +485,14 @@ func init() {
 		neverInterestingBySuffix[ignoreSuffixes[i]] = true
 	}
 	neverInterestingByBasename = map[string]bool{
-		"readme":true, "readme.tk":true, "readme.md":true,
-		"changelog":true, "repository":true, "changes":true,
-		"bugs":true, "todo":true, "copying":true, "maintainers":true,
-		"news":true,
-		"configure":true, "autom4te.cache":true, "config.log":true,
-		"config.status":true,
-		"lex.yy.c":true, "lex.yy.cc":true,
-		"y.code.c":true, "y.tab.c":true, "y.tab.h":true,
+		"readme": true, "readme.tk": true, "readme.md": true,
+		"changelog": true, "repository": true, "changes": true,
+		"bugs": true, "todo": true, "copying": true, "maintainers": true,
+		"news":      true,
+		"configure": true, "autom4te.cache": true, "config.log": true,
+		"config.status": true,
+		"lex.yy.c":      true, "lex.yy.cc": true,
+		"y.code.c": true, "y.tab.c": true, "y.tab.h": true,
 	}
 	cHeaderPriority = []string{"c", "c++", "obj-c"}
 
@@ -504,13 +508,13 @@ const INSTRING = 1
 const INCOMMENT = 2
 
 type countContext struct {
-	line []byte
-	line_number uint
-	nonblank bool			// Is current line nonblank?
-	lexfile bool			// Do we see lex directives?
+	line                  []byte
+	line_number           uint
+	nonblank              bool // Is current line nonblank?
+	lexfile               bool // Do we see lex directives?
 	last_char_was_newline bool
-	underlyingStream *os.File
-	rc *bufio.Reader
+	underlyingStream      *os.File
+	rc                    *bufio.Reader
 }
 
 func (ctx *countContext) setup(path string) bool {
@@ -530,7 +534,7 @@ func (ctx *countContext) teardown() {
 }
 
 // consume - conditionally consume an expected byte sequence
-func (ctx *countContext) consume (expect []byte) bool {
+func (ctx *countContext) consume(expect []byte) bool {
 	s, err := ctx.rc.Peek(len(expect))
 	if err == nil && bytes.Equal(s, expect) {
 		ctx.rc.Discard(len(expect))
@@ -604,11 +608,11 @@ func isspace(c byte) bool {
 
 // really_is_objc - returns TRUE if filename contents really are objective-C.
 func really_is_objc(ctx *countContext, path string) bool {
-	var is_objc bool = false   // Value to determine.
-	var brace_lines int        // Lines that begin/end with curly braces.
-	var plus_minus int         // Lines that begin with + or -.
-	var word_main int          // Did we find "main("?
-	var special bool = false   // Did we find a special Objective-C pattern?
+	var is_objc bool = false // Value to determine.
+	var brace_lines int      // Lines that begin/end with curly braces.
+	var plus_minus int       // Lines that begin with + or -.
+	var word_main int        // Did we find "main("?
+	var special bool = false // Did we find a special Objective-C pattern?
 
 	ctx.setup(path)
 	defer ctx.teardown()
@@ -620,9 +624,9 @@ func really_is_objc(ctx *countContext, path string) bool {
 		if ctx.matchline("^\\s*[+-]") {
 			plus_minus++
 		}
-		if ctx.matchline("\\bmain\\s*\\(") {// "main" followed by "("?
+		if ctx.matchline("\\bmain\\s*\\(") { // "main" followed by "("?
 			word_main++
-		} 
+		}
 		// Handle /usr/src/redhat/BUILD/egcs-1.1.2/gcc/objc/linking.m:
 		if ctx.matchline("(?i)^\\s*\\[object name\\];\\s*") {
 			special = true
@@ -641,9 +645,8 @@ func really_is_objc(ctx *countContext, path string) bool {
 	return is_objc
 }
 
-
 func has_keywords(ctx *countContext, path string, lang string, tells []string) bool {
-	var matching bool = false   // Value to determine.
+	var matching bool = false // Value to determine.
 
 	ctx.setup(path)
 	defer ctx.teardown()
@@ -714,12 +717,12 @@ func really_is_prolog(ctx *countContext, path string) bool {
 // The heuristic is as follows: it's Expect _IF_ it:
 // 1. has "load_lib" command and either "#" comments or {}.
 // 2. {, }, and one of: proc, if, [...], expect
-func really_is_expect (ctx *countContext, path string) bool {
-	var is_expect = false      // Value to determine.
+func really_is_expect(ctx *countContext, path string) bool {
+	var is_expect = false // Value to determine.
 
-	var begin_brace bool  // Lines that begin with curly braces.
-	var end_brace bool    // Lines that begin with curly braces.
-	var load_lib bool     // Lines with the Load_lib command.
+	var begin_brace bool // Lines that begin with curly braces.
+	var end_brace bool   // Lines that begin with curly braces.
+	var load_lib bool    // Lines with the Load_lib command.
 	var found_proc bool
 	var found_if bool
 	var found_brackets bool
@@ -739,15 +742,33 @@ func really_is_expect (ctx *countContext, path string) bool {
 			}
 		}
 
-		if (ctx.matchline("^\\s*\\{")) { begin_brace = true}
-		if (ctx.matchline("\\{\\s*$")) { begin_brace = true}
-		if (ctx.matchline("^\\s*}")) { end_brace = true}
-		if (ctx.matchline("};?\\s*$")) { end_brace = true}
-		if (ctx.matchline("^\\s*load_lib\\s+\\S")) { load_lib = true}
-		if (ctx.matchline("^\\s*proc\\s")) { found_proc = true}
-		if (ctx.matchline("^\\s*if\\s")) { found_if = true}
-		if (ctx.matchline("\\[.*\\]")) { found_brackets = true}
-		if (ctx.matchline("^\\s*expect\\s")) { found_expect = true}
+		if ctx.matchline("^\\s*\\{") {
+			begin_brace = true
+		}
+		if ctx.matchline("\\{\\s*$") {
+			begin_brace = true
+		}
+		if ctx.matchline("^\\s*}") {
+			end_brace = true
+		}
+		if ctx.matchline("};?\\s*$") {
+			end_brace = true
+		}
+		if ctx.matchline("^\\s*load_lib\\s+\\S") {
+			load_lib = true
+		}
+		if ctx.matchline("^\\s*proc\\s") {
+			found_proc = true
+		}
+		if ctx.matchline("^\\s*if\\s") {
+			found_if = true
+		}
+		if ctx.matchline("\\[.*\\]") {
+			found_brackets = true
+		}
+		if ctx.matchline("^\\s*expect\\s") {
+			found_expect = true
+		}
 	}
 
 	if load_lib && (found_pound || (begin_brace && end_brace)) {
@@ -765,58 +786,57 @@ func really_is_expect (ctx *countContext, path string) bool {
 	return is_expect
 }
 
-
 // really-is-pascal - returns  true if filename contents really are Pascal.
-func really_is_pascal (ctx *countContext, path string) bool {
-//
-// dwheeler had this to say:
-//
-// This isn't as obvious as it seems.
-// Many ".p" files are Perl files
-// (such as /usr/src/redhat/BUILD/ispell-3.1/dicts/czech/glob.p),
-// others are C extractions
-// (such as /usr/src/redhat/BUILD/linux/include/linux/umsdos_fs.p
-// and some files in linuxconf).
-// However, test files in "p2c" really are Pascal, for example.
-//
-// Note that /usr/src/redhat/BUILD/ucd-snmp-4.1.1/ov/bitmaps/UCD.20.p
-// is actually C code.  The heuristics determine that they're not Pascal,
-// but because it ends in ".p" it's not counted as C code either.
-// I believe this is actually correct behavior, because frankly it
-// looks like it's automatically generated (it's a bitmap expressed as code).
-// Rather than guess otherwise, we don't include it in a list of
-// source files.  Let's face it, someone who creates C files ending in ".p"
-// and expects them to be counted by default as C files in SLOCCount needs
-// their head examined.  I suggest examining their head
-// with a sucker rod (see syslogd(8) for more on sucker rods).
-//
-// This heuristic counts as Pascal such files such as:
-//  /usr/src/redhat/BUILD/teTeX-1.0/texk/web2c/tangleboot.p
-// Which is hand-generated.  We don't count woven documents now anyway,
-// so this is justifiable.
+func really_is_pascal(ctx *countContext, path string) bool {
+	//
+	// dwheeler had this to say:
+	//
+	// This isn't as obvious as it seems.
+	// Many ".p" files are Perl files
+	// (such as /usr/src/redhat/BUILD/ispell-3.1/dicts/czech/glob.p),
+	// others are C extractions
+	// (such as /usr/src/redhat/BUILD/linux/include/linux/umsdos_fs.p
+	// and some files in linuxconf).
+	// However, test files in "p2c" really are Pascal, for example.
+	//
+	// Note that /usr/src/redhat/BUILD/ucd-snmp-4.1.1/ov/bitmaps/UCD.20.p
+	// is actually C code.  The heuristics determine that they're not Pascal,
+	// but because it ends in ".p" it's not counted as C code either.
+	// I believe this is actually correct behavior, because frankly it
+	// looks like it's automatically generated (it's a bitmap expressed as code).
+	// Rather than guess otherwise, we don't include it in a list of
+	// source files.  Let's face it, someone who creates C files ending in ".p"
+	// and expects them to be counted by default as C files in SLOCCount needs
+	// their head examined.  I suggest examining their head
+	// with a sucker rod (see syslogd(8) for more on sucker rods).
+	//
+	// This heuristic counts as Pascal such files such as:
+	//  /usr/src/redhat/BUILD/teTeX-1.0/texk/web2c/tangleboot.p
+	// Which is hand-generated.  We don't count woven documents now anyway,
+	// so this is justifiable.
 
-// The heuristic is as follows: it's Pascal _IF_ it has all of the following
-// (ignoring {...} and (*...*) comments):
-// 1. "^..program NAME" or "^..unit NAME",
-// 2. "procedure", "function", "^..interface", or "^..implementation",
-// 3. a "begin", and
-// 4. it ends with "end.",
-//
-// Or it has all of the following:
-// 1. "^..module NAME" and
-// 2. it ends with "end.".
-//
-// Or it has all of the following:
-// 1. "^..program NAME",
-// 2. a "begin", and
-// 3. it ends with "end.".
-//
-// The "end." requirements in particular filter out non-Pascal.
-//
-// Note (jgb): this does not detect Pascal main files in fpc, like
-// fpc-1.0.4/api/test/testterminfo.pas, which does not have "program" in
-// it
-	var is_pascal bool      // Value to determine.
+	// The heuristic is as follows: it's Pascal _IF_ it has all of the following
+	// (ignoring {...} and (*...*) comments):
+	// 1. "^..program NAME" or "^..unit NAME",
+	// 2. "procedure", "function", "^..interface", or "^..implementation",
+	// 3. a "begin", and
+	// 4. it ends with "end.",
+	//
+	// Or it has all of the following:
+	// 1. "^..module NAME" and
+	// 2. it ends with "end.".
+	//
+	// Or it has all of the following:
+	// 1. "^..program NAME",
+	// 2. a "begin", and
+	// 3. it ends with "end.".
+	//
+	// The "end." requirements in particular filter out non-Pascal.
+	//
+	// Note (jgb): this does not detect Pascal main files in fpc, like
+	// fpc-1.0.4/api/test/testterminfo.pas, which does not have "program" in
+	// it
+	var is_pascal bool // Value to determine.
 
 	var has_program bool
 	var has_unit bool
@@ -834,29 +854,29 @@ func really_is_pascal (ctx *countContext, path string) bool {
 		// Ignore (*...*) comments on this line; imperfect but effective.
 		ctx.drop("\\(\\*.*\\*\\)")
 
-		if ctx.matchline("(?i)\\bprogram\\s+[A-Za-z]")  {
+		if ctx.matchline("(?i)\\bprogram\\s+[A-Za-z]") {
 			has_program = true
 		}
-		if ctx.matchline("(?i)\\bunit\\s+[A-Za-z]")     {
+		if ctx.matchline("(?i)\\bunit\\s+[A-Za-z]") {
 			has_unit = true
 		}
-		if ctx.matchline("(?i)\\bmodule\\s+[A-Za-z]")   {
+		if ctx.matchline("(?i)\\bmodule\\s+[A-Za-z]") {
 			has_module = true
 		}
-		if ctx.matchline("(?i)\\bprocedure\\b")         {
-			has_procedure_or_function  = true
+		if ctx.matchline("(?i)\\bprocedure\\b") {
+			has_procedure_or_function = true
 		}
-		if ctx.matchline("(?i)\\bfunction\\b")          {
-			has_procedure_or_function  = true
+		if ctx.matchline("(?i)\\bfunction\\b") {
+			has_procedure_or_function = true
 		}
-		if ctx.matchline("(?i)^\\s*interface\\s+")      {
-			has_procedure_or_function  = true
+		if ctx.matchline("(?i)^\\s*interface\\s+") {
+			has_procedure_or_function = true
 		}
 		if ctx.matchline("(?i)^\\s*implementation\\s+") {
-			has_procedure_or_function  = true
+			has_procedure_or_function = true
 		}
 		if ctx.matchline("(?i)\\bbegin\\b") {
-			has_begin  = true
+			has_begin = true
 		}
 		// Originally dw said: "This heuristic fails if there
 		// are multi-line comments after "end."; I haven't
@@ -874,8 +894,8 @@ func really_is_pascal (ctx *countContext, path string) bool {
 	// Okay, we've examined the entire file looking for clues;
 	// let's use those clues to determine if it's really Pascal:
 	is_pascal = (((has_unit || has_program) && has_procedure_or_function &&
-		has_begin && found_terminating_end ) ||
-		(has_module && found_terminating_end ) ||
+		has_begin && found_terminating_end) ||
+		(has_module && found_terminating_end) ||
 		(has_program && has_begin && found_terminating_end))
 
 	if debug > 0 {
@@ -886,22 +906,22 @@ func really_is_pascal (ctx *countContext, path string) bool {
 }
 
 func was_generated_automatically(ctx *countContext, path string, eolcomment string) bool {
- // Determine if the file was generated automatically.
- // Use a simple heuristic: check if first few lines have phrases like
- // "generated automatically", "automatically generated", "Generated by",
- // or "do not edit" as the first
- // words in the line (after possible comment markers and spaces).
-	i := 15;  // Look at first 15 lines.
+	// Determine if the file was generated automatically.
+	// Use a simple heuristic: check if first few lines have phrases like
+	// "generated automatically", "automatically generated", "Generated by",
+	// or "do not edit" as the first
+	// words in the line (after possible comment markers and spaces).
+	i := 15 // Look at first 15 lines.
 	ctx.setup(path)
 	defer ctx.teardown()
 
-	// Avoid blowing up if the comment leader is "*" (as in COBOL). 
+	// Avoid blowing up if the comment leader is "*" (as in COBOL).
 	if eolcomment == "*" {
 		eolcomment = ""
 	} else {
 		eolcomment = "|" + eolcomment
 	}
-	re := "(\\*" + eolcomment + ").*(?i:" + generated +")"
+	re := "(\\*" + eolcomment + ").*(?i:" + generated + ")"
 	cre, err := regexp.Compile(re)
 	if err != nil {
 		panic(fmt.Sprintf("unexpected failure while building %s", re))
@@ -918,14 +938,14 @@ func was_generated_automatically(ctx *countContext, path string, eolcomment stri
 		i--
 	}
 
-	return false;
+	return false
 }
 
 // hashbang - hunt for a specified string in the first line of an executable
 func hashbang(ctx *countContext, path string, langname string) bool {
 	fi, err := os.Stat(path)
 	// If it's not executable by somebody, don't read for hashbang
-	if err != nil || (fi.Mode() & 01111) == 0 {
+	if err != nil || (fi.Mode()&01111) == 0 {
 		return false
 	}
 	ctx.setup(path)
@@ -948,14 +968,14 @@ func c_family_counter(ctx *countContext, path string, syntax genericLanguage) ui
 	const TRAILING_COMMENT = 1
 
 	var sloc uint = 0
-	var mode int = NORMAL            /* NORMAL, INSTRING, or INCOMMENT */
-	var comment_type int             /* BLOCK_COMMENT or TRAILING_COMMENT */
+	var mode int = NORMAL /* NORMAL, INSTRING, or INCOMMENT */
+	var comment_type int  /* BLOCK_COMMENT or TRAILING_COMMENT */
 	var startline uint
 
 	if syntax.verifier != nil && !syntax.verifier(ctx, path) {
 		return 0
 	}
-	
+
 	ctx.setup(path)
 	defer ctx.teardown()
 
@@ -998,13 +1018,13 @@ func c_family_counter(ctx *countContext, path string, syntax genericLanguage) ui
 			}
 		} else if mode == INSTRING {
 			/*
-		        We only count string lines with non-whitespace --
-		        this is to gracefully handle syntactically invalid
-			programs.
-			You could argue that multiline strings with
-			whitespace are still executable and should be
-			counted.
-			 */
+				        We only count string lines with non-whitespace --
+				        this is to gracefully handle syntactically invalid
+					programs.
+					You could argue that multiline strings with
+					whitespace are still executable and should be
+					counted.
+			*/
 			if !isspace(c) {
 				ctx.nonblank = true
 			}
@@ -1016,21 +1036,21 @@ func c_family_counter(ctx *countContext, path string, syntax genericLanguage) ui
 				c, err = ctx.getachar()
 			} else if c == '\n' {
 				/*
-                                We found a bare newline in a string without
-				preceding backslash.
-                                */
+					                                We found a bare newline in a string without
+									preceding backslash.
+				*/
 				if syntax.eolwarn {
 					log.Printf("WARNING - newline in string, line %d, file %s\n", ctx.line_number, path)
 				}
 
 				/*
-                                We COULD warn & reset mode to
-                                "Normal", but lots of code does this,
-                                so we'll just depend on the warning
-                                for ending the program in a string to
-                                catch syntactically erroneous
-                                programs.
-                                */
+				   We COULD warn & reset mode to
+				   "Normal", but lots of code does this,
+				   so we'll just depend on the warning
+				   for ending the program in a string to
+				   catch syntactically erroneous
+				   programs.
+				*/
 			}
 		} else { /* INCOMMENT mode */
 			if (c == '\n') && (comment_type == TRAILING_COMMENT) {
@@ -1081,7 +1101,7 @@ func genericCounter(ctx *countContext,
 	if verifier != nil && !verifier(ctx, path) {
 		return 0
 	}
-	
+
 	ctx.setup(path)
 	defer ctx.teardown()
 
@@ -1101,13 +1121,13 @@ func genericCounter(ctx *countContext,
 
 func pythonCounter(ctx *countContext, path string) uint {
 	var sloc uint = 0
-	var isintriple bool	// A triple-quote is in effect.
-	var isincomment bool	// We are in a multiline (triple-quoted) comment.
+	var isintriple bool  // A triple-quote is in effect.
+	var isincomment bool // We are in a multiline (triple-quoted) comment.
 
 	ctx.setup(path)
 	defer ctx.teardown()
 
-	triple_boundary := func(line []byte) bool {return bytes.Contains(line, []byte(dt)) || bytes.Contains(line, []byte(st))}
+	triple_boundary := func(line []byte) bool { return bytes.Contains(line, []byte(dt)) || bytes.Contains(line, []byte(st)) }
 	for ctx.munchline() {
 		// Delete trailing comments
 		i := bytes.Index(ctx.line, []byte("#"))
@@ -1115,7 +1135,7 @@ func pythonCounter(ctx *countContext, path string) uint {
 			ctx.line = ctx.line[:i]
 		}
 
-		if !isintriple {  // Normal case:
+		if !isintriple { // Normal case:
 			// Ignore triple-quotes that begin & end on the ctx.line.
 			ctx.line = dtriple.ReplaceAllLiteral(ctx.line, []byte(""))
 			ctx.line = striple.ReplaceAllLiteral(ctx.line, []byte(""))
@@ -1129,14 +1149,14 @@ func pythonCounter(ctx *countContext, path string) uint {
 			}
 			// Does multictx.line triple-quote begin here?
 			if triple_boundary(ctx.line) {
-		    		isintriple = true;
+				isintriple = true
 				ctx.line = bytes.Trim(ctx.line, " \t\r\n")
 				// It's a comment if at BOL.
-				if bytes.HasPrefix(ctx.line, []byte(dt)) || bytes.HasPrefix(ctx.line, []byte(st)){
+				if bytes.HasPrefix(ctx.line, []byte(dt)) || bytes.HasPrefix(ctx.line, []byte(st)) {
 					isincomment = true
 				}
 			}
-		} else {  // we ARE in a triple.
+		} else { // we ARE in a triple.
 			if triple_boundary(ctx.line) {
 				if isincomment {
 					// Delete text if it's a comment (not if data)
@@ -1199,10 +1219,10 @@ func perlCounter(ctx *countContext, path string) uint {
 		}
 
 		ctx.line = bytes.Trim(ctx.line, " \t\r\n")
-		
+
 		if heredoc != "" && strings.HasPrefix(string(ctx.line), heredoc) {
-			heredoc = ""    //finished here doc.
-		} else if i := bytes.Index(ctx.line, []byte("<<")); i > -1 { 
+			heredoc = "" //finished here doc.
+		} else if i := bytes.Index(ctx.line, []byte("<<")); i > -1 {
 			// Beginning of a here document.
 			heredoc = string(bytes.Trim(ctx.line[i:], "< \t\"';,"))
 		} else if len(heredoc) == 0 && bytes.HasPrefix(ctx.line, []byte("=cut")) {
@@ -1212,7 +1232,7 @@ func perlCounter(ctx *countContext, path string) uint {
 					path, ctx.line_number)
 			}
 			isinpod = false
-			continue  // Don't count the cut command.
+			continue // Don't count the cut command.
 		} else if len(heredoc) == 0 && podheader.Match(ctx.line) {
 			// Starting or continuing a POD?
 			// Perlpods can have multiple contents, so
@@ -1235,13 +1255,13 @@ func perlCounter(ctx *countContext, path string) uint {
 // pascalCounter - Handle lanuages like Pascal and Modula 3
 func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 	var sloc uint = 0
-	var mode int = NORMAL              /* NORMAL, or INCOMMENT */
+	var mode int = NORMAL /* NORMAL, or INCOMMENT */
 	var startline uint
 
 	if syntax.verifier != nil && !syntax.verifier(ctx, path) {
 		return 0
 	}
-	
+
 	ctx.setup(path)
 	defer ctx.teardown()
 
@@ -1348,8 +1368,8 @@ func Generic(ctx *countContext, path string) SourceStat {
 		stat.SLOC = pythonCounter(ctx, path)
 		return stat
 	}
-		
-	if strings.HasSuffix(path, ".pl") || strings.HasSuffix(path, ".pm")|| strings.HasSuffix(path, ".ph") || hashbang(ctx, path, "perl") {
+
+	if strings.HasSuffix(path, ".pl") || strings.HasSuffix(path, ".pm") || strings.HasSuffix(path, ".ph") || hashbang(ctx, path, "perl") {
 		if autofilter("#") {
 			return stat
 		}
@@ -1357,7 +1377,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		stat.SLOC = perlCounter(ctx, path)
 		return stat
 	}
-		
+
 	if filepath.Base(path) == "wscript" {
 		if autofilter("#") {
 			return stat
@@ -1366,7 +1386,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		stat.SLOC = pythonCounter(ctx, path)
 		return stat
 	}
-		
+
 	for i := range scriptingLanguages {
 		if autofilter("#") {
 			return stat
@@ -1404,12 +1424,12 @@ func Generic(ctx *countContext, path string) SourceStat {
 	return stat
 }
 
-func isDirectory(path string) (bool) {
+func isDirectory(path string) bool {
 	fileInfo, err := os.Stat(path)
 	return err == nil && fileInfo.Mode().IsDir()
 }
 
-func isRegular(path string) (bool) {
+func isRegular(path string) bool {
 	fileInfo, err := os.Stat(path)
 	return err == nil && fileInfo.Mode().IsRegular()
 }
@@ -1450,7 +1470,7 @@ func filter(path string, info os.FileInfo, err error) error {
 		}
 	}
 	basename := filepath.Base(path)
-	if  neverInterestingByBasename[strings.ToLower(basename)] {
+	if neverInterestingByBasename[strings.ToLower(basename)] {
 		if debug > 0 {
 			fmt.Printf("basename filter failed: %s\n", path)
 		}
@@ -1459,7 +1479,7 @@ func filter(path string, info os.FileInfo, err error) error {
 	for i := range exclusions {
 		if path == exclusions[i] || strings.HasPrefix(path, exclusions[i]+"/") {
 			if debug > 0 {
-				fmt.Printf("exclusion '%s' filter failed: %s\n", exclusions,path)
+				fmt.Printf("exclusion '%s' filter failed: %s\n", exclusions, path)
 			}
 			return err
 		}
@@ -1476,9 +1496,9 @@ func filter(path string, info os.FileInfo, err error) error {
 	/* toss generated Makefiles */
 	if basename == "Makefile" {
 		if _, err := os.Stat(path + ".in"); err == nil {
-		if debug > 0 {
-			fmt.Printf("generated-makefile filter failed: %s\n", path)
-		}
+			if debug > 0 {
+				fmt.Printf("generated-makefile filter failed: %s\n", path)
+			}
 			return err
 		}
 	}
@@ -1497,7 +1517,7 @@ func filter(path string, info os.FileInfo, err error) error {
 }
 
 type countRecord struct {
-	language string
+	language  string
 	linecount uint
 	filecount uint
 }
@@ -1507,17 +1527,17 @@ func reportCocomo(sloc uint) {
 	const TIME_EXP = 1.05
 	const SCHED_MULT = 2.5
 	const SCHED_EXP = 0.38
-	const SALARY = 60384	// From payscale.com, late 2016
+	const SALARY = 60384 // From payscale.com, late 2016
 	const OVERHEAD = 2.40
 	fmt.Printf("Total Physical Source Lines of Code (SLOC)                = %d\n", sloc)
 	person_months := TIME_MULT * math.Pow(float64(sloc)/1000, TIME_EXP)
-	fmt.Printf("Development Effort Estimate, Person-Years (Person-Months) = %2.2f (%2.2f)\n", person_months / 12, person_months) 
+	fmt.Printf("Development Effort Estimate, Person-Years (Person-Months) = %2.2f (%2.2f)\n", person_months/12, person_months)
 	fmt.Printf(" (Basic COCOMO model, Person-Months = %2.2f * (KSLOC**%2.2f))\n", TIME_MULT, TIME_EXP)
 	sched_months := SCHED_MULT * math.Pow(person_months, SCHED_EXP)
 	fmt.Printf("Schedule Estimate, Years (Months)                         = %2.2f (%2.2f)\n", sched_months/12, sched_months)
 	fmt.Printf(" (Basic COCOMO model, Months = %2.2f * (person-months**%2.2f))\n", SCHED_MULT, SCHED_EXP)
-	fmt.Printf("Estimated Average Number of Developers (Effort/Schedule)  = %2.2f\n", person_months / sched_months)
-	fmt.Printf("Total Estimated Cost to Develop                           = $%d\n", int(SALARY * (person_months / 12) * OVERHEAD))
+	fmt.Printf("Estimated Average Number of Developers (Effort/Schedule)  = %2.2f\n", person_months/sched_months)
+	fmt.Printf("Total Estimated Cost to Develop                           = $%d\n", int(SALARY*(person_months/12)*OVERHEAD))
 	fmt.Printf(" (average salary = $%d/year, overhead = %2.2f).\n", SALARY, OVERHEAD)
 }
 
@@ -1561,28 +1581,28 @@ func listLanguages() []string {
 
 func listExtensions() {
 	extensions := map[string][]string{
-		"python": []string{".py"},
-		"waf": []string{"waf"},
-		"perl": []string{"pl", "pm"},
+		"python": {".py"},
+		"waf":    {"waf"},
+		"perl":   {"pl", "pm"},
 	}
 	for i := range genericLanguages {
 		lang := genericLanguages[i]
-		extensions[lang.name] = append(extensions[lang.name], lang.suffix)  
+		extensions[lang.name] = append(extensions[lang.name], lang.suffix)
 	}
 
 	for i := range scriptingLanguages {
 		lang := scriptingLanguages[i]
-		extensions[lang.name] = append(extensions[lang.name], lang.suffix)  
+		extensions[lang.name] = append(extensions[lang.name], lang.suffix)
 	}
 
 	for i := range pascalLikes {
 		lang := pascalLikes[i]
-		extensions[lang.name] = append(extensions[lang.name], lang.suffix)  
+		extensions[lang.name] = append(extensions[lang.name], lang.suffix)
 	}
 
 	for i := range fortranLikes {
 		lang := fortranLikes[i]
-		extensions[lang.name] = append(extensions[lang.name], lang.suffix)  
+		extensions[lang.name] = append(extensions[lang.name], lang.suffix)
 	}
 	names := listLanguages()
 	for i := range names {
@@ -1590,8 +1610,9 @@ func listExtensions() {
 	}
 }
 
-type sortable []countRecord 
-func (a sortable) Len() int {return len(a)}
+type sortable []countRecord
+
+func (a sortable) Len() int           { return len(a) }
 func (a sortable) Swap(i int, j int)  { a[i], a[j] = a[j], a[i] }
 func (a sortable) Less(i, j int) bool { return -a[i].linecount < -a[j].linecount }
 
@@ -1657,7 +1678,7 @@ func main() {
 	} else {
 		chandepth = runtime.NumCPU()
 	}
-	pipeline = make(chan SourceStat, chandepth) 
+	pipeline = make(chan SourceStat, chandepth)
 
 	if len(*excludePtr) > 0 {
 		exclusions = strings.Split(*excludePtr, ",")
@@ -1674,7 +1695,7 @@ func main() {
 	}()
 
 	var totals countRecord
-	counts := map[string]countRecord{} 
+	counts := map[string]countRecord{}
 
 	// Mainline resumes
 	for {
@@ -1686,7 +1707,7 @@ func main() {
 			fmt.Printf("from pipeline: %s %d %s\n",
 				st.Path, st.SLOC, st.Language)
 		}
-		
+
 		if individual {
 			if !unclassified && st.SLOC > 0 {
 				fmt.Printf("%s %d %s\n",
@@ -1727,7 +1748,7 @@ func main() {
 			}
 		}
 	}
-	
+
 	var summary sortable
 	totals.language = "all"
 	if totals.filecount > 1 {
@@ -1749,12 +1770,12 @@ func main() {
 			fmt.Printf("%-12s %7d (%2.2f%%) in %d files\n",
 				r.language,
 				r.linecount,
-				float64(r.linecount) * 100.0 / float64(totals.linecount),
+				float64(r.linecount)*100.0/float64(totals.linecount),
 				r.filecount)
 		}
 	}
 
-	if (cocomo) {
+	if cocomo {
 		reportCocomo(totals.linecount)
 	}
 }
