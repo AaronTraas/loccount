@@ -58,8 +58,8 @@ ignores metadata associated with version-control systems).
 Display usage summary and quit.
 
 -c::
-Report a COCOMO II cost estimate. Use the coefficients for the
-"organic" project type, which is the best fot for most open-source
+Report a COCOMO I cost estimate. Use the coefficients for the
+"organic" project type, which is the best for for most open-source
 projects.
 
 -d _n_::
