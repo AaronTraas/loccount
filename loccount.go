@@ -348,6 +348,9 @@ func init() {
 		{"lisp", ".l", "", "", ";", true, nil},
 		{"scheme", ".scm", "", "", ";", true, nil},
 		{"elisp", ".el", "", "", ";", true, nil},	// Emacs Lisp
+		{"clojure", ".clj", "", "", ";", true, nil},        // Clojure
+		{"clojure", ".cljc", "", "", ";", true, nil},
+		{"clojurescript", ".cljs", "", "", ";", true, nil},
 		{"cobol", ".CBL", "", "", "*", true, nil},
 		{"cobol", ".cbl", "", "", "*", true, nil},
 		{"cobol", ".COB", "", "", "*", true, nil},
