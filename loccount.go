@@ -242,7 +242,7 @@ type genericLanguage struct {
 	commentleader string
 	commenttrailer string
 	eolcomment string
-	longstrings bool
+	eolwarn bool
 	verifier func(*countContext, string) bool
 }
 var genericLanguages []genericLanguage
@@ -304,77 +304,77 @@ func init() {
 	// be foiled.
 	genericLanguages = []genericLanguage{
 		/* C family */
-		{"c", ".c", "/*", "*/", "//", false, nil},
-		{"c-header", ".h", "/*", "*/", "//", false, nil},
-		{"c-header", ".hpp", "/*", "*/", "//", false, nil},
-		{"c-header", ".hxx", "/*", "*/", "//", false, nil},
-		{"yacc", ".y", "/*", "*/", "//", false, nil},
-		{"lex", ".l", "/*", "*/", "//", false, really_is_lex},
-		{"c++", ".cpp", "/*", "*/", "//", false, nil},
-		{"c++", ".cxx", "/*", "*/", "//", false, nil},
-		{"c++", ".cc", "/*", "*/", "//", false, nil},
-		{"java", ".java", "/*", "*/", "//", false, nil},
-		{"javascript", ".js", "/*", "*/", "//", false, nil},
-		{"obj-c", ".m", "/*", "*/", "//", false, really_is_objc},
-		{"c#", ".cs", "/*", "*/", "//", false, nil},
-		{"php", ".php", "/*", "*/", "//", false, nil},
-		{"php3", ".php", "/*", "*/", "//", false, nil},
-		{"php4", ".php", "/*", "*/", "//", false, nil},
-		{"php5", ".php", "/*", "*/", "//", false, nil},
-		{"php6", ".php", "/*", "*/", "//", false, nil},
-		{"php7", ".php", "/*", "*/", "//", false, nil},
-		{"go", ".go", "/*", "*/", "//", false, nil},
-		{"swift", ".swift", "/*", "*/", "//", false, nil},
-		{"sql", ".sql", "/*", "*/", "--", true, nil},
-		{"haskell", ".hs", "{-", "-}", "--", false, nil},
-		{"pl/1", ".pl1", "/*", "*/", "", false, nil},
+		{"c", ".c", "/*", "*/", "//", true, nil},
+		{"c-header", ".h", "/*", "*/", "//", true, nil},
+		{"c-header", ".hpp", "/*", "*/", "//", true, nil},
+		{"c-header", ".hxx", "/*", "*/", "//", true, nil},
+		{"yacc", ".y", "/*", "*/", "//", true, nil},
+		{"lex", ".l", "/*", "*/", "//", true, really_is_lex},
+		{"c++", ".cpp", "/*", "*/", "//", true, nil},
+		{"c++", ".cxx", "/*", "*/", "//", true, nil},
+		{"c++", ".cc", "/*", "*/", "//", true, nil},
+		{"java", ".java", "/*", "*/", "//", true, nil},
+		{"javascript", ".js", "/*", "*/", "//", true, nil},
+		{"obj-c", ".m", "/*", "*/", "//", true, really_is_objc},
+		{"c#", ".cs", "/*", "*/", "//", true, nil},
+		{"php", ".php", "/*", "*/", "//", true, nil},
+		{"php3", ".php", "/*", "*/", "//", true, nil},
+		{"php4", ".php", "/*", "*/", "//", true, nil},
+		{"php5", ".php", "/*", "*/", "//", true, nil},
+		{"php6", ".php", "/*", "*/", "//", true, nil},
+		{"php7", ".php", "/*", "*/", "//", true, nil},
+		{"go", ".go", "/*", "*/", "//", true, nil},
+		{"swift", ".swift", "/*", "*/", "//", true, nil},
+		{"sql", ".sql", "/*", "*/", "--", false, nil},
+		{"haskell", ".hs", "{-", "-}", "--", true, nil},
+		{"pl/1", ".pl1", "/*", "*/", "", true, nil},
 		/* everything else */
-		{"asm", ".asm", "", "", ";", false, nil},
-		{"asm", ".s", "", "", ";", false, nil},
-		{"asm", ".S", "", "", ";", false, nil},
-		{"ada", ".ada", "", "", "--", false, nil},
-		{"ada", ".adb", "", "", "--", false, nil},
-		{"ada", ".ads", "", "", "--", false, nil},
-		{"ada", ".pad", "", "", "--", false, nil},	// Oracle Ada preprocessoer.
-		{"css", ".css", "/*", "*/", "", false, nil},
-		{"makefile", ".mk", "", "", "#", false, nil},
-		{"makefile", "Makefile", "", "", "#", false, nil},
-		{"makefile", "makefile", "", "", "#", false, nil},
-		{"makefile", "Imakefile", "", "", "#", false, nil},
-		{"m4", ".m4", "", "", "#", false, nil},
-		{"lisp", ".lisp", "", "", ";", false, nil},
-		{"lisp", ".lsp", "", "", ";", false, nil},	// XLISP
-		{"lisp", ".cl", "", "", ";", false, nil},	// Common Lisp
-		{"lisp", ".l", "", "", ";", false, nil},
-		{"scheme", ".scm", "", "", ";", false, nil},
-		{"elisp", ".el", "", "", ";", false, nil},	// Emacs Lisp
-		{"cobol", ".CBL", "", "", "*", false, nil},
-		{"cobol", ".cbl", "", "", "*", false, nil},
-		{"cobol", ".COB", "", "", "*", false, nil},
-		{"cobol", ".cob", "", "", "*", false, nil},
-		{"eiffel", ".e", "", "", "--", false, nil},
-		{"sather", ".sa", "", "", "--", false, really_is_sather},
-		{"lua", ".lua", "", "", "--", false, nil},
-		{"clu", ".clu", "", "", "%", false, nil},
-		{"rust", ".rs", "", "", "//", false, nil},
-		{"rust", ".rlib", "", "", "//", false, nil},
-		{"erlang", ".erl", "", "", "%", false, nil},
-		//{"turing", ".t", "", "", "%", false, nil},
-		{"d", ".d", "", "", "//", false, nil},
-		{"occam", ".f", "", "", "//", false, really_is_occam},
-		{"prolog", ".pl", "", "", "%", false, really_is_prolog},
-		{"mumps", ".m", "", "", ";", false, nil},
-		{"pop11", ".p", "", "", ";", false, really_is_pop11},
+		{"asm", ".asm", "", "", ";", true, nil},
+		{"asm", ".s", "", "", ";", true, nil},
+		{"asm", ".S", "", "", ";", true, nil},
+		{"ada", ".ada", "", "", "--", true, nil},
+		{"ada", ".adb", "", "", "--", true, nil},
+		{"ada", ".ads", "", "", "--", true, nil},
+		{"ada", ".pad", "", "", "--", true, nil},	// Oracle Ada preprocessoer.
+		{"css", ".css", "/*", "*/", "", true, nil},
+		{"makefile", ".mk", "", "", "#", true, nil},
+		{"makefile", "Makefile", "", "", "#", true, nil},
+		{"makefile", "makefile", "", "", "#", true, nil},
+		{"makefile", "Imakefile", "", "", "#", true, nil},
+		{"m4", ".m4", "", "", "#", true, nil},
+		{"lisp", ".lisp", "", "", ";", true, nil},
+		{"lisp", ".lsp", "", "", ";", true, nil},	// XLISP
+		{"lisp", ".cl", "", "", ";", true, nil},	// Common Lisp
+		{"lisp", ".l", "", "", ";", true, nil},
+		{"scheme", ".scm", "", "", ";", true, nil},
+		{"elisp", ".el", "", "", ";", true, nil},	// Emacs Lisp
+		{"cobol", ".CBL", "", "", "*", true, nil},
+		{"cobol", ".cbl", "", "", "*", true, nil},
+		{"cobol", ".COB", "", "", "*", true, nil},
+		{"cobol", ".cob", "", "", "*", true, nil},
+		{"eiffel", ".e", "", "", "--", true, nil},
+		{"sather", ".sa", "", "", "--", true, really_is_sather},
+		{"lua", ".lua", "", "", "--", true, nil},
+		{"clu", ".clu", "", "", "%", true, nil},
+		{"rust", ".rs", "", "", "//", true, nil},
+		{"rust", ".rlib", "", "", "//", true, nil},
+		{"erlang", ".erl", "", "", "%", true, nil},
+		//{"turing", ".t", "", "", "%", true, nil},
+		{"d", ".d", "", "", "//", true, nil},
+		{"occam", ".f", "", "", "//", true, really_is_occam},
+		{"prolog", ".pl", "", "", "%", true, really_is_prolog},
+		{"mumps", ".m", "", "", ";", true, nil},
+		{"pop11", ".p", "", "", ";", true, really_is_pop11},
 		// autoconf cruft
-		{"autotools", "config.h.in", "/*", "*/", "//", false, nil},
-		{"autotools", "autogen.sh", "", "", "#", false, nil},
-		{"autotools", "configure.in", "", "", "#", false, nil},
-		{"autotools", "Makefile.in", "", "", "#", false, nil},
-		{"autotools", ".am", "", "", "#", false, nil},
-		{"autotools", ".ac", "", "", "#", false, nil},
-		{"autotools", ".mf", "", "", "#", false, nil},
+		{"autotools", "config.h.in", "/*", "*/", "//", true, nil},
+		{"autotools", "autogen.sh", "", "", "#", true, nil},
+		{"autotools", "configure.in", "", "", "#", true, nil},
+		{"autotools", "Makefile.in", "", "", "#", true, nil},
+		{"autotools", ".am", "", "", "#", true, nil},
+		{"autotools", ".ac", "", "", "#", true, nil},
+		{"autotools", ".mf", "", "", "#", true, nil},
 		// Scons
-		{"scons", "SConstruct", "", "", "#", false, nil},
+		{"scons", "SConstruct", "", "", "#", true, nil},
 	}
 
 	var err error
@@ -1011,12 +1011,14 @@ func c_family_counter(ctx *countContext, path string, syntax genericLanguage) ui
 				c, err = ctx.getachar()
 			} else if (c == '\\') && ctx.ispeek('\n') {
 				c, err = ctx.getachar()
-			} else if (c == '\n' && !syntax.longstrings) {
+			} else if c == '\n' {
 				/*
                                 We found a bare newline in a string without
 				preceding backslash.
                                 */
-				log.Printf("WARNING - newline in string, line %d, file %s\n", ctx.line_number, path)
+				if syntax.eolwarn {
+					log.Printf("WARNING - newline in string, line %d, file %s\n", ctx.line_number, path)
+				}
 
 				/*
                                 We COULD warn & reset mode to
