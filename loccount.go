@@ -300,7 +300,7 @@ func init() {
 	// pre-empted by it).
 	//
 	// All entries for a given language should be in a contiguous span,
-	// otherwise the primtive duplicate director in listLanguages will
+	// otherwise the primitive duplicate director in listLanguages will
 	// be foiled.
 	genericLanguages = []genericLanguage{
 		/* C family */
