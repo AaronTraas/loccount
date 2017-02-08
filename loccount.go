@@ -1,21 +1,23 @@
 // SPDX-License-Identifier: BSD-2-Clause
 package main
 
-import "bytes"
-import "bufio"
-import "fmt"
-import "flag"
-import "io"
-import "math"
-import "os"
-import "path/filepath"
-import "regexp"
-import "runtime"
-import "sort"
-import "strings"
-import "log"
-import "sync"
-import "runtime/pprof"
+import (
+	"bufio"
+	"bytes"
+	"flag"
+	"fmt"
+	"io"
+	"log"
+	"math"
+	"os"
+	"path/filepath"
+	"regexp"
+	"runtime"
+	"runtime/pprof"
+	"sort"
+	"strings"
+	"sync"
+)
 
 const version float32 = 1.0
 
