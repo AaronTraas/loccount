@@ -705,7 +705,7 @@ func really_is_prolog(ctx *countContext, path string) bool {
 	return true
 }
 
-// really_is_expect - filename, returns tue if its contents really are Expect.
+// really_is_expect - filename, returns true if its contents really are Expect.
 //
 // dwheeler had this to say:
 //
@@ -1017,14 +1017,11 @@ func c_family_counter(ctx *countContext, path string, syntax genericLanguage) ui
 				ctx.nonblank = true
 			}
 		} else if mode == INSTRING {
-			/*
-				        We only count string lines with non-whitespace --
-				        this is to gracefully handle syntactically invalid
-					programs.
-					You could argue that multiline strings with
-					whitespace are still executable and should be
-					counted.
-			*/
+			// We only count string lines with non-whitespace --
+			// this is to gracefully handle syntactically invalid
+			// programs.  You could argue that multiline strings
+			// with whitespace are still executable and should be
+			// counted.
 			if !isspace(c) {
 				ctx.nonblank = true
 			}
@@ -1035,22 +1032,18 @@ func c_family_counter(ctx *countContext, path string, syntax genericLanguage) ui
 			} else if (c == '\\') && ctx.ispeek('\n') {
 				c, err = ctx.getachar()
 			} else if c == '\n' {
-				/*
-					                                We found a bare newline in a string without
-									preceding backslash.
-				*/
+				// We found a bare newline in a string without
+				// preceding backslash.
 				if syntax.eolwarn {
 					log.Printf("WARNING - newline in string, line %d, file %s\n", ctx.line_number, path)
 				}
 
-				/*
-				   We COULD warn & reset mode to
-				   "Normal", but lots of code does this,
-				   so we'll just depend on the warning
-				   for ending the program in a string to
-				   catch syntactically erroneous
-				   programs.
-				*/
+				// We COULD warn & reset mode to
+				// "Normal", but lots of code does this,
+				// so we'll just depend on the warning
+				// for ending the program in a string to
+				// catch syntactically erroneous
+				// programs.
 			}
 		} else { /* INCOMMENT mode */
 			if (c == '\n') && (comment_type == TRAILING_COMMENT) {
@@ -1147,7 +1140,7 @@ func pythonCounter(ctx *countContext, path string) uint {
 			if i > -1 {
 				ctx.line = ctx.line[:i]
 			}
-			// Does multictx.line triple-quote begin here?
+			// Does multi-line triple-quote begin here?
 			if triple_boundary(ctx.line) {
 				isintriple = true
 				ctx.line = bytes.Trim(ctx.line, " \t\r\n")
