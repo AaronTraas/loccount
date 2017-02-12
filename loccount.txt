@@ -133,5 +133,10 @@ literals will confuse this program and throw a warning.
 Literate Haskell (.lhs) is not supported.  (This is a regression from
 sloccount).
 
+In Go, the backtick delimiter for raw string literals is not
+recognized. This means that unbalanced normal string quotes and
+comment leaders within a raw string literal will confuse loccount.
+(Go is not supported at all in sloccount.)
+
 == REPORTING BUGS ==
 Report bugs to Eric S. Raymond <esr@thyrsus.com>.
