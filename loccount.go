@@ -242,6 +242,7 @@ type genericLanguage struct {
 	commentleader  string
 	commenttrailer string
 	eolcomment     string
+	multistring    string
 	eolwarn        bool
 	verifier       func(*countContext, string) bool
 }
@@ -308,80 +309,80 @@ func init() {
 	// be foiled.
 	genericLanguages = []genericLanguage{
 		/* C family */
-		{"c", ".c", "/*", "*/", "//", true, nil},
-		{"c-header", ".h", "/*", "*/", "//", true, nil},
-		{"c-header", ".hpp", "/*", "*/", "//", true, nil},
-		{"c-header", ".hxx", "/*", "*/", "//", true, nil},
-		{"yacc", ".y", "/*", "*/", "//", true, nil},
-		{"lex", ".l", "/*", "*/", "//", true, really_is_lex},
-		{"c++", ".cpp", "/*", "*/", "//", true, nil},
-		{"c++", ".cxx", "/*", "*/", "//", true, nil},
-		{"c++", ".cc", "/*", "*/", "//", true, nil},
-		{"java", ".java", "/*", "*/", "//", true, nil},
-		{"javascript", ".js", "/*", "*/", "//", true, nil},
-		{"obj-c", ".m", "/*", "*/", "//", true, really_is_objc},
-		{"c#", ".cs", "/*", "*/", "//", true, nil},
-		{"php", ".php", "/*", "*/", "//", true, nil},
-		{"php3", ".php", "/*", "*/", "//", true, nil},
-		{"php4", ".php", "/*", "*/", "//", true, nil},
-		{"php5", ".php", "/*", "*/", "//", true, nil},
-		{"php6", ".php", "/*", "*/", "//", true, nil},
-		{"php7", ".php", "/*", "*/", "//", true, nil},
-		{"go", ".go", "/*", "*/", "//", true, nil},
-		{"swift", ".swift", "/*", "*/", "//", true, nil},
-		{"sql", ".sql", "/*", "*/", "--", false, nil},
-		{"haskell", ".hs", "{-", "-}", "--", true, nil},
-		{"pl/1", ".pl1", "/*", "*/", "", true, nil},
+		{"c", ".c", "/*", "*/", "//", "", true, nil},
+		{"c-header", ".h", "/*", "*/", "//", "", true, nil},
+		{"c-header", ".hpp", "/*", "*/", "//", "", true, nil},
+		{"c-header", ".hxx", "/*", "*/", "//", "", true, nil},
+		{"yacc", ".y", "/*", "*/", "//", "", true, nil},
+		{"lex", ".l", "/*", "*/", "//", "", true, really_is_lex},
+		{"c++", ".cpp", "/*", "*/", "//", "", true, nil},
+		{"c++", ".cxx", "/*", "*/", "//", "", true, nil},
+		{"c++", ".cc", "/*", "*/", "//", "", true, nil},
+		{"java", ".java", "/*", "*/", "//", "", true, nil},
+		{"javascript", ".js", "/*", "*/", "//", "", true, nil},
+		{"obj-c", ".m", "/*", "*/", "//", "", true, really_is_objc},
+		{"c#", ".cs", "/*", "*/", "//", "", true, nil},
+		{"php", ".php", "/*", "*/", "//", "", true, nil},
+		{"php3", ".php", "/*", "*/", "//", "", true, nil},
+		{"php4", ".php", "/*", "*/", "//", "", true, nil},
+		{"php5", ".php", "/*", "*/", "//", "", true, nil},
+		{"php6", ".php", "/*", "*/", "//", "", true, nil},
+		{"php7", ".php", "/*", "*/", "//", "", true, nil},
+		{"go", ".go", "/*", "*/", "//", "`", true, nil},
+		{"swift", ".swift", "/*", "*/", "//", "", true, nil},
+		{"sql", ".sql", "/*", "*/", "--", "", false, nil},
+		{"haskell", ".hs", "{-", "-}", "--", "", true, nil},
+		{"pl/1", ".pl1", "/*", "*/", "", "", true, nil},
 		/* everything else */
-		{"asm", ".asm", "", "", ";", true, nil},
-		{"asm", ".s", "", "", ";", true, nil},
-		{"asm", ".S", "", "", ";", true, nil},
-		{"ada", ".ada", "", "", "--", true, nil},
-		{"ada", ".adb", "", "", "--", true, nil},
-		{"ada", ".ads", "", "", "--", true, nil},
-		{"ada", ".pad", "", "", "--", true, nil}, // Oracle Ada preprocessoer.
-		{"css", ".css", "/*", "*/", "", true, nil},
-		{"makefile", ".mk", "", "", "#", true, nil},
-		{"makefile", "Makefile", "", "", "#", true, nil},
-		{"makefile", "makefile", "", "", "#", true, nil},
-		{"makefile", "Imakefile", "", "", "#", true, nil},
-		{"m4", ".m4", "", "", "#", true, nil},
-		{"lisp", ".lisp", "", "", ";", true, nil},
-		{"lisp", ".lsp", "", "", ";", true, nil}, // XLISP
-		{"lisp", ".cl", "", "", ";", true, nil},  // Common Lisp
-		{"lisp", ".l", "", "", ";", true, nil},
-		{"scheme", ".scm", "", "", ";", true, nil},
-		{"elisp", ".el", "", "", ";", true, nil},    // Emacs Lisp
-		{"clojure", ".clj", "", "", ";", true, nil}, // Clojure
-		{"clojure", ".cljc", "", "", ";", true, nil},
-		{"clojurescript", ".cljs", "", "", ";", true, nil},
-		{"cobol", ".CBL", "", "", "*", true, nil},
-		{"cobol", ".cbl", "", "", "*", true, nil},
-		{"cobol", ".COB", "", "", "*", true, nil},
-		{"cobol", ".cob", "", "", "*", true, nil},
-		{"eiffel", ".e", "", "", "--", true, nil},
-		{"sather", ".sa", "", "", "--", true, really_is_sather},
-		{"lua", ".lua", "", "", "--", true, nil},
-		{"clu", ".clu", "", "", "%", true, nil},
-		{"rust", ".rs", "", "", "//", true, nil},
-		{"rust", ".rlib", "", "", "//", true, nil},
-		{"erlang", ".erl", "", "", "%", true, nil},
-		//{"turing", ".t", "", "", "%", true, nil},
-		{"d", ".d", "", "", "//", true, nil},
-		{"occam", ".f", "", "", "//", true, really_is_occam},
-		{"prolog", ".pl", "", "", "%", true, really_is_prolog},
-		{"mumps", ".m", "", "", ";", true, nil},
-		{"pop11", ".p", "", "", ";", true, really_is_pop11},
+		{"asm", ".asm", "", "", ";", "", true, nil},
+		{"asm", ".s", "", "", ";", "", true, nil},
+		{"asm", ".S", "", "", ";", "", true, nil},
+		{"ada", ".ada", "", "", "--", "", true, nil},
+		{"ada", ".adb", "", "", "--", "", true, nil},
+		{"ada", ".ads", "", "", "--", "", true, nil},
+		{"ada", ".pad", "", "", "--", "", true, nil}, // Oracle Ada preprocessoer.
+		{"css", ".css", "/*", "*/", "", "", true, nil},
+		{"makefile", ".mk", "", "", "#", "", true, nil},
+		{"makefile", "Makefile", "", "", "#", "", true, nil},
+		{"makefile", "makefile", "", "", "#", "", true, nil},
+		{"makefile", "Imakefile", "", "", "#", "", true, nil},
+		{"m4", ".m4", "", "", "#", "", true, nil},
+		{"lisp", ".lisp", "", "", ";", "", true, nil},
+		{"lisp", ".lsp", "", "", ";", "", true, nil}, // XLISP
+		{"lisp", ".cl", "", "", ";", "", true, nil},  // Common Lisp
+		{"lisp", ".l", "", "", ";", "", true, nil},
+		{"scheme", ".scm", "", "", ";", "", true, nil},
+		{"elisp", ".el", "", "", ";", "", true, nil},    // Emacs Lisp
+		{"clojure", ".clj", "", "", ";", "", true, nil}, // Clojure
+		{"clojure", ".cljc", "", "", ";", "", true, nil},
+		{"clojurescript", ".cljs", "", "", ";", "", true, nil},
+		{"cobol", ".CBL", "", "", "*", "", true, nil},
+		{"cobol", ".cbl", "", "", "*", "", true, nil},
+		{"cobol", ".COB", "", "", "*", "", true, nil},
+		{"cobol", ".cob", "", "", "*", "", true, nil},
+		{"eiffel", ".e", "", "", "--", "", true, nil},
+		{"sather", ".sa", "", "", "--", "", true, really_is_sather},
+		{"lua", ".lua", "", "", "--", "", true, nil},
+		{"clu", ".clu", "", "", "%", "", true, nil},
+		{"rust", ".rs", "", "", "//", "", true, nil},
+		{"rust", ".rlib", "", "", "//", "", true, nil},
+		{"erlang", ".erl", "", "", "%", "", true, nil},
+		//{"turing", ".t", "", "", "%", "", true, nil},
+		{"d", ".d", "", "", "//", "", true, nil},
+		{"occam", ".f", "", "", "//", "", true, really_is_occam},
+		{"prolog", ".pl", "", "", "%", "", true, really_is_prolog},
+		{"mumps", ".m", "", "", ";", "", true, nil},
+		{"pop11", ".p", "", "", ";", "", true, really_is_pop11},
 		// autoconf cruft
-		{"autotools", "config.h.in", "/*", "*/", "//", true, nil},
-		{"autotools", "autogen.sh", "", "", "#", true, nil},
-		{"autotools", "configure.in", "", "", "#", true, nil},
-		{"autotools", "Makefile.in", "", "", "#", true, nil},
-		{"autotools", ".am", "", "", "#", true, nil},
-		{"autotools", ".ac", "", "", "#", true, nil},
-		{"autotools", ".mf", "", "", "#", true, nil},
+		{"autotools", "config.h.in", "/*", "*/", "//", "", true, nil},
+		{"autotools", "autogen.sh", "", "", "#", "", true, nil},
+		{"autotools", "configure.in", "", "", "#", "", true, nil},
+		{"autotools", "Makefile.in", "", "", "#", "", true, nil},
+		{"autotools", ".am", "", "", "#", "", true, nil},
+		{"autotools", ".ac", "", "", "#", "", true, nil},
+		{"autotools", ".mf", "", "", "#", "", true, nil},
 		// Scons
-		{"scons", "SConstruct", "", "", "#", true, nil},
+		{"scons", "SConstruct", "", "", "#", "", true, nil},
 	}
 
 	var err error
@@ -505,7 +506,8 @@ func init() {
 /* Modes */
 const NORMAL = 0
 const INSTRING = 1
-const INCOMMENT = 2
+const INMULTISTRING = 2
+const INCOMMENT = 3
 
 type countContext struct {
 	line                  []byte
@@ -968,7 +970,7 @@ func c_family_counter(ctx *countContext, path string, syntax genericLanguage) ui
 	const TRAILING_COMMENT = 1
 
 	var sloc uint = 0
-	var mode int = NORMAL /* NORMAL, INSTRING, or INCOMMENT */
+	var mode int = NORMAL /* NORMAL, INSTRING, INMULTISTRING, or INCOMMENT */
 	var comment_type int  /* BLOCK_COMMENT or TRAILING_COMMENT */
 	var startline uint
 
@@ -1013,6 +1015,9 @@ func c_family_counter(ctx *countContext, path string, syntax genericLanguage) ui
 				mode = INCOMMENT
 				comment_type = TRAILING_COMMENT
 				startline = ctx.line_number
+			} else if (syntax.multistring != "") && (c == syntax.multistring[0]) {
+				mode = INMULTISTRING
+				startline = ctx.line_number
 			} else if !isspace(c) {
 				ctx.nonblank = true
 			}
@@ -1044,6 +1049,14 @@ func c_family_counter(ctx *countContext, path string, syntax genericLanguage) ui
 				// for ending the program in a string to
 				// catch syntactically erroneous
 				// programs.
+			}
+		} else if mode == INMULTISTRING {
+			// We only count multi-string lines with non-whitespace.
+			if !isspace(c) {
+				ctx.nonblank = true
+			}
+			if c == syntax.multistring[0] {
+				mode = NORMAL
 			}
 		} else { /* INCOMMENT mode */
 			if (c == '\n') && (comment_type == TRAILING_COMMENT) {

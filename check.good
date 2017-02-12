@@ -27,6 +27,7 @@ tests/hello.sa 5 sather
 tests/hello.sh 1 shell
 tests/hello.tcl 1 tcl
 tests/lisp-hello.l 1 lisp
+tests/multiline.go 11 go
 tests/mumps-hello.m 3 mumps
 tests/ntp_fp.h 254 c-header
 tests/ntpver 1 shell
@@ -37,6 +38,7 @@ tests/pascal-hello.p 4 pascal
 tests/perl-filewrite 11 perl
 tests/pilotconv.l 36 lex
 tests/ruby-hello 1 ruby
+tests/singleline.go 4 go
 tests/sshlogin.exp 16 expect
 tests/test.hs 8 haskell
 tests/upload 6 python
