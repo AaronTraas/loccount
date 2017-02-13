@@ -19,7 +19,7 @@ import (
 	"sync"
 )
 
-const version float32 = 1.0
+const version string = "1.0"
 
 /*
 How to add support for a language to this program:
@@ -1663,7 +1663,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 	if showversion {
-		fmt.Printf("loccount %.1f\n", version)
+		fmt.Printf("loccount %s\n", version)
 		return
 	} else if list {
 		fmt.Printf("%s\n", listLanguages())

@@ -1,8 +1,4 @@
 = News file for loccount =
 
-Repository head:
-     Support for CSS and JavaScript added.
-     Correct counting of raw string literals in Go.
-
-1.0: 2016-11-21::
+1.0: 2017-02-13::
      Initial release.

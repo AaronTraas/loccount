@@ -5,7 +5,7 @@ November 2016
 loccount is a re-implementation of David A. Wheeler's sloccount tool
 in Go.  It is faster and handles more different languages. Because
 it's one source file in Go, it is easier to maintain and extend than the
-multi-file, multi-language implemention of the original.
+multi-file, multi-language implementation of the original.
 
 The algorithms are largely unchanged and can be expected to produce
 identical numbers for languages supported by both tools.  Python is
@@ -21,5 +21,5 @@ loccount -cpuprofile /tmp/loc.prof .
 
 go tool pprof loccount /tmp/loc.prof
 
-"top20" is a useful command to starrt with in viewing results.
+"top20" is a useful command to start with in viewing results.
 

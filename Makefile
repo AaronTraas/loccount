@@ -1,6 +1,9 @@
 # Makefile for loccount
 # You must have the Go compiler and tools installed to build this software.
 
+VERS=$(shell sed <reposurgeon -n -e '/version *= *\"\(.*\)\"/s//\1/p')
+
+
 loccount: loccount.go
 	go build
 
