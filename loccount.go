@@ -301,7 +301,7 @@ func init() {
 	// after extensions that don't. But remember that you don't pay the
 	// overhead for a verifier unless the extension matches.
 	//
-	// If you have mutiple entries for an extension, (a) all the entries
+	// If you have multiple entries for an extension, (a) all the entries
 	// with verifiers should go first, and (b) there should be at most one
 	// entry without a verifier (because any second and later ones will be
 	// pre-empted by it).
@@ -1651,7 +1651,7 @@ func main() {
 	flag.BoolVar(&json, "j", false,
 		"dump statistics in JSON format")
 	flag.BoolVar(&showversion, "V", false,
-		"report version and exil")
+		"report version and exit")
 	flag.Parse()
 
 	if *cpuprofile != "" {
