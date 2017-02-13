@@ -269,8 +269,8 @@ type pascalLike struct {
 
 var pascalLikes []pascalLike
 
-const dt = "\"\"\""
-const st = "'''"
+const dt = `"""`
+const st = `'''`
 
 var dtriple, striple, dtrailer, strailer, dlonely, slonely *regexp.Regexp
 
@@ -1090,10 +1090,10 @@ func c_family_counter(ctx *countContext, path string, syntax genericLanguage) ui
 	}
 
 	if mode == INCOMMENT {
-		log.Printf("\"%s\", line %d: ERROR - terminated in comment beginning here\n",
+		log.Printf("%q, line %d: ERROR - terminated in comment beginning here\n",
 			path, startline)
 	} else if mode == INSTRING {
-		log.Printf("\"%s\", line %d: ERROR - terminated in string beginning here\n",
+		log.Printf("%q, line %d: ERROR - terminated in string beginning here\n",
 			path, startline)
 	}
 
@@ -1236,7 +1236,7 @@ func perlCounter(ctx *countContext, path string) uint {
 		} else if len(heredoc) == 0 && bytes.HasPrefix(ctx.line, []byte("=cut")) {
 			// Ending a POD?
 			if !isinpod {
-				log.Printf("\"%s\", %d: cut without pod start\n",
+				log.Printf("%q, %d: cut without pod start\n",
 					path, ctx.line_number)
 			}
 			isinpod = false
@@ -1309,10 +1309,10 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 	ctx.nonblank = false
 
 	if mode == INCOMMENT {
-		log.Printf("\"%s\", line %d: ERROR - terminated in comment beginning here.\n",
+		log.Printf("%q, line %d: ERROR - terminated in comment beginning here.\n",
 			path, startline)
 	} else if mode == INSTRING {
-		log.Printf("\"%s\", line %d: ERROR - terminated in string beginning here.\n",
+		log.Printf("%q, line %d: ERROR - terminated in string beginning here.\n",
 			path, startline)
 	}
 
@@ -1770,7 +1770,7 @@ func main() {
 	for i := range summary {
 		r := summary[i]
 		if json {
-			fmt.Printf("{\"language\":\"%s\", \"linecount\":%d, \"filecount\":%d}\n",
+			fmt.Printf("{\"language\":%q, \"linecount\":%d, \"filecount\":%d}\n",
 				r.language,
 				r.linecount,
 				r.filecount)
