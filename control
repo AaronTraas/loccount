@@ -9,7 +9,7 @@ Description: Count source lines of code in a project.
 
 #XBS-Destinations: freshcode
 
-Homepage: http://www.catb.org/~esr/ascii
+Homepage: http://www.catb.org/~esr/loccount
 
 XBS-Repository-URL: https://gitlab.com/esr/loccount
 
