@@ -512,13 +512,13 @@ const INMULTISTRING = 2
 const INCOMMENT = 3
 
 type countContext struct {
-	line                  []byte
-	lineNumber            uint
-	nonblank              bool // Is current line nonblank?
-	lexfile               bool // Do we see lex directives?
-	wasNewline            bool // Was the last character seen a newline?
-	underlyingStream      *os.File
-	rc                    *bufio.Reader
+	line             []byte
+	lineNumber       uint
+	nonblank         bool // Is current line nonblank?
+	lexfile          bool // Do we see lex directives?
+	wasNewline       bool // Was the last character seen a newline?
+	underlyingStream *os.File
+	rc               *bufio.Reader
 }
 
 func (ctx *countContext) setup(path string) bool {
@@ -612,10 +612,10 @@ func isspace(c byte) bool {
 
 // reallyObjectiveC - returns TRUE if filename contents really are objective-C.
 func reallyObjectiveC(ctx *countContext, path string) bool {
-	var isObjC bool = false // Value to determine.
-	var braceLines int      // Lines that begin/end with curly braces.
-	var plusMinus int       // Lines that begin with + or -.
-	var wordMain int        // Did we find "main("?
+	var isObjC bool = false  // Value to determine.
+	var braceLines int       // Lines that begin/end with curly braces.
+	var plusMinus int        // Lines that begin with + or -.
+	var wordMain int         // Did we find "main("?
 	var special bool = false // Did we find a special Objective-C pattern?
 
 	ctx.setup(path)
@@ -973,7 +973,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) uint
 
 	var sloc uint = 0
 	var mode int = NORMAL /* NORMAL, INSTRING, INMULTISTRING, or INCOMMENT */
-	var commentType int  /* BLOCK_COMMENT or TRAILING_COMMENT */
+	var commentType int   /* BLOCK_COMMENT or TRAILING_COMMENT */
 	var startline uint
 
 	if syntax.verifier != nil && !syntax.verifier(ctx, path) {
@@ -1037,7 +1037,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) uint
 			} else if (c == '\\') && (ctx.ispeek('"') || ctx.ispeek('\\')) {
 				c, err = ctx.getachar()
 			} else if (c == '\\') && ctx.ispeek('\n') {
-				c, err = ctx.getachar()
+				c, _ = ctx.getachar()
 			} else if c == '\n' {
 				// We found a bare newline in a string without
 				// preceding backslash.
@@ -1283,7 +1283,7 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 			if syntax.bracketcomments && c == '{' {
 				mode = INCOMMENT
 			} else if (c == '(') && ctx.ispeek('*') {
-				c, err = ctx.getachar()
+				c, _ = ctx.getachar()
 				mode = INCOMMENT
 			} else if !isspace(c) {
 				ctx.nonblank = true

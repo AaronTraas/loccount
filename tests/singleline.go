@@ -2,5 +2,5 @@
 package newline
 
 func foo() string {
-    return `" `
+	return `" `
 }
