@@ -1,4 +1,7 @@
 = News file for loccount =
 
+Repository head:
+     Ckeanups suggested by Go Report Card: https://goreportcard.com/report/gitlab.com/esr/loccount
+
 1.0: 2017-02-13::
      Initial release.

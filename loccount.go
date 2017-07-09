@@ -1013,7 +1013,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) uint
 				commentType = BLOCK_COMMENT
 				startline = ctx.lineNumber
 			} else if (syntax.eolcomment != "") && c == syntax.eolcomment[0] && (len(syntax.eolcomment) > 1 && ctx.ispeek(syntax.eolcomment[1])) {
-				c, err = ctx.getachar()
+				c, _ = ctx.getachar()
 				mode = INCOMMENT
 				commentType = TRAILING_COMMENT
 				startline = ctx.lineNumber
