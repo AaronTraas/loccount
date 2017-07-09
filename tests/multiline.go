@@ -4,11 +4,11 @@ package main
 import "fmt"
 
 func main() {
-    foo := `//  might
+	foo := `//  might
 /*  consider
 "   comments
 */  and
 "   quotes
 `
-    fmt.Printf("%s\n", foo)
+	fmt.Printf("%s\n", foo)
 }
