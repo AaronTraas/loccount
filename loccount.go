@@ -226,6 +226,7 @@ func Walk(root string, walkFn WalkFunc) error {
 
 // Swiped code ends here
 
+// SourceStat - line count record for a specified path
 type SourceStat struct {
 	Path     string
 	Language string
@@ -505,11 +506,10 @@ func init() {
 
 // Generic machinery for walking source text to count lines
 
-/* Modes */
-const NORMAL = 0
-const INSTRING = 1
-const INMULTISTRING = 2
-const INCOMMENT = 3
+const NORMAL = 0        // in running text
+const INSTRING = 1      // in single-line string
+const INMULTISTRING = 2 // in multi-line string
+const INCOMMENT = 3     // in comment
 
 type countContext struct {
 	line             []byte
@@ -971,7 +971,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) uint
 	const BLOCK_COMMENT = 0
 	const TRAILING_COMMENT = 1
 
-	var sloc uint = 0
+	var sloc uint
 	var mode int = NORMAL /* NORMAL, INSTRING, INMULTISTRING, or INCOMMENT */
 	var commentType int   /* BLOCK_COMMENT or TRAILING_COMMENT */
 	var startline uint
@@ -1035,7 +1035,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) uint
 			if c == '"' {
 				mode = NORMAL
 			} else if (c == '\\') && (ctx.ispeek('"') || ctx.ispeek('\\')) {
-				c, err = ctx.getachar()
+				c, _ = ctx.getachar()
 			} else if (c == '\\') && ctx.ispeek('\n') {
 				c, _ = ctx.getachar()
 			} else if c == '\n' {
