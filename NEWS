@@ -1,7 +1,8 @@
 = News file for loccount =
 
-Repository head:
-     Ckeanups suggested by Go Report Card: https://goreportcard.com/report/gitlab.com/esr/loccount
+1.1: 2017-07-09
+     Documentation fix for copy-paste error.
+     Cleanup suggested by https://goreportcard.com/report/gitlab.com/esr/loccount
 
 1.0: 2017-02-13::
      Initial release.
