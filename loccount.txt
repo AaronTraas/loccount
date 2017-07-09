@@ -82,14 +82,6 @@ List supported languages and exit.
 -u::
 List paths of files that could not be classified into a type.
 
--g::
-generate a picture of the commit graph in the DOT markup language
-used by the graphviz tools, rather than fast-exporting.
-
--x::
-Take a comma-separated list of exclusion paths. If a directory is
-excluded, all paths beneath it are.
-
 -V::
 Show program version and exit.
 
