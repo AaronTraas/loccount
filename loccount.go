@@ -19,7 +19,7 @@ import (
 	"sync"
 )
 
-const version string = "1.1"
+const version string = "1.2"
 
 /*
 How to add support for a language to this program:
@@ -68,6 +68,8 @@ must be unique across all tables.
 // Following code swiped from Michael T. Jones's "walk" package.
 // It's a parallelized implementation of tree-walking that's
 // faster than the version in the system filepath library.
+// Note, however, it seems to have a limitation - does not like paths
+// containing "..".
 
 type VisitData struct {
 	path string
@@ -1693,11 +1695,14 @@ func main() {
 	}
 	roots := flag.Args()
 
+	here, _ := os.Getwd()
 	go func() {
 		for i := range roots {
+			os.Chdir(roots[i])
 			// The system filepath.Walk() works here,
 			// but is slower.
-			Walk(roots[i], filter)
+			Walk(".", filter)
+			os.Chdir(here)
 		}
 		close(pipeline)
 	}()

@@ -1,5 +1,8 @@
 = News file for loccount =
 
+1.2: 2017-12-05
+     Work around bug in the parallelized treewalker that barfed on .. paths.
+
 1.1: 2017-07-09
      Documentation fix for copy-paste error.
      Cleanup suggested by https://goreportcard.com/report/gitlab.com/esr/loccount
