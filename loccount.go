@@ -71,7 +71,7 @@ must be unique across all tables.
 // Note, however, it seems to have a limitation - does not like paths
 // containing "..".
 
-type VisitData struct {
+type visitData struct {
 	path string
 	info os.FileInfo
 }
@@ -91,22 +91,22 @@ type VisitData struct {
 // the next file.
 type WalkFunc func(path string, info os.FileInfo, err error) error
 
-type WalkState struct {
+type walkState struct {
 	walkFn     WalkFunc
-	v          chan VisitData // files to be processed
+	v          chan visitData // files to be processed
 	active     sync.WaitGroup // number of files to process
 	lock       sync.RWMutex
 	firstError error // accessed using lock
 }
 
-func (ws *WalkState) terminated() bool {
+func (ws *walkState) terminated() bool {
 	ws.lock.RLock()
 	done := ws.firstError != nil
 	ws.lock.RUnlock()
 	return done
 }
 
-func (ws *WalkState) setTerminated(err error) {
+func (ws *walkState) setTerminated(err error) {
 	ws.lock.Lock()
 	if ws.firstError == nil {
 		ws.firstError = err
@@ -115,7 +115,7 @@ func (ws *WalkState) setTerminated(err error) {
 	return
 }
 
-func (ws *WalkState) visitChannel() {
+func (ws *walkState) visitChannel() {
 	for file := range ws.v {
 		ws.visitFile(file)
 		ws.active.Add(-1)
@@ -138,7 +138,7 @@ func readDirNames(dirname string) ([]string, error) {
 	return names, nil
 }
 
-func (ws *WalkState) visitFile(file VisitData) {
+func (ws *walkState) visitFile(file visitData) {
 	if ws.terminated() {
 		return
 	}
@@ -200,22 +200,22 @@ func (ws *WalkState) visitFile(file VisitData) {
 // Walk walks the file tree rooted at root, calling walkFn for each file or
 // directory in the tree, including root. All errors that arise visiting files
 // and directories are filtered by walkFn. The files are walked in a random
-// order. Walk does not follow symbolic links.
+// order. walk does not follow symbolic links.
 
-func Walk(root string, walkFn WalkFunc) error {
+func walk(root string, walkFn WalkFunc) error {
 	info, err := os.Lstat(root)
 	if err != nil {
 		return walkFn(root, nil, err)
 	}
 
-	ws := &WalkState{
+	ws := &walkState{
 		walkFn: walkFn,
-		v:      make(chan VisitData, 1024),
+		v:      make(chan visitData, 1024),
 	}
 	defer close(ws.v)
 
 	ws.active.Add(1)
-	ws.v <- VisitData{root, info}
+	ws.v <- visitData{root, info}
 
 	walkers := 16
 	for i := 0; i < walkers; i++ {
@@ -442,7 +442,7 @@ func init() {
 		{"modula3", ".m3", false, nil},
 		{"modula3", ".ig", false, nil},
 		{"modula3", ".mg", false, nil},
-		{"ml", ".ml", false, nil},	// Could be CAML or OCAML
+		{"ml", ".ml", false, nil}, // Could be CAML or OCAML
 		{"mli", ".ml", false, nil},
 		{"mll", ".ml", false, nil},
 		{"mly", ".ml", false, nil},
@@ -516,10 +516,10 @@ func init() {
 
 // Generic machinery for walking source text to count lines
 
-const NORMAL = 0        // in running text
-const INSTRING = 1      // in single-line string
-const INMULTISTRING = 2 // in multi-line string
-const INCOMMENT = 3     // in comment
+const stateNORMAL = 0        // in running text
+const stateINSTRING = 1      // in single-line string
+const stateINMULTISTRING = 2 // in multi-line string
+const stateINCOMMENT = 3     // in comment
 
 type countContext struct {
 	line             []byte
@@ -622,11 +622,11 @@ func isspace(c byte) bool {
 
 // reallyObjectiveC - returns TRUE if filename contents really are objective-C.
 func reallyObjectiveC(ctx *countContext, path string) bool {
-	var isObjC bool = false  // Value to determine.
-	var braceLines int       // Lines that begin/end with curly braces.
-	var plusMinus int        // Lines that begin with + or -.
-	var wordMain int         // Did we find "main("?
-	var special bool = false // Did we find a special Objective-C pattern?
+	special := false // Did we find a special Objective-C pattern?
+	isObjC := false  // Value to determine.
+	braceLines := 0  // Lines that begin/end with curly braces.
+	plusMinus := 0   // Lines that begin with + or -.
+	wordMain := 0    // Did we find "main("?
 
 	ctx.setup(path)
 	defer ctx.teardown()
@@ -660,7 +660,7 @@ func reallyObjectiveC(ctx *countContext, path string) bool {
 }
 
 func hasKeywords(ctx *countContext, path string, lang string, tells []string) bool {
-	var matching bool = false // Value to determine.
+	matching := false // Value to determine.
 
 	ctx.setup(path)
 	defer ctx.teardown()
@@ -978,12 +978,12 @@ func hashbang(ctx *countContext, path string, langname string) bool {
 // files to contain %%.
 func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) uint {
 	/* Types of comments: */
-	const BLOCK_COMMENT = 0
-	const TRAILING_COMMENT = 1
+	const commentBLOCK = 0
+	const commentTRAILING = 1
 
+	mode := stateNORMAL /* stateNORMAL, stateINSTRING, stateINMULTISTRING, or stateINCOMMENT */
 	var sloc uint
-	var mode int = NORMAL /* NORMAL, INSTRING, INMULTISTRING, or INCOMMENT */
-	var commentType int   /* BLOCK_COMMENT or TRAILING_COMMENT */
+	var commentType int /* commentBLOCK or commentTRAILING */
 	var startline uint
 
 	if syntax.verifier != nil && !syntax.verifier(ctx, path) {
@@ -999,10 +999,10 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) uint
 			break
 		}
 
-		if mode == NORMAL {
+		if mode == stateNORMAL {
 			if !ctx.lexfile && c == '"' {
 				ctx.nonblank = true
-				mode = INSTRING
+				mode = stateINSTRING
 				startline = ctx.lineNumber
 			} else if !ctx.lexfile && c == '\'' {
 				/* Consume single-character 'xxxx' values */
@@ -1019,21 +1019,21 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) uint
 				}
 			} else if (c == syntax.commentleader[0]) && (ctx.ispeek(syntax.commentleader[1])) {
 				c, err = ctx.getachar()
-				mode = INCOMMENT
-				commentType = BLOCK_COMMENT
+				mode = stateINCOMMENT
+				commentType = commentBLOCK
 				startline = ctx.lineNumber
 			} else if (syntax.eolcomment != "") && c == syntax.eolcomment[0] && (len(syntax.eolcomment) > 1 && ctx.ispeek(syntax.eolcomment[1])) {
 				c, _ = ctx.getachar()
-				mode = INCOMMENT
-				commentType = TRAILING_COMMENT
+				mode = stateINCOMMENT
+				commentType = commentTRAILING
 				startline = ctx.lineNumber
 			} else if (syntax.multistring != "") && (c == syntax.multistring[0]) {
-				mode = INMULTISTRING
+				mode = stateINMULTISTRING
 				startline = ctx.lineNumber
 			} else if !isspace(c) {
 				ctx.nonblank = true
 			}
-		} else if mode == INSTRING {
+		} else if mode == stateINSTRING {
 			// We only count string lines with non-whitespace --
 			// this is to gracefully handle syntactically invalid
 			// programs.  You could argue that multiline strings
@@ -1043,7 +1043,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) uint
 				ctx.nonblank = true
 			}
 			if c == '"' {
-				mode = NORMAL
+				mode = stateNORMAL
 			} else if (c == '\\') && (ctx.ispeek('"') || ctx.ispeek('\\')) {
 				c, _ = ctx.getachar()
 			} else if (c == '\\') && ctx.ispeek('\n') {
@@ -1062,21 +1062,21 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) uint
 				// catch syntactically erroneous
 				// programs.
 			}
-		} else if mode == INMULTISTRING {
+		} else if mode == stateINMULTISTRING {
 			// We only count multi-string lines with non-whitespace.
 			if !isspace(c) {
 				ctx.nonblank = true
 			}
 			if c == syntax.multistring[0] {
-				mode = NORMAL
+				mode = stateNORMAL
 			}
-		} else { /* INCOMMENT mode */
-			if (c == '\n') && (commentType == TRAILING_COMMENT) {
-				mode = NORMAL
+		} else { /* stateINCOMMENT mode */
+			if (c == '\n') && (commentType == commentTRAILING) {
+				mode = stateNORMAL
 			}
-			if (commentType == BLOCK_COMMENT) && (c == syntax.commenttrailer[0]) && ctx.ispeek(syntax.commenttrailer[1]) {
+			if (commentType == commentBLOCK) && (c == syntax.commenttrailer[0]) && ctx.ispeek(syntax.commenttrailer[1]) {
 				c, _ = ctx.getachar()
-				mode = NORMAL
+				mode = stateNORMAL
 			}
 		}
 		if c == '\n' {
@@ -1095,14 +1095,14 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) uint
 		sloc++
 	}
 	ctx.nonblank = false
-	if (mode == INCOMMENT) && (commentType == TRAILING_COMMENT) {
-		mode = NORMAL
+	if (mode == stateINCOMMENT) && (commentType == commentTRAILING) {
+		mode = stateNORMAL
 	}
 
-	if mode == INCOMMENT {
+	if mode == stateINCOMMENT {
 		log.Printf("%q, line %d: ERROR - terminated in comment beginning here\n",
 			path, startline)
-	} else if mode == INSTRING {
+	} else if mode == stateINSTRING {
 		log.Printf("%q, line %d: ERROR - terminated in string beginning here\n",
 			path, startline)
 	}
@@ -1272,8 +1272,8 @@ func perlCounter(ctx *countContext, path string) uint {
 
 // pascalCounter - Handle lanuages like Pascal and Modula 3
 func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
+	mode := stateNORMAL /* stateNORMAL, or stateINCOMMENT */
 	var sloc uint
-	var mode int = NORMAL /* NORMAL, or INCOMMENT */
 	var startline uint
 
 	if syntax.verifier != nil && !syntax.verifier(ctx, path) {
@@ -1289,12 +1289,12 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 			break
 		}
 
-		if mode == NORMAL {
+		if mode == stateNORMAL {
 			if syntax.bracketcomments && c == '{' {
-				mode = INCOMMENT
+				mode = stateINCOMMENT
 			} else if (c == '(') && ctx.ispeek('*') {
 				c, _ = ctx.getachar()
-				mode = INCOMMENT
+				mode = stateINCOMMENT
 			} else if !isspace(c) {
 				ctx.nonblank = true
 			} else if c == '\n' {
@@ -1303,12 +1303,12 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 				}
 				ctx.nonblank = false
 			}
-		} else { /* INCOMMENT mode */
+		} else { /* stateINCOMMENT mode */
 			if syntax.bracketcomments && c == '}' {
-				mode = NORMAL
+				mode = stateNORMAL
 			} else if (c == '*') && ctx.ispeek(')') {
 				_, _ = ctx.getachar()
-				mode = NORMAL
+				mode = stateNORMAL
 			}
 		}
 	}
@@ -1318,10 +1318,10 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 	}
 	ctx.nonblank = false
 
-	if mode == INCOMMENT {
+	if mode == stateINCOMMENT {
 		log.Printf("%q, line %d: ERROR - terminated in comment beginning here.\n",
 			path, startline)
-	} else if mode == INSTRING {
+	} else if mode == stateINSTRING {
 		log.Printf("%q, line %d: ERROR - terminated in string beginning here.\n",
 			path, startline)
 	}
@@ -1482,9 +1482,8 @@ func filter(path string, info os.FileInfo, err error) error {
 					fmt.Printf("directory skipped: %s\n", path)
 				}
 				return filepath.SkipDir
-			} else {
-				return err
 			}
+			return err
 		}
 	}
 	basename := filepath.Base(path)
@@ -1541,26 +1540,26 @@ type countRecord struct {
 }
 
 func reportCocomo(sloc uint) {
-	const TIME_MULT = 2.4
-	const TIME_EXP = 1.05
-	const SCHED_MULT = 2.5
-	const SCHED_EXP = 0.38
-	const SALARY = 60384 // From payscale.com, late 2016
-	const OVERHEAD = 2.40
+	const cTIMEMULT = 2.4
+	const cTIMEEXP = 1.05
+	const cSCHEDMULT = 2.5
+	const cSCHEDEXP = 0.38
+	const cSALARY = 60384 // From payscale.com, late 2016
+	const cOVERHEAD = 2.40
 	fmt.Printf("Total Physical Source Lines of Code (SLOC)                = %d\n", sloc)
-	personMonths := TIME_MULT * math.Pow(float64(sloc)/1000, TIME_EXP)
+	personMonths := cTIMEMULT * math.Pow(float64(sloc)/1000, cTIMEEXP)
 	fmt.Printf("Development Effort Estimate, Person-Years (Person-Months) = %2.2f (%2.2f)\n", personMonths/12, personMonths)
-	fmt.Printf(" (Basic COCOMO model, Person-Months = %2.2f * (KSLOC**%2.2f))\n", TIME_MULT, TIME_EXP)
-	schedMonths := SCHED_MULT * math.Pow(personMonths, SCHED_EXP)
+	fmt.Printf(" (Basic COCOMO model, Person-Months = %2.2f * (KSLOC**%2.2f))\n", cTIMEMULT, cTIMEEXP)
+	schedMonths := cSCHEDMULT * math.Pow(personMonths, cSCHEDEXP)
 	fmt.Printf("Schedule Estimate, Years (Months)                         = %2.2f (%2.2f)\n", schedMonths/12, schedMonths)
-	fmt.Printf(" (Basic COCOMO model, Months = %2.2f * (person-months**%2.2f))\n", SCHED_MULT, SCHED_EXP)
+	fmt.Printf(" (Basic COCOMO model, Months = %2.2f * (person-months**%2.2f))\n", cSCHEDMULT, cSCHEDEXP)
 	fmt.Printf("Estimated Average Number of Developers (Effort/Schedule)  = %2.2f\n", personMonths/schedMonths)
-	fmt.Printf("Total Estimated Cost to Develop                           = $%d\n", int(SALARY*(personMonths/12)*OVERHEAD))
-	fmt.Printf(" (average salary = $%d/year, overhead = %2.2f).\n", SALARY, OVERHEAD)
+	fmt.Printf("Total Estimated Cost to Develop                           = $%d\n", int(cSALARY*(personMonths/12)*cOVERHEAD))
+	fmt.Printf(" (average salary = $%d/year, overhead = %2.2f).\n", cSALARY, cOVERHEAD)
 }
 
 func listLanguages() []string {
-	var names []string = []string{"python", "waf", "perl"}
+	names := []string{"python", "waf", "perl"}
 	var lastlang string
 	for i := range genericLanguages {
 		lang := genericLanguages[i].name
@@ -1709,7 +1708,7 @@ func main() {
 			os.Chdir(roots[i])
 			// The system filepath.Walk() works here,
 			// but is slower.
-			Walk(".", filter)
+			walk(".", filter)
 			os.Chdir(here)
 		}
 		close(pipeline)
