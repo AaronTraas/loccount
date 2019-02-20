@@ -1,0 +1,6 @@
+# icon comments begin with a hash, like in most scripting languages
+procedure main (args)
+       while (1) do {
+                write ("Hello World ")
+        }
+end

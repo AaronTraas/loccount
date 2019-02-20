@@ -16,6 +16,7 @@ hello.e 12 eiffel
 hello.erl 4 erlang
 hello.f 6 fortran
 hello.f90 6 fortran90
+hello.icn 5 icon
 hello.lsp 3 lisp
 hello.m 6 obj-c
 hello.m3 5 modula3
@@ -26,6 +27,7 @@ hello.rb 1 ruby
 hello.sa 5 sather
 hello.sh 1 shell
 hello.tcl 1 tcl
+hello.v 4 verilog
 lisp-hello.l 1 lisp
 multiline.go 11 go
 mumps-hello.m 3 mumps
@@ -38,12 +40,15 @@ pascal-hello.p 4 pascal
 perl-filewrite 11 perl
 pilotconv.l 36 lex
 ruby-hello 1 ruby
+simula.sim 6 simula
 singleline.go 4 go
+sreplace.r 7 rebol
 sshlogin.exp 16 expect
 test.hs 8 haskell
 upload 6 python
 wokka.cs 5 c#
 wscript 65 waf
 factorial.t
+hello.abc
 test1.lhs
 test2.lhs

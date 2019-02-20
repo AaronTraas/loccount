@@ -1,0 +1,5 @@
+\ Comments in ABC begin with a backslash
+\ Currently this testload is ignored, as the \ does horrible things to the
+\ Go regexp engine.
+WHILE (1=1) :
+    WRITE "Hello World "

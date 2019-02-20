@@ -1,5 +1,8 @@
 = News file for loccount =
 
+Repository head::
+     Added support for Rebol, Verilog, Simula, Icon.
+
 1.2: 2017-12-05
      Work around bug in the parallelized treewalker that barfed on .. paths.
 

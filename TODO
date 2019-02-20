@@ -63,3 +63,9 @@ TODO items specific to the Go implementation start here:
 
 * Support literate Haskell (*.lhs).  A couple of examples have been copied
   into tests/ from the sloccount distribution.
+
+* Algol60?  See http://cs.ecs.baylor.edu/~maurer/SieveE/Algol60.htm
+
+* Take HTML and XML out of the penaly box? (We have an HTML test load)
+
+* Beat Go into not barfing on ABC comments?  (We have a test load)
