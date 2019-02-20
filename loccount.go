@@ -489,7 +489,7 @@ func init() {
 		".pyc", ".pyo", ".elc",
 		".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".n", ".man",
 		".html", ".htm", ".sgml", ".xml",
-		".txt", ".tex", ".texi",
+		".adoc", "md", ".txt", ".tex", ".texi",
 		".po",
 		".gz", ".bz2", ".Z", ".tgz", ".zip",
 		".au", ".wav", ".ogg",
