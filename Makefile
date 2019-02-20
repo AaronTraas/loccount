@@ -20,15 +20,15 @@ check: loccount
 testbuild: loccount
 	@(./loccount -i tests; ./loccount -u tests) >check.good
 
-SOURCES = README COPYING NEWS control loccount.go loccount.txt \
+SOURCES = README COPYING NEWS control loccount.go loccount.adoc \
 		Makefile TODO loccount-logo.png check.good tests/
 
-.SUFFIXES: .html .txt .1
+.SUFFIXES: .html .adoc .1
 
 # Requires asciidoc and xsltproc/docbook stylesheets.
-.txt.1:
+.adoc.1:
 	a2x --doctype manpage --format manpage $<
-.txt.html:
+.adoc.html:
 	a2x --doctype manpage --format xhtml -D . $<
 	rm -f docbook-xsl.css
 
