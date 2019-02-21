@@ -19,7 +19,7 @@ import (
 	"sync"
 )
 
-const version string = "1.2"
+const version string = "1.3"
 
 /*
 How to add support for a language to this program:
