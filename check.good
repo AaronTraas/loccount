@@ -10,6 +10,7 @@ gcd.p pop11 10 0
 guide.awk awk 7 0
 hanoi.pl prolog 15 0
 hello.ada ada 5 0
+hello.c c 6 2
 hello.cl lisp 1 0
 hello.clu clu 11 0
 hello.e eiffel 12 0
