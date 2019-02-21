@@ -19,11 +19,11 @@ solely of a comment or part of a comment.  Comment leaders and
 trailers in string literals (including multiline string literals) in
 languages that have them) are ignored.
 
-LLOC is counted by tallying SLOCS with line terminators. In C like
+LLOC is counted by tallying SLOCs with line terminators. In C like
 languages, preprocessor directives including #define, #include, and
 Objective-C #import are also counted as a LLOC each.
 
-LLOC ereporting is not available in all supported languages, as the
+LLOC reporting is not available in all supported languages, as the
 concept may not fit the langage's syntax (e.g. the Lisp family) or its
 line-termination rules would require full parsing (e.g. Go). In these
 case LLOC will always be reported as 0. It is quite reliable in
@@ -108,7 +108,7 @@ The algorithms in this code originated with David A. Wheeler's
 *sloccount* utility, version 2.26 of 2004.  It is, however, faster
 than sloccount, and handles many languages that sloccount does not.
 
-Generally it will produce identical figures to sloccount for a
+Generally it will produce identical SLOC figures to sloccount for a
 language supported by both tools; the differences in whole-tree
 reports will mainly be due to better detection of some files sloccount
 left unclassified. Notably, for individual C and Perl files
@@ -120,8 +120,8 @@ A few of sloccount's tests have been simplified in cases where the
 complexity came from a rare or edge case that the author judges to
 have become extinct since 2004.
 
-The reporting formats were substantially different in the 1.x versions
-due to absence of any LLOC fields.
+The reporting formats of loccount 2.x are substantially different from
+those in the 1.x versions due to absence of any LLOC fields.
 
 The base salary used for cost estimation will differ between these
 tools depending on time of last release.
@@ -146,7 +146,7 @@ literals will confuse this program and throw a warning.
 Literate Haskell (.lhs) is not supported.  (This is a regression from
 sloccount).
 
-LLOC counts in languages that use ac semicolon as an Algol-like
+LLOC counts in languages that use a semicolon as an Algol-like
 statement separator - Sather, Simula, CLU, -  are somewhat too high,
 because "end" is counted as a statement.
 
