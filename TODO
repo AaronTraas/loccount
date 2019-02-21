@@ -37,9 +37,6 @@ here are languages I'd like to add support for specifically:
 
 Here are other TODOs:
 
-* Add support for COCOMO II. See Park's paper, COCOMO II,
-  and Humphrey's 1995 book.
-
 * Handle scripts embedded in data.
   Perhaps create a category, "only the code embedded in HTML"
   (e.g., Javascript scripts, PHP statements, etc.).
@@ -61,6 +58,7 @@ TODO items specific to the Go implementation start here:
   into tests/ from the sloccount distribution.
 
 * Algol60?  See http://cs.ecs.baylor.edu/~maurer/SieveE/Algol60.htm
+  The block-comment syntax is a problem.
 
 * Take HTML and XML out of the penalty box? (We have an HTML test load)
 

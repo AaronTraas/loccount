@@ -1574,20 +1574,34 @@ type countRecord struct {
 	filecount uint
 }
 
-func reportCocomo(sloc uint) {
+
+func cocomo81(sloc uint) float64 {
 	const cTIMEMULT = 2.4
 	const cTIMEEXP = 1.05
+	fmt.Printf("\n1Total Physical Source Lines of Code (SLOC)                = %d\n", sloc)
+	fmt.Printf(" (COCOMO I model, Person-Months = %2.2f * (KSLOC**%2.2f))\n", cTIMEMULT, cTIMEEXP)
+	return cTIMEMULT * math.Pow(float64(sloc)/1000, cTIMEEXP)
+}
+
+// See https://en.wikipedia.org/wiki/COCOMO
+func cocomo2000(lloc uint) float64 {
+	const cTIMEMULT = 3.2
+	const cTIMEEXP = 1.05
+	fmt.Printf("\nTotal Logical Source Lines of Code (LLOC)                 = %d\n", lloc)
+	fmt.Printf(" (COCOMO II model, Person-Months = %2.2f * (KLOC**%2.2f))\n", cTIMEMULT, cTIMEEXP)
+	return cTIMEMULT * math.Pow(float64(lloc)/1000, cTIMEEXP)
+}
+
+func reportCocomo(loc uint, curve func(uint) float64) {
 	const cSCHEDMULT = 2.5
 	const cSCHEDEXP = 0.38
 	const cSALARY = 60384 // From payscale.com, late 2016
 	const cOVERHEAD = 2.40
-	fmt.Printf("Total Physical Source Lines of Code (SLOC)                = %d\n", sloc)
-	personMonths := cTIMEMULT * math.Pow(float64(sloc)/1000, cTIMEEXP)
+	personMonths := curve(loc)
 	fmt.Printf("Development Effort Estimate, Person-Years (Person-Months) = %2.2f (%2.2f)\n", personMonths/12, personMonths)
-	fmt.Printf(" (Basic COCOMO model, Person-Months = %2.2f * (KSLOC**%2.2f))\n", cTIMEMULT, cTIMEEXP)
 	schedMonths := cSCHEDMULT * math.Pow(personMonths, cSCHEDEXP)
 	fmt.Printf("Schedule Estimate, Years (Months)                         = %2.2f (%2.2f)\n", schedMonths/12, schedMonths)
-	fmt.Printf(" (Basic COCOMO model, Months = %2.2f * (person-months**%2.2f))\n", cSCHEDMULT, cSCHEDEXP)
+	fmt.Printf(" (COCOMO model, Months = %2.2f * (person-months**%2.2f))\n", cSCHEDMULT, cSCHEDEXP)
 	fmt.Printf("Estimated Average Number of Developers (Effort/Schedule)  = %2.2f\n", personMonths/schedMonths)
 	fmt.Printf("Total Estimated Cost to Develop                           = $%d\n", int(cSALARY*(personMonths/12)*cOVERHEAD))
 	fmt.Printf(" (average salary = $%d/year, overhead = %2.2f).\n", cSALARY, cOVERHEAD)
@@ -1845,7 +1859,8 @@ func main() {
 	}
 
 	if cocomo {
-		reportCocomo(totals.slinecount)
+		reportCocomo(totals.slinecount, cocomo81)
+		reportCocomo(totals.llinecount, cocomo2000)
 	}
 }
 

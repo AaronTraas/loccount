@@ -9,9 +9,9 @@ loccount - count lines of code in a source tree and perform cost estimation
 
 == DESCRIPTION ==
 
-This program counts source lines of code (SLOC) and logical lines of
-code (LLOC) in one or more files or directories given on the command
-line.
+This program counts physical source lines of code (SLOC) and logical
+lines of code (LLOC) in one or more files or directories given on the
+command line.
 
 A line of code is counted in SLOC if it (a) includes characters other
 than whitespace and a terminating newline, and (b) is not composed
@@ -29,9 +29,10 @@ line-termination rules would require full parsing (e.g. Go). In these
 case LLOC will always be reported as 0. It is quite reliable in
 languages with C-like statement termination by semicolon.
 
-Optionally, this program can perform a cost estimation using the
-COCOMO I model. It uses the "organic"  profile of COCOMO I, which is
-generally appropriate for open-source projects.
+Optionally, this program can perform a cost-to-replicate estimation
+using the COCOMO I and (if LLOC count is nonzero) COCOMO II models. It
+uses the "organic" profile of COCOMO, which is generally appropriate
+for open-source projects.
 
 SLOC/LLOC figures should be used with caution.  While they do predict
 project costs and defect incidence reasonably well, they are not
@@ -44,12 +45,14 @@ With these qualifications, SLOC/LLOC does have some other uses. It
 is quite effective for tracking changes in complexity and attack
 surface as a codebase evolves over time.
 
-All languages in common use on Unix-like operating systems are supported.
-For a full list of supported languages, run "loccount -l". Note that
-(1) "shell" includes bash, dash, ksh, and other similar variants descended
-from the Bourne shell, and (2) the language "c-header" is a marker for
-C-style include (.h) files which will be assigned to the dominant
-C-family language in a report (if there is one).
+All languages in common use on Unix-like operating systems are
+supported.  For a full list of supported languages, run "loccount -s";
+loccount -l lists languages for which LLOC computation is
+available. Note that (1) "shell" includes bash, dash, ksh, and other
+similar variants descended from the Bourne shell, and (2) the language
+"c-header" is a marker for C-style include (.h) files which will be
+assigned to the dominant C-family language in a report (if there is
+one).
 
 The program also emits counts for build recipes - Makefiles, autoconf
 specifications, scons recipes, and waf scripts. Generated Makefiles
@@ -73,9 +76,9 @@ ignores metadata associated with version-control systems).
 Display usage summary and quit.
 
 -c::
-Report a COCOMO I cost estimate. Use the coefficients for the
-"organic" project type, which is the best for for most open-source
-projects.
+Report COCOMO cost estimates. Use the coefficients for the
+"organic" project type, which fits most open-source
+projects.  An EAF of 1.0 is assumed.
 
 -d _n_::
 Set debug level. At > 0, displays various progress messages.  Mainly
