@@ -29,19 +29,19 @@ its job is the syntax of comments and string literals.  Generally,
 languages fall into one of the following groups:
 
 * C-like: C is the prototype. This code recognizes them by file
-  extension only.  These languages have two kinds of comment.  One is
-  a block comment delimited by two distinct strings and the second is
-  a winged comment introduced by a third string and terminated by
-  newline.  The following bool signals whether newlines are permitted
-  in strings.  You can add support simply by appending an initializer
-  to the genericLanguages table; any entry with a nonempty comment
-  leader invokes C-like parsing.
+  extension and verifier.  These languages have two kinds of comment.
+  One is a block comment delimited by two distinct strings and the
+  second is a winged comment introduced by a third string and
+  terminated by newline.  The following bool signals whether newlines
+  are permitted in strings.  You can add support simply by appending
+  an initializer to the genericLanguages table; any entry with a
+  nonempty comment leader invokes C-like parsing.
 
 * Generic languages have only winged comments, usually led with #.
-  This code recognizes them by file extension only.  You can append an
-  initializer to the genericLanguages table specifying a name, an
-  extension, and the winged-comment leader.  Any entry with empty
-  commentleader and trailer strings gets generic parsing.
+  This code recognizes them by file extension and verifier.  You can
+  append an initializer to the genericLanguages table specifying a
+  name, an extension, and the winged-comment leader.  Any entry with
+  empty commentleader and trailer strings gets generic parsing.
 
 * Scripting languages have only winged comments, always led with #.
   This code recognizes them by file extension, or by looking for a
@@ -50,7 +50,7 @@ languages fall into one of the following groups:
   extension, and a matching string to look for in a hashbang line.
 
 * Pascal-likes use the (* *) block comment syntax.  This code
-  recognizes them by file extension only.  You can append an
+  recognizes them by file extension and verifier.  You can append an
   initializer to the PascalLikes table specifying a name, an
   extension, and a boolean saying whether the language uses { } as
   additional pair of block comments.
@@ -62,7 +62,9 @@ languages fall into one of the following groups:
   the first and not the second.
 
 You may add multiple entries with the same language name, but extensions
-must be unique across all tables.
+must be unique across all tables - *except* that entries with verifiers
+may share extensions with each other and with one trailing entry that has
+no verifier.
 */
 
 // Following code swiped from Michael T. Jones's "walk" package.
