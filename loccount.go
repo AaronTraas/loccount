@@ -1569,38 +1569,42 @@ func reportCocomo(sloc uint) {
 	fmt.Printf(" (average salary = $%d/year, overhead = %2.2f).\n", cSALARY, cOVERHEAD)
 }
 
-func listLanguages() []string {
+func listLanguages(lloc bool) []string {
 	names := []string{"python", "waf", "perl"}
 	var lastlang string
 	for i := range genericLanguages {
 		lang := genericLanguages[i].name
 		if lang != lastlang {
-			names = append(names, lang)
-			lastlang = lang
+			if !lloc || len(genericLanguages[i].terminator) > 0 {
+				names = append(names, lang)
+				lastlang = lang
+			}
 		}
 	}
 
-	for i := range scriptingLanguages {
-		lang := scriptingLanguages[i].name
-		if lang != lastlang {
-			names = append(names, lang)
-			lastlang = lang
+	if !lloc {
+		for i := range scriptingLanguages {
+			lang := scriptingLanguages[i].name
+			if lang != lastlang {
+				names = append(names, lang)
+				lastlang = lang
+			}
 		}
-	}
 
-	for i := range pascalLikes {
-		lang := pascalLikes[i].name
-		if lang != lastlang {
-			names = append(names, lang)
-			lastlang = lang
+		for i := range pascalLikes {
+			lang := pascalLikes[i].name
+			if lang != lastlang {
+				names = append(names, lang)
+				lastlang = lang
+			}
 		}
-	}
 
-	for i := range fortranLikes {
-		lang := fortranLikes[i].name
-		if lang != lastlang {
-			names = append(names, lang)
-			lastlang = lang
+		for i := range fortranLikes {
+			lang := fortranLikes[i].name
+			if lang != lastlang {
+				names = append(names, lang)
+				lastlang = lang
+			}
 		}
 	}
 	sort.Strings(names)
@@ -1632,7 +1636,7 @@ func listExtensions() {
 		lang := fortranLikes[i]
 		extensions[lang.name] = append(extensions[lang.name], lang.suffix)
 	}
-	names := listLanguages()
+	names := listLanguages(false)
 	for i := range names {
 		fmt.Printf("%s: %v\n", names[i], extensions[names[i]])
 	}
@@ -1649,7 +1653,8 @@ var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 func main() {
 	var individual bool
 	var unclassified bool
-	var list bool
+	var llist bool
+	var slist bool
 	var extensions bool
 	var cocomo bool
 	var json bool
@@ -1662,8 +1667,10 @@ func main() {
 		"list unclassified files")
 	flag.BoolVar(&cocomo, "c", false,
 		"report Cocomo-model estimation")
-	flag.BoolVar(&list, "l", false,
-		"list supported languages and exit")
+	flag.BoolVar(&llist, "l", false,
+		"list languages that yield LLOC and exit")
+	flag.BoolVar(&slist, "s", false,
+		"list languages that yield SLOC and exit")
 	flag.BoolVar(&extensions, "e", false,
 		"list extensions associated with each language and exit")
 	flag.IntVar(&debug, "d", 0,
@@ -1685,8 +1692,11 @@ func main() {
 	if showversion {
 		fmt.Printf("loccount %s\n", version)
 		return
-	} else if list {
-		fmt.Printf("%s\n", listLanguages())
+	} else if slist {
+		fmt.Printf("%s\n", listLanguages(false))
+		return
+	} else if llist {
+		fmt.Printf("%s\n", listLanguages(true))
 		return
 	} else if extensions {
 		listExtensions()
