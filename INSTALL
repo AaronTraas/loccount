@@ -1,6 +1,0 @@
-= loccount installation instructions =
-
-1. Take your best route to installing the Go toolchain.
-
-2. Run 'make' - or, equivalently, "go build".
-

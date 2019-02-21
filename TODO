@@ -37,12 +37,8 @@ here are languages I'd like to add support for specifically:
 
 Here are other TODOs:
 
-* A big one is to add support for logical SLOC, at least for C/C++.
-  Then add support for COCOMO II.  Even partial support would be great
-  (e.g., not all languages)... other languages could be displayed as
-  "UNK" (unknown) and be considered 0.
-  Add options to allow display of only one,
-  or of both.  See Park's paper, COCOMO II, and Humphrey's 1995 book.
+* Add support for COCOMO II. See Park's paper, COCOMO II,
+  and Humphrey's 1995 book.
 
 * Handle scripts embedded in data.
   Perhaps create a category, "only the code embedded in HTML"
@@ -66,6 +62,6 @@ TODO items specific to the Go implementation start here:
 
 * Algol60?  See http://cs.ecs.baylor.edu/~maurer/SieveE/Algol60.htm
 
-* Take HTML and XML out of the penaly box? (We have an HTML test load)
+* Take HTML and XML out of the penalty box? (We have an HTML test load)
 
 * Beat Go into not barfing on ABC comments?  (We have a test load)

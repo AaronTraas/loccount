@@ -1,54 +1,55 @@
-awk-hello 3 awk
-comment.sql 20 sql
-conditions.CBL 25 cobol
-count.csh 7 csh
-csh-lookup 6 csh
-delegate.d 18 d
-dirlist.pl 8 perl
-factorial.ml 8 ml
-gcd.p 10 pop11
-guide.awk 7 awk
-hanoi.pl 15 prolog
-hello.ada 5 ada
-hello.cl 1 lisp
-hello.clu 11 clu
-hello.e 12 eiffel
-hello.erl 4 erlang
-hello.f 6 fortran
-hello.f90 6 fortran90
-hello.icn 5 icon
-hello.lsp 3 lisp
-hello.m 6 obj-c
-hello.m3 5 modula3
-hello.mod 12 oberon
-hello.pas 4 pascal
-hello.pl1 6 pl/1
-hello.rb 1 ruby
-hello.sa 5 sather
-hello.sh 1 shell
-hello.tcl 1 tcl
-hello.v 4 verilog
-hello.vhdl 8 vhdl
-lisp-hello.l 1 lisp
-multiline.go 11 go
-mumps-hello.m 3 mumps
-ntp_fp.h 254 c-header
-ntpver 1 shell
-occam-hello.f 5 occam
-oneliner.pl 1 perl
-packet.py 849 python
-pascal-hello.p 4 pascal
-perl-filewrite 11 perl
-pilotconv.l 36 lex
-ruby-hello 1 ruby
-simula.sim 6 simula
-singleline.go 4 go
-sreplace.r 7 rebol
-sshlogin.exp 16 expect
-test.hs 8 haskell
-upload 6 python
-wokka.cs 5 c#
-wscript 65 waf
+awk-hello awk 3 0
+comment.sql sql 20 0
+conditions.CBL cobol 25 0
+count.csh csh 7 0
+csh-lookup csh 6 0
+delegate.d d 18 0
+dirlist.pl perl 8 6
+factorial.ml ml 8 0
+gcd.p pop11 10 0
+guide.awk awk 7 0
+hanoi.pl prolog 15 0
+hello.ada ada 5 0
+hello.cl lisp 1 0
+hello.clu clu 11 0
+hello.e eiffel 12 0
+hello.erl erlang 4 0
+hello.f fortran 6 0
+hello.f90 fortran90 6 0
+hello.icn icon 5 0
+hello.lsp lisp 3 0
+hello.m obj-c 6 2
+hello.m3 modula3 5 0
+hello.mod oberon 12 0
+hello.mps mumps 3 0
+hello.pas pascal 4 0
+hello.pl1 pl/1 6 6
+hello.rb ruby 1 0
+hello.sa sather 5 0
+hello.sh shell 1 0
+hello.tcl tcl 1 0
+hello.v verilog 4 2
+hello.vhdl vhdl 8 0
+lisp-hello.l lisp 1 0
+multiline.go go 11 0
+mumps-hello.m mumps 3 0
+ntp_fp.h c-header 254 100
+ntpver shell 1 0
+occam-hello.f occam 5 0
+oneliner.pl perl 1 0
+packet.py python 849 843
+pascal-hello.p pascal 4 0
+perl-filewrite perl 11 9
+pilotconv.l lex 36 19
+ruby-hello ruby 1 0
+simula.sim simula 6 0
+singleline.go go 4 0
+sreplace.r rebol 7 0
+sshlogin.exp expect 16 0
+test.hs haskell 8 0
+upload python 6 6
+wokka.cs c# 5 1
+wscript waf 65 65
 factorial.t
 hello.abc
 test1.lhs

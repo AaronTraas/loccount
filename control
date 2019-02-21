@@ -5,7 +5,8 @@ Package: loccount
 
 Description: Count source lines of code in a project.
  This is a faster implementation (in Go) of David A. Wheeler's sloccount tool.
- It handles a wider spread of languages, as well.
+ It can count LLOC as well as SLOC and handles a wider spread of languages,
+ as well.
 
 #XBS-Destinations: freshcode
 
