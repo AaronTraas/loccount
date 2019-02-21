@@ -318,7 +318,7 @@ func init() {
 	// detected in the following generic languages: javascript,
 	// html, xml, go, swift, haskell, css, m4, makefile, lisp,
 	// scheme, elisp, clojure, clojurescript, cobol, eiffel, lua,
-	// vhdl,
+	// vhdl, pop11, icon.
 	//
 	// See https://en.wikipedia.org/wiki/Comparison_of_programming_languages_(syntax)
 	genericLanguages = []genericLanguage{
@@ -395,7 +395,7 @@ func init() {
 		{"mumps", ".m", "", "", ";", "", true, "", nil},
 		{"pop11", ".p", "", "", ";", "", true, "", reallyPOP11},
 		{"rebol", ".r", "", "", "comment", "", false, "", nil},
-		{"simula", ".sim", "", "", "comment", "", false, "", nil},
+		{"simula", ".sim", "", "", "comment", "", false, ";", nil},
 		{"icon", ".icn", "", "", "#", "", false, "", nil},
 		// autoconf cruft
 		{"autotools", "config.h.in", "/*", "*/", "//", "", true, "", nil},
@@ -1546,7 +1546,7 @@ func filter(path string, info os.FileInfo, err error) error {
 
 type countRecord struct {
 	language  string
-	linecount uint
+	slinecount uint
 	filecount uint
 }
 
@@ -1642,7 +1642,7 @@ type sortable []countRecord
 
 func (a sortable) Len() int           { return len(a) }
 func (a sortable) Swap(i int, j int)  { a[i], a[j] = a[j], a[i] }
-func (a sortable) Less(i, j int) bool { return -a[i].linecount < -a[j].linecount }
+func (a sortable) Less(i, j int) bool { return -a[i].slinecount < -a[j].slinecount }
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
@@ -1754,10 +1754,10 @@ func main() {
 		if st.SLOC > 0 {
 			var tmp = counts[st.Language]
 			tmp.language = st.Language
-			tmp.linecount += st.SLOC
+			tmp.slinecount += st.SLOC
 			tmp.filecount++
 			counts[st.Language] = tmp
-			totals.linecount += st.SLOC
+			totals.slinecount += st.SLOC
 			totals.filecount++
 		}
 	}
@@ -1768,11 +1768,11 @@ func main() {
 
 	// C headers may get reassigned based on what other languages
 	// are present in the tree
-	if counts["c-header"].linecount > 0 {
+	if counts["c-header"].slinecount > 0 {
 		for i := range cHeaderPriority {
-			if counts[cHeaderPriority[i]].linecount > 0 {
+			if counts[cHeaderPriority[i]].slinecount > 0 {
 				var tmp = counts[cHeaderPriority[i]]
-				tmp.linecount += counts["c-header"].linecount
+				tmp.slinecount += counts["c-header"].slinecount
 				counts[cHeaderPriority[i]] = tmp
 				delete(counts, "c-header")
 				break
@@ -1793,21 +1793,21 @@ func main() {
 	for i := range summary {
 		r := summary[i]
 		if json {
-			fmt.Printf("{\"language\":%q, \"linecount\":%d, \"filecount\":%d}\n",
+			fmt.Printf("{\"language\":%q, \"slinecount\":%d, \"filecount\":%d}\n",
 				r.language,
-				r.linecount,
+				r.slinecount,
 				r.filecount)
 		} else {
 			fmt.Printf("%-12s %7d (%2.2f%%) in %d files\n",
 				r.language,
-				r.linecount,
-				float64(r.linecount)*100.0/float64(totals.linecount),
+				r.slinecount,
+				float64(r.slinecount)*100.0/float64(totals.slinecount),
 				r.filecount)
 		}
 	}
 
 	if cocomo {
-		reportCocomo(totals.linecount)
+		reportCocomo(totals.slinecount)
 	}
 }
 
