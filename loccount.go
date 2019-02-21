@@ -1578,7 +1578,7 @@ type countRecord struct {
 func cocomo81(sloc uint) float64 {
 	const cTIMEMULT = 2.4
 	const cTIMEEXP = 1.05
-	fmt.Printf("\n1Total Physical Source Lines of Code (SLOC)                = %d\n", sloc)
+	fmt.Printf("\nTotal Physical Source Lines of Code (SLOC)                = %d\n", sloc)
 	fmt.Printf(" (COCOMO I model, Person-Months = %2.2f * (KSLOC**%2.2f))\n", cTIMEMULT, cTIMEEXP)
 	return cTIMEMULT * math.Pow(float64(sloc)/1000, cTIMEEXP)
 }
