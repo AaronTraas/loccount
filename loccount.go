@@ -1008,6 +1008,10 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 	ctx.setup(path)
 	defer ctx.teardown()
 
+	// # at start of file - assume it's a cpp directive
+	if ctx.consume([]byte("#")) {
+		lloc++
+	}
 	for {
 		c, err := ctx.getachar()
 		if err == io.EOF {
@@ -1102,6 +1106,10 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 			if ctx.consume([]byte("%")) {
 				ctx.lexfile = true
 				ctx.nonblank = true
+			}
+			// # at start of line - assume it's a cpp directive
+			if ctx.consume([]byte("#")) {
+				lloc++
 			}
 		}
 		if mode == stateNORMAL && len(syntax.terminator) > 0 && c == syntax.terminator[0] {

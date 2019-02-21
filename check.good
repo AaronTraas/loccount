@@ -10,7 +10,7 @@ gcd.p pop11 10 0
 guide.awk awk 7 0
 hanoi.pl prolog 15 0
 hello.ada ada 5 0
-hello.c c 6 2
+hello.c c 6 3
 hello.cl lisp 1 0
 hello.clu clu 11 0
 hello.e eiffel 12 0
@@ -19,7 +19,7 @@ hello.f fortran 6 0
 hello.f90 fortran90 6 0
 hello.icn icon 5 0
 hello.lsp lisp 3 0
-hello.m obj-c 6 2
+hello.m obj-c 6 3
 hello.m3 modula3 5 0
 hello.mod oberon 12 0
 hello.mps mumps 3 0
@@ -34,14 +34,14 @@ hello.vhdl vhdl 8 0
 lisp-hello.l lisp 1 0
 multiline.go go 11 0
 mumps-hello.m mumps 3 0
-ntp_fp.h c-header 254 100
+ntp_fp.h c-header 254 179
 ntpver shell 1 0
 occam-hello.f occam 5 0
 oneliner.pl perl 1 0
 packet.py python 849 843
 pascal-hello.p pascal 4 0
 perl-filewrite perl 11 9
-pilotconv.l lex 36 19
+pilotconv.l lex 36 20
 ruby-hello ruby 1 0
 simula.sim simula 6 0
 singleline.go go 4 0
