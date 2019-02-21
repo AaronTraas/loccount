@@ -375,6 +375,7 @@ func init() {
 		{"rust", ".rs", "", "", "//", "", true, nil},
 		{"rust", ".rlib", "", "", "//", "", true, nil},
 		{"erlang", ".erl", "", "", "%", "", true, nil},
+		{"vhdl", ".vhdl", "", "", "--", "", false, nil},
 		{"verilog", ".v", "/*", "*/", "//", "", true, nil},
 		{"verilog", ".vh", "/*", "*/", "//", "", true, nil},
 		//{"turing", ".t", "", "", "%", "", true, nil},

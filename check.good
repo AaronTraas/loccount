@@ -28,6 +28,7 @@ hello.sa 5 sather
 hello.sh 1 shell
 hello.tcl 1 tcl
 hello.v 4 verilog
+hello.vhdl 8 vhdl
 lisp-hello.l 1 lisp
 multiline.go 11 go
 mumps-hello.m 3 mumps
