@@ -249,6 +249,7 @@ type genericLanguage struct {
 	eolcomment     string
 	multistring    string
 	eolwarn        bool
+	terminator     string
 	verifier       func(*countContext, string) bool
 }
 
@@ -312,91 +313,100 @@ func init() {
 	// All entries for a given language should be in a contiguous span,
 	// otherwise the primitive duplicate director in listLanguages will
 	// be foiled.
+	//
+	// FIXME: Statement termination cannot presently be reliably
+	// detected in the following generic languages: javascript,
+	// html, xml, go, swift, haskell, css, m4, makefile, lisp,
+	// scheme, elisp, clojure, clojurescript, cobol, eiffel, lua,
+	// vhdl,
+	//
+	// See https://en.wikipedia.org/wiki/Comparison_of_programming_languages_(syntax)
 	genericLanguages = []genericLanguage{
 		/* C family */
-		{"c", ".c", "/*", "*/", "//", "", true, nil},
-		{"c-header", ".h", "/*", "*/", "//", "", true, nil},
-		{"c-header", ".hpp", "/*", "*/", "//", "", true, nil},
-		{"c-header", ".hxx", "/*", "*/", "//", "", true, nil},
-		{"yacc", ".y", "/*", "*/", "//", "", true, nil},
-		{"lex", ".l", "/*", "*/", "//", "", true, reallyLex},
-		{"c++", ".cpp", "/*", "*/", "//", "", true, nil},
-		{"c++", ".cxx", "/*", "*/", "//", "", true, nil},
-		{"c++", ".cc", "/*", "*/", "//", "", true, nil},
-		{"java", ".java", "/*", "*/", "//", "", true, nil},
-		{"javascript", ".js", "/*", "*/", "//", "", true, nil},
-		{"obj-c", ".m", "/*", "*/", "//", "", true, reallyObjectiveC},
-		{"c#", ".cs", "/*", "*/", "//", "", true, nil},
-		//{"html", ".html", "<!--", "-->", "", "", false, nil},
-		//{"html", ".htm", "<!--", "-->", "", "", false, nil},
-		//{"xml", ".xml", "<!--", "-->", "", "", false, nil},
-		{"php", ".php", "/*", "*/", "//", "", true, nil},
-		{"php3", ".php", "/*", "*/", "//", "", true, nil},
-		{"php4", ".php", "/*", "*/", "//", "", true, nil},
-		{"php5", ".php", "/*", "*/", "//", "", true, nil},
-		{"php6", ".php", "/*", "*/", "//", "", true, nil},
-		{"php7", ".php", "/*", "*/", "//", "", true, nil},
-		{"go", ".go", "/*", "*/", "//", "`", true, nil},
-		{"swift", ".swift", "/*", "*/", "//", "", true, nil},
-		{"sql", ".sql", "/*", "*/", "--", "", false, nil},
-		{"haskell", ".hs", "{-", "-}", "--", "", true, nil},
-		{"pl/1", ".pl1", "/*", "*/", "", "", true, nil},
+		{"c", ".c", "/*", "*/", "//", "", true, ";", nil},
+		{"c-header", ".h", "/*", "*/", "//", "", true, ";", nil},
+		{"c-header", ".hpp", "/*", "*/", "//", "", true, ";", nil},
+		{"c-header", ".hxx", "/*", "*/", "//", "", true, ";", nil},
+		{"yacc", ".y", "/*", "*/", "//", "", true, ";", nil},
+		{"lex", ".l", "/*", "*/", "//", "", true, ";", reallyLex},
+		{"c++", ".cpp", "/*", "*/", "//", "", true, ";", nil},
+		{"c++", ".cxx", "/*", "*/", "//", "", true, ";", nil},
+		{"c++", ".cc", "/*", "*/", "//", "", true, ";", nil},
+		{"java", ".java", "/*", "*/", "//", "", true, ";", nil},
+		{"javascript", ".js", "/*", "*/", "//", "", true, "", nil},
+		{"obj-c", ".m", "/*", "*/", "//", "", true, ";", reallyObjectiveC},
+		{"c#", ".cs", "/*", "*/", "//", "", true, ";", nil},
+		//{"html", ".html", "<!--", "-->", "", "", false, "", nil},
+		//{"html", ".htm", "<!--", "-->", "", "", false, "", nil},
+		//{"xml", ".xml", "<!--", "-->", "", "", false, "", nil},
+		{"php", ".php", "/*", "*/", "//", "", true, ";", nil},
+		{"php3", ".php", "/*", "*/", "//", "", true, ";", nil},
+		{"php4", ".php", "/*", "*/", "//", "", true, ";", nil},
+		{"php5", ".php", "/*", "*/", "//", "", true, ";", nil},
+		{"php6", ".php", "/*", "*/", "//", "", true, ";", nil},
+		{"php7", ".php", "/*", "*/", "//", "", true, ";", nil},
+		{"go", ".go", "/*", "*/", "//", "`", true, "", nil},
+		{"swift", ".swift", "/*", "*/", "//", "", true, "", nil},
+		{"sql", ".sql", "/*", "*/", "--", "", false, "", nil},
+		{"haskell", ".hs", "{-", "-}", "--", "", true, "", nil},
+		{"pl/1", ".pl1", "/*", "*/", "", "", true, ";", nil},
 		/* everything else */
-		{"asm", ".asm", "", "", ";", "", true, nil},
-		{"asm", ".s", "", "", ";", "", true, nil},
-		{"asm", ".S", "", "", ";", "", true, nil},
-		{"ada", ".ada", "", "", "--", "", true, nil},
-		{"ada", ".adb", "", "", "--", "", true, nil},
-		{"ada", ".ads", "", "", "--", "", true, nil},
-		{"ada", ".pad", "", "", "--", "", true, nil}, // Oracle Ada preprocessoer.
-		{"css", ".css", "/*", "*/", "", "", true, nil},
-		{"makefile", ".mk", "", "", "#", "", true, nil},
-		{"makefile", "Makefile", "", "", "#", "", true, nil},
-		{"makefile", "makefile", "", "", "#", "", true, nil},
-		{"makefile", "Imakefile", "", "", "#", "", true, nil},
-		{"m4", ".m4", "", "", "#", "", true, nil},
-		{"lisp", ".lisp", "", "", ";", "", true, nil},
-		{"lisp", ".lsp", "", "", ";", "", true, nil}, // XLISP
-		{"lisp", ".cl", "", "", ";", "", true, nil},  // Common Lisp
-		{"lisp", ".l", "", "", ";", "", true, nil},
-		{"scheme", ".scm", "", "", ";", "", true, nil},
-		{"elisp", ".el", "", "", ";", "", true, nil},    // Emacs Lisp
-		{"clojure", ".clj", "", "", ";", "", true, nil}, // Clojure
-		{"clojure", ".cljc", "", "", ";", "", true, nil},
-		{"clojurescript", ".cljs", "", "", ";", "", true, nil},
-		{"cobol", ".CBL", "", "", "*", "", true, nil},
-		{"cobol", ".cbl", "", "", "*", "", true, nil},
-		{"cobol", ".COB", "", "", "*", "", true, nil},
-		{"cobol", ".cob", "", "", "*", "", true, nil},
-		{"eiffel", ".e", "", "", "--", "", true, nil},
-		{"sather", ".sa", "", "", "--", "", true, reallySather},
-		{"lua", ".lua", "", "", "--", "", true, nil},
-		{"clu", ".clu", "", "", "%", "", true, nil},
-		{"rust", ".rs", "", "", "//", "", true, nil},
-		{"rust", ".rlib", "", "", "//", "", true, nil},
-		{"erlang", ".erl", "", "", "%", "", true, nil},
-		{"vhdl", ".vhdl", "", "", "--", "", false, nil},
-		{"verilog", ".v", "/*", "*/", "//", "", true, nil},
-		{"verilog", ".vh", "/*", "*/", "//", "", true, nil},
-		//{"turing", ".t", "", "", "%", "", true, nil},
-		{"d", ".d", "", "", "//", "", true, nil},
-		{"occam", ".f", "", "", "//", "", true, realllyOccam},
-		{"prolog", ".pl", "", "", "%", "", true, reallyProlog},
-		{"mumps", ".m", "", "", ";", "", true, nil},
-		{"pop11", ".p", "", "", ";", "", true, reallyPOP11},
-		{"rebol", ".r", "", "", "comment", "", false, nil},
-		{"simula", ".sim", "", "", "comment", "", false, nil},
-		{"icon", ".icn", "", "", "#", "", false, nil},
+		{"asm", ".asm", "", "", ";", "", true, "\n", nil},
+		{"asm", ".s", "", "", ";", "", true, "\n", nil},
+		{"asm", ".S", "", "", ";", "", true, "\n", nil},
+		{"ada", ".ada", "", "", "--", "", true, ";", nil},
+		{"ada", ".adb", "", "", "--", "", true, ";", nil},
+		{"ada", ".ads", "", "", "--", "", true, ";", nil},
+		{"ada", ".pad", "", "", "--", "", true, "", nil}, // Oracle Ada preprocessoer.
+		{"css", ".css", "/*", "*/", "", "", true, "", nil},
+		{"makefile", ".mk", "", "", "#", "", true, "", nil},
+		{"makefile", "Makefile", "", "", "#", "", true, "", nil},
+		{"makefile", "makefile", "", "", "#", "", true, "", nil},
+		{"makefile", "Imakefile", "", "", "#", "", true, "", nil},
+		{"m4", ".m4", "", "", "#", "", true, "", nil},
+		{"lisp", ".lisp", "", "", ";", "", true, "", nil},
+		{"lisp", ".lsp", "", "", ";", "", true, "", nil}, // XLISP
+		{"lisp", ".cl", "", "", ";", "", true, "", nil},  // Common Lisp
+		{"lisp", ".l", "", "", ";", "", true, "", nil},
+		{"scheme", ".scm", "", "", ";", "", true, "", nil},
+		{"elisp", ".el", "", "", ";", "", true, "", nil},    // Emacs Lisp
+		{"clojure", ".clj", "", "", ";", "", true, "", nil}, // Clojure
+		{"clojure", ".cljc", "", "", ";", "", true, "", nil},
+		{"clojurescript", ".cljs", "", "", ";", "", true, "", nil},
+		{"cobol", ".CBL", "", "", "*", "", true, "", nil},
+		{"cobol", ".cbl", "", "", "*", "", true, "", nil},
+		{"cobol", ".COB", "", "", "*", "", true, "", nil},
+		{"cobol", ".cob", "", "", "*", "", true, "", nil},
+		{"eiffel", ".e", "", "", "--", "", true, "", nil},
+		{"sather", ".sa", "", "", "--", "", true, ";", reallySather},
+		{"lua", ".lua", "", "", "--", "", true, "", nil},
+		{"clu", ".clu", "", "", "%", "", true, ";", nil},
+		{"rust", ".rs", "", "", "//", "", true, ";", nil},
+		{"rust", ".rlib", "", "", "//", "", true, ";", nil},
+		{"erlang", ".erl", "", "", "%", "", true, "", nil},
+		{"vhdl", ".vhdl", "", "", "--", "", false, "", nil},
+		{"verilog", ".v", "/*", "*/", "//", "", true, ";", nil},
+		{"verilog", ".vh", "/*", "*/", "//", "", true, ";", nil},
+		//{"turing", ".t", "", "", "%", "", true, "", nil},
+		{"d", ".d", "", "", "//", "", true, ";", nil},
+		{"occam", ".f", "", "", "//", "", true, "", reallyOccam},
+		{"prolog", ".pl", "", "", "%", "", true, ".", reallyProlog},
+		{"mumps", ".mps", "", "", ";", "", true, "", nil},
+		{"mumps", ".m", "", "", ";", "", true, "", nil},
+		{"pop11", ".p", "", "", ";", "", true, "", reallyPOP11},
+		{"rebol", ".r", "", "", "comment", "", false, "", nil},
+		{"simula", ".sim", "", "", "comment", "", false, "", nil},
+		{"icon", ".icn", "", "", "#", "", false, "", nil},
 		// autoconf cruft
-		{"autotools", "config.h.in", "/*", "*/", "//", "", true, nil},
-		{"autotools", "autogen.sh", "", "", "#", "", true, nil},
-		{"autotools", "configure.in", "", "", "#", "", true, nil},
-		{"autotools", "Makefile.in", "", "", "#", "", true, nil},
-		{"autotools", ".am", "", "", "#", "", true, nil},
-		{"autotools", ".ac", "", "", "#", "", true, nil},
-		{"autotools", ".mf", "", "", "#", "", true, nil},
+		{"autotools", "config.h.in", "/*", "*/", "//", "", true, "", nil},
+		{"autotools", "autogen.sh", "", "", "#", "", true, "", nil},
+		{"autotools", "configure.in", "", "", "#", "", true, "", nil},
+		{"autotools", "Makefile.in", "", "", "#", "", true, "", nil},
+		{"autotools", ".am", "", "", "#", "", true, "", nil},
+		{"autotools", ".ac", "", "", "#", "", true, "", nil},
+		{"autotools", ".mf", "", "", "#", "", true, "", nil},
 		// Scons
-		{"scons", "SConstruct", "", "", "#", "", true, nil},
+		{"scons", "SConstruct", "", "", "#", "", true, "", nil},
 	}
 
 	var err error
@@ -683,8 +693,8 @@ func hasKeywords(ctx *countContext, path string, lang string, tells []string) bo
 	return matching
 }
 
-// realllyOccam - returns TRUE if filename contents really are occam.
-func realllyOccam(ctx *countContext, path string) bool {
+// reallyOccam - returns TRUE if filename contents really are occam.
+func reallyOccam(ctx *countContext, path string) bool {
 	return hasKeywords(ctx, path, "occam", []string{"--", "PROC"})
 }
 
