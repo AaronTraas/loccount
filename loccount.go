@@ -305,6 +305,7 @@ var generated string
 const nf	= 0x00	// no flags
 const eolwarn	= 0x01	// Warn on EOL in string
 const cbs	= 0x02	// C-style backslash escapes
+const gotick	= 0x04	// Strong backtick a la Go
 
 func init() {
 	// For speed, try to put more common languages and extensions
@@ -348,7 +349,7 @@ func init() {
 		{"php5", ".php", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
 		{"php6", ".php", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
 		{"php7", ".php", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"go", ".go", "/*", "*/", "//", "`", eolwarn|cbs, "", nil},
+		{"go", ".go", "/*", "*/", "//", "`", eolwarn|cbs|gotick, "", nil},
 		{"swift", ".swift", "/*", "*/", "//", "", eolwarn, "", nil},
 		{"sql", ".sql", "/*", "*/", "--", "", nf, "", nil},
 		{"haskell", ".hs", "{-", "-}", "--", "", eolwarn, "", nil},
@@ -677,7 +678,7 @@ func reallyObjectiveC(ctx *countContext, path string) bool {
 	}
 
 	if debug > 0 {
-		log.Printf("objc verifier returned %t on %s\n", isObjC, path)
+		fmt.Fprint(os.Stderr, "objc verifier returned %t on %s\n", isObjC, path)
 	}
 
 	return isObjC
@@ -699,7 +700,7 @@ func hasKeywords(ctx *countContext, path string, lang string, tells []string) bo
 	}
 
 	if debug > 0 {
-		log.Printf("%s verifier returned %t on %s\n",
+		fmt.Fprint(os.Stderr, "%s verifier returned %t on %s\n",
 			lang, matching, path)
 	}
 
@@ -818,7 +819,7 @@ func reallyExpect(ctx *countContext, path string) bool {
 	}
 
 	if debug > 0 {
-		log.Printf("expect verifier returned %t on %s\n", isExpect, path)
+		fmt.Fprint(os.Stderr, "expect verifier returned %t on %s\n", isExpect, path)
 	}
 
 	return isExpect
@@ -937,7 +938,7 @@ func reallyPascal(ctx *countContext, path string) bool {
 		(hasProgram && hasBegin && foundTerminatingEnd))
 
 	if debug > 0 {
-		log.Printf("pascal verifier returned %t on %s\n", isPascal, path)
+		fmt.Fprint(os.Stderr, "pascal verifier returned %t on %s\n", isPascal, path)
 	}
 
 	return isPascal
@@ -966,10 +967,10 @@ func wasGeneratedAutomatically(ctx *countContext, path string, eolcomment string
 	}
 
 	for ctx.munchline() && i > 0 {
-		//log.Printf("Matching %s against %s", ctx.line, re)
+		//fmt.Fprint(os.Stderr, "Matching %s against %s", ctx.line, re)
 		if cre.Find(ctx.line) != nil {
 			if debug > 0 {
-				log.Printf("%s: is generated\n", path)
+				fmt.Fprint(os.Stderr, "%s: is generated\n", path)
 			}
 			return true
 		}
@@ -1033,7 +1034,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 				ctx.nonblank = true
 				mode = stateINSTRING
 				startline = ctx.lineNumber
-			} else if !ctx.lexfile && c == '\'' {
+			} else if (syntax.flags & cbs) != 0 && !ctx.lexfile && c == '\'' {
 				/* Consume single-character 'xxxx' values */
 				ctx.nonblank = true
 				c, err = ctx.getachar()
@@ -1059,6 +1060,17 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 			} else if (syntax.multistring != "") && (c == syntax.multistring[0]) {
 				mode = stateINMULTISTRING
 				startline = ctx.lineNumber
+			} else if (syntax.flags & gotick) != 0 && c == '`' {
+				startLine := ctx.lineNumber
+				for {
+					c, err = ctx.getachar()
+					if err != nil {
+						fmt.Fprint(os.Stderr, "WARNING - unterminated backtick, line %d, file %s\n", startLine, path)
+					}
+					if c == '`' {
+						break
+					}
+				}
 			} else if !isspace(c) {
 				ctx.nonblank = true
 			}
@@ -1081,7 +1093,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 				// We found a bare newline in a string without
 				// preceding backslash.
 				if (syntax.flags & eolwarn) != 0 {
-					log.Printf("WARNING - newline in string, line %d, file %s\n", ctx.lineNumber, path)
+					fmt.Fprint(os.Stderr, "WARNING - newline in string, line %d, file %s\n", ctx.lineNumber, path)
 				}
 
 				// We COULD warn & reset mode to
@@ -1136,10 +1148,10 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 	}
 
 	if mode == stateINCOMMENT {
-		log.Printf("%q, line %d: ERROR - terminated in comment beginning here\n",
+		fmt.Fprint(os.Stderr, "%q, line %d: ERROR - terminated in comment beginning here\n",
 			path, startline)
 	} else if mode == stateINSTRING {
-		log.Printf("%q, line %d: ERROR - terminated in string beginning here\n",
+		fmt.Fprint(os.Stderr, "%q, line %d: ERROR - terminated in string beginning here\n",
 			path, startline)
 	}
 
@@ -1291,7 +1303,7 @@ func perlCounter(ctx *countContext, path string) (uint, uint) {
 		} else if len(heredoc) == 0 && bytes.HasPrefix(ctx.line, []byte("=cut")) {
 			// Ending a POD?
 			if !isinpod {
-				log.Printf("%q, %d: cut without pod start\n",
+				fmt.Fprint(os.Stderr, "%q, %d: cut without pod start\n",
 					path, ctx.lineNumber)
 			}
 			isinpod = false
@@ -1371,10 +1383,10 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) (uint, uin
 	ctx.nonblank = false
 
 	if mode == stateINCOMMENT {
-		log.Printf("%q, line %d: ERROR - terminated in comment beginning here.\n",
+		fmt.Fprint(os.Stderr, "%q, line %d: ERROR - terminated in comment beginning here.\n",
 			path, startline)
 	} else if mode == stateINSTRING {
-		log.Printf("%q, line %d: ERROR - terminated in string beginning here.\n",
+		fmt.Fprint(os.Stderr, "%q, line %d: ERROR - terminated in string beginning here.\n",
 			path, startline)
 	}
 
