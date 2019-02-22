@@ -46,6 +46,7 @@ pascal-hello.p pascal 4 2
 perl-filewrite perl 11 9
 pilotconv.l lex 36 20
 ruby-hello ruby 1 0
+sieve.alg algol60 47 20
 simula.sim simula 6 4
 singleline.go go 4 0
 sreplace.r rebol 7 0
@@ -56,6 +57,5 @@ wokka.cs c# 5 1
 wscript waf 65 65
 factorial.t
 hello.abc
-sieve.alg
 test1.lhs
 test2.lhs
