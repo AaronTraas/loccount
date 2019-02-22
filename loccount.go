@@ -377,7 +377,7 @@ func init() {
 		{"cobol", ".cob", "", "", "*", "", true, "", nil},
 		{"eiffel", ".e", "", "", "--", "", true, "", nil},
 		{"sather", ".sa", "", "", "--", "", true, ";", reallySather},
-		{"lua", ".lua", "", "", "--", "", true, "", nil},
+		{"lua", ".lua", "--[[", "]]", "--", "", true, "", nil},
 		{"clu", ".clu", "", "", "%", "", true, ";", nil},
 		{"rust", ".rs", "", "", "//", "", true, ";", nil},
 		{"rust", ".rlib", "", "", "//", "", true, ";", nil},
