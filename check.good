@@ -13,6 +13,7 @@ hello.ada ada 5 3
 hello.c c 6 3
 hello.cl lisp 1 0
 hello.clu clu 11 0
+hello.cobra cobra 3 0
 hello.dart dart 3 1
 hello.e eiffel 12 0
 hello.erl erlang 4 0

@@ -174,5 +174,7 @@ statement.  Conversely, reported LLOC will be a bit low in languages
 like Pascal, Modula, and Oberon that don't require a semi either after
 the last statement in the block or the block end.
 
+The Algol 60 support assumes it's a dialect with all-caps unquoted keywords.
+
 == REPORTING BUGS ==
 Report bugs to Eric S. Raymond <esr@thyrsus.com>.

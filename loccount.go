@@ -256,6 +256,10 @@ type genericLanguage struct {
 	verifier       func(*countContext, string) bool
 }
 
+func (g genericLanguage) property(v uint) bool {
+	return (v & g.flags) != 0
+}
+
 var genericLanguages []genericLanguage
 
 type scriptingLanguage struct {
@@ -306,6 +310,7 @@ const nf	= 0x00	// no flags
 const eolwarn	= 0x01	// Warn on EOL in string
 const cbs	= 0x02	// C-style backslash escapes
 const gotick	= 0x04	// Strong backtick a la Go
+const cpp       = 0x08	// Count C preprocessor directives or Objective C #import
 
 func init() {
 	// For speed, try to put more common languages and extensions
@@ -327,18 +332,18 @@ func init() {
 	// See https://en.wikipedia.org/wiki/Comparison_of_programming_languages_(syntax)
 	genericLanguages = []genericLanguage{
 		/* C family */
-		{"c", ".c", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"c-header", ".h", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"c-header", ".hpp", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"c-header", ".hxx", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"yacc", ".y", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"lex", ".l", "/*", "*/", "//", "", eolwarn|cbs, ";", reallyLex},
-		{"c++", ".cpp", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"c++", ".cxx", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"c++", ".cc", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
+		{"c", ".c", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
+		{"c-header", ".h", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
+		{"c-header", ".hpp", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
+		{"c-header", ".hxx", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
+		{"yacc", ".y", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
+		{"lex", ".l", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", reallyLex},
+		{"c++", ".cpp", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
+		{"c++", ".cxx", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
+		{"c++", ".cc", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
 		{"java", ".java", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
 		{"javascript", ".js", "/*", "*/", "//", "", eolwarn|cbs, "", nil},
-		{"obj-c", ".m", "/*", "*/", "//", "", eolwarn|cbs, ";", reallyObjectiveC},
+		{"obj-c", ".m", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", reallyObjectiveC},
 		{"c#", ".cs", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
 		//{"html", ".html", "<!--", "-->", "", "", nf, "", nil},
 		//{"html", ".htm", "<!--", "-->", "", "", nf, "", nil},
@@ -408,7 +413,8 @@ func init() {
 		{"rebol", ".r", "", "", "comment", "", nf, "", nil},
 		{"simula", ".sim", "", "", "comment", "", nf, ";", nil},
 		{"icon", ".icn", "", "", "#", "", nf, "", nil},
-		{"algol60", ".alg", "", "", "COMMENT", "", nf, ";", nil},
+		{"cobra", ".cobra", "/#", "#/", "#", "", eolwarn|cbs, "", nil},
+		{"algol60", ".alg", "", "", "COMMENT", `"""`, nf, ";", nil},
 		// autoconf cruft
 		{"autotools", "config.h.in", "/*", "*/", "//", "", eolwarn, "", nil},
 		{"autotools", "autogen.sh", "", "", "#", "", eolwarn, "", nil},
@@ -1020,7 +1026,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 	defer ctx.teardown()
 
 	// # at start of file - assume it's a cpp directive
-	if ctx.consume([]byte("#")) {
+	if syntax.property(cpp) && ctx.consume([]byte("#")) {
 		lloc++
 	}
 	for {
@@ -1034,7 +1040,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 				ctx.nonblank = true
 				mode = stateINSTRING
 				startline = ctx.lineNumber
-			} else if (syntax.flags & cbs) != 0 && !ctx.lexfile && c == '\'' {
+			} else if syntax.property(cbs) && !ctx.lexfile && c == '\'' {
 				/* Consume single-character 'xxxx' values */
 				ctx.nonblank = true
 				c, err = ctx.getachar()
@@ -1060,7 +1066,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 			} else if (syntax.multistring != "") && (c == syntax.multistring[0]) {
 				mode = stateINMULTISTRING
 				startline = ctx.lineNumber
-			} else if (syntax.flags & gotick) != 0 && c == '`' {
+			} else if syntax.property(gotick) && c == '`' {
 				startLine := ctx.lineNumber
 				for {
 					c, err = ctx.getachar()
@@ -1085,14 +1091,14 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 			}
 			if c == '"' {
 				mode = stateNORMAL
-			} else if (syntax.flags & cbs) != 0 && (c == '\\') && (ctx.ispeek('"') || ctx.ispeek('\\')) {
+			} else if syntax.property(cbs) && (c == '\\') && (ctx.ispeek('"') || ctx.ispeek('\\')) {
 				c, _ = ctx.getachar()
-			} else if (syntax.flags & cbs) != 0 && (c == '\\') && ctx.ispeek('\n') {
+			} else if syntax.property(cbs) && (c == '\\') && ctx.ispeek('\n') {
 				c, _ = ctx.getachar()
 			} else if c == '\n' {
 				// We found a bare newline in a string without
 				// preceding backslash.
-				if (syntax.flags & eolwarn) != 0 {
+				if syntax.property(eolwarn) {
 					fmt.Fprint(os.Stderr, "WARNING - newline in string, line %d, file %s\n", ctx.lineNumber, path)
 				}
 
@@ -1130,7 +1136,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 				ctx.nonblank = true
 			}
 			// # at start of line - assume it's a cpp directive
-			if ctx.consume([]byte("#")) {
+			if syntax.property(cpp) && ctx.consume([]byte("#")) {
 				lloc++
 			}
 		}
