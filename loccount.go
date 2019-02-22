@@ -398,6 +398,8 @@ func init() {
 		{"f#", ".fsi", "", "", "//", "", true, "", nil},
 		{"f#", ".fsx", "", "", "//", "", true, "", nil},
 		{"f#", ".fscript", "", "", "//", "", true, "", nil},
+		{"kotlin", ".kt", "", "", "//", "", true, "", nil},
+		{"kotlin", ".kts", "", "", "//", "", true, "", nil},
 		{"prolog", ".pl", "", "", "%", "", true, ".", reallyProlog},
 		{"mumps", ".mps", "", "", ";", "", true, "", nil},
 		{"mumps", ".m", "", "", ";", "", true, "", nil},
