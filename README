@@ -3,7 +3,8 @@ by Eric S. Raymond
 November 2016
 
 loccount is a re-implementation of David A. Wheeler's sloccount tool
-in Go.  It is faster and handles more different languages. Because
+in Go.  It is faster, handles more different languages, can report LLOC
+as well as SLOC, and can do COCOMO II as well as COCOMO I estimates. Because
 it's one source file in Go, it is easier to maintain and extend than the
 multi-file, multi-language implementation of the original.
 
