@@ -153,7 +153,7 @@ Eiffel indexing comments are counted as code, not text. (This is
 arguably a feature.)
 
 The asm counter assumes ";" winged comments. This is correct for Intel
-assemblers and some others, but not all.
+assemblers and some others, but not all.  GAS uses "#".
 
 In lex, flex, yacc, and bison files, block comments beginning within string
 literals will confuse this program and throw a warning.
