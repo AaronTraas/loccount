@@ -142,14 +142,14 @@ tools depending on time of last release.
 The sloccount logic for treating multiple argument directories as different
 projects has not been reproduced. This may change in a future release.
 
-Nesting block comments languages that allow this (such as Rust or D)
-will confuse the line counting, resulting in overcounts after the
-deepest comment exit is reached.
+Nesting block comments in languages that allow this (such as Rust,
+Haskell, or D) will confuse the line counting, resulting in overcounts
+after the deepest comment exit is reached.
 
 PHP #-comments taking up an entire line or following only whitespace
 on a line will be counted, not recognized as comments and skipped.
 
-In lue, only the zero-level comment syntax beginning --[[ is
+In lua, only the zero-level block comment syntax beginning --[[ is
 recognized as a comment.
 
 Eiffel indexing comments are counted as code, not text. (This is
@@ -164,7 +164,7 @@ literals will confuse this program and throw a warning.
 Literate Haskell (.lhs) is not supported.  (This is a regression from
 sloccount).
 
-Simula, Ruby, and Algol 60 block comments are not recognized.
+Ruby, Simula, and Algol 60 block comments are not recognized.
 
 LLOC counts in languages that use a semicolon as an Algol-like
 statement separator, rather than a terminator, will be less accurate.
