@@ -355,9 +355,9 @@ func init() {
 		{"haskell", ".hs", "{-", "-}", "--", "", true, "", nil},
 		{"pl/1", ".pl1", "/*", "*/", "", "", true, ";", nil},
 		/* everything else */
-		{"asm", ".asm", "", "", ";", "", true, "\n", nil},
-		{"asm", ".s", "", "", ";", "", true, "\n", nil},
-		{"asm", ".S", "", "", ";", "", true, "\n", nil},
+		{"asm", ".asm", "/*", "*/", ";", "", true, "\n", nil},
+		{"asm", ".s", "/*", "*/", ";", "", true, "\n", nil},
+		{"asm", ".S", "/*", "*/", ";", "", true, "\n", nil},
 		{"ada", ".ada", "", "", "--", "", true, ";", nil},
 		{"ada", ".adb", "", "", "--", "", true, ";", nil},
 		{"ada", ".ads", "", "", "--", "", true, ";", nil},
