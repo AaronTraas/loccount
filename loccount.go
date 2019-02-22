@@ -1140,8 +1140,8 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 
 // genericCounter - count SLOC in a generic language.
 func genericCounter(ctx *countContext,
-	path string, eolcomment string,
-verifier func(*countContext, string) bool) (uint, uint) {
+	path string, eolcomment string, terminator string,
+	verifier func(*countContext, string) bool) (uint, uint) {
 	var sloc uint
 
 	if verifier != nil && !verifier(ctx, path) {
@@ -1409,7 +1409,8 @@ func Generic(ctx *countContext, path string) SourceStat {
 				stat.SLOC, stat.LLOC = cFamilyCounter(ctx, path, lang)
 			} else {
 				stat.SLOC, stat.LLOC = genericCounter(ctx, path,
-					lang.eolcomment, lang.verifier)
+					lang.eolcomment, lang.terminator,
+					lang.verifier)
 			}
 			if stat.SLOC > 0 {
 				stat.Language = lang.name
@@ -1452,7 +1453,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		lang := scriptingLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
 			stat.Language = lang.name
-			stat.SLOC, stat.LLOC = genericCounter(ctx, path, "#", nil)
+			stat.SLOC, stat.LLOC = genericCounter(ctx, path, "#", "", nil)
 			return stat
 		}
 	}
