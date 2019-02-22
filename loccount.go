@@ -485,6 +485,8 @@ func init() {
 	}
 	fortranLikes = []fortranLike{
 		{"fortran90", ".f90", f90comment, f90nocomment},
+		{"fortran95", ".f95", f90comment, f90nocomment},
+		{"fortran03", ".f03", f90comment, f90nocomment},
 		{"fortran", ".f77", f77comment, f77nocomment},
 		{"fortran", ".f", f77comment, f77nocomment},
 	}
