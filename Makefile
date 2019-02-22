@@ -37,6 +37,12 @@ VERS=$(shell sed <loccount.go -n -e '/.*version.*= *\(.*\)/s//\1/p')
 version:
 	@echo $(VERS)
 
+# Report which languages lack lloc support
+sloc: loccount
+	loccount -i -s >/tmp/sloc$$; loccount -i -l >/tmp/lloc$$
+	comm -23 /tmp/sloc$$ /tmp/lloc$$
+	rm -f /tmp/sloc$$ /tmp/lloc$$
+
 loccount-$(VERS).tar.gz: $(SOURCES) loccount.1
 	tar --transform='s:^:loccount-$(VERS)/:' --show-transformed-names -cvzf loccount-$(VERS).tar.gz $(SOURCES) loccount.1
 

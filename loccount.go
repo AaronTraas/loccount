@@ -318,12 +318,6 @@ func init() {
 	// otherwise the primitive duplicate director in listLanguages will
 	// be foiled.
 	//
-	// FIXME: Statement termination cannot presently be reliably
-	// detected in the following generic languages: javascript,
-	// html, xml, go, swift, haskell, css, m4, makefile, lisp,
-	// scheme, elisp, clojure, clojurescript, cobol, eiffel, lua,
-	// vhdl, pop11, icon.
-	//
 	// See https://en.wikipedia.org/wiki/Comparison_of_programming_languages_(syntax)
 	genericLanguages = []genericLanguage{
 		/* C family */
