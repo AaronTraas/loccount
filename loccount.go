@@ -1593,7 +1593,7 @@ func cocomo2000(lloc uint) float64 {
 func reportCocomo(loc uint, curve func(uint) float64) {
 	const cSCHEDMULT = 2.5
 	const cSCHEDEXP = 0.38
-	const cSALARY = 60384 // From payscale.com, late 2016
+	const cSALARY = 790000 // From Wikipedia, late 2019
 	const cOVERHEAD = 2.40
 	personMonths := curve(loc)
 	fmt.Printf("Development Effort Estimate, Person-Years (Person-Months) = %2.2f (%2.2f)\n", personMonths/12, personMonths)
