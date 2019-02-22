@@ -393,7 +393,8 @@ func init() {
 		{"f#", ".fsx", "", "", "//", "", true, "", nil},
 		{"f#", ".fscript", "", "", "//", "", true, "", nil},
 		{"kotlin", ".kt", "", "", "//", "", true, "", nil},
-		{"kotlin", ".kts", "", "", "//", "", true, "", nil},
+		{"dart", ".dart", "", "", "//", "", true, ";", nil},
+		{"mumps", ".m", "", "", ";", "", true, "", nil},
 		{"prolog", ".pl", "", "", "%", "", true, ".", reallyProlog},
 		{"mumps", ".mps", "", "", ";", "", true, "", nil},
 		{"mumps", ".m", "", "", ";", "", true, "", nil},
@@ -1143,6 +1144,7 @@ func genericCounter(ctx *countContext,
 	path string, eolcomment string, terminator string,
 	verifier func(*countContext, string) bool) (uint, uint) {
 	var sloc uint
+	var lloc uint
 
 	if verifier != nil && !verifier(ctx, path) {
 		return 0, 0
@@ -1159,10 +1161,13 @@ func genericCounter(ctx *countContext,
 		ctx.line = bytes.Trim(ctx.line, " \t\r\n")
 		if len(ctx.line) > 0 {
 			sloc++
+			if len(terminator) > 0 && strings.Contains(string(ctx.line), terminator) {
+				lloc++
+			}
 		}
 	}
 
-	return sloc, 0
+	return sloc, lloc
 }
 
 func pythonCounter(ctx *countContext, path string) (uint, uint) {
