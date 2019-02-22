@@ -1784,11 +1784,20 @@ func main() {
 	here, _ := os.Getwd()
 	go func() {
 		for i := range roots {
-			os.Chdir(roots[i])
-			// The system filepath.Walk() works here,
-			// but is slower.
-			walk(".", filter)
-			os.Chdir(here)
+			fi, err := os.Stat(roots[i])
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				break
+			}
+			if fi.Mode().IsDir() {
+				os.Chdir(roots[i])
+				// The system filepath.Walk() works here,
+				// but is slower.
+				walk(".", filter)
+				os.Chdir(here)
+			} else {
+				filter(roots[i], fi, nil)
+			}
 		}
 		close(pipeline)
 	}()
@@ -1869,7 +1878,7 @@ func main() {
 				r.llinecount,
 				r.filecount)
 		} else {
-			fmt.Printf("%-12s SLOC=%7d (%2.2f%%) LLOC=%d in %d files\n",
+			fmt.Printf("%-12s SLOC=%-7d (%2.2f%%)\tLLOC=%-7d in %d files\n",
 				r.language,
 				r.slinecount,
 				float64(r.slinecount)*100.0/float64(totals.slinecount),

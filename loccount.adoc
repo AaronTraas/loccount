@@ -5,7 +5,7 @@
 loccount - count lines of code in a source tree and perform cost estimation
 
 == SYNOPSIS ==
-*loccount* [-c] [-e] [-i] [-l] [-s] [-u] [-x pathlist] [-V] [-?] file-or-dir
+*loccount* [-c] [-e] [-i] [-l] [-s] [-u] [-x pathlist] [-V] [-?] file-or-dir...
 
 == DESCRIPTION ==
 
@@ -108,6 +108,10 @@ Ignore paths maching the specified Go regular expression.
 
 -V::
 Show program version and exit.
+
+Arguments following options may be either directories or files.
+Directories are recursed into. The report is generated on all
+paths specified on the command line.
 
 == HISTORY AND COMPATIBILITY ==
 
