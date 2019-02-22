@@ -19,6 +19,7 @@ hello.f fortran 6 0
 hello.f90 fortran90 6 0
 hello.fs f# 2 0
 hello.icn icon 5 0
+hello.kt kotlin 4 0
 hello.lsp lisp 3 0
 hello.m obj-c 6 3
 hello.m3 modula3 5 2
