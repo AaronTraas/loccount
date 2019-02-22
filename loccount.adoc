@@ -128,7 +128,7 @@ complexity came from a rare or edge case that the author judges to
 have become extinct since 2004.
 
 The reporting formats of loccount 2.x are substantially different from
-those in the 1.x versions due to absence of any LLOC fields.
+those in the 1.x versions due to absence of any LLOC fields in 1.x.
 
 The base salary used for cost estimation will differ between these
 tools depending on time of last release.

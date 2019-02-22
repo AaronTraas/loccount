@@ -53,5 +53,6 @@ wokka.cs c# 5 1
 wscript waf 65 65
 factorial.t
 hello.abc
+sieve.alg
 test1.lhs
 test2.lhs

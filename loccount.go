@@ -401,6 +401,7 @@ func init() {
 		{"rebol", ".r", "", "", "comment", "", false, "", nil},
 		{"simula", ".sim", "", "", "comment", "", false, ";", nil},
 		{"icon", ".icn", "", "", "#", "", false, "", nil},
+		//{"algol60", ".alg", "COMMENT\n", ";", "COMMENT", "", false, ";", nil},
 		// autoconf cruft
 		{"autotools", "config.h.in", "/*", "*/", "//", "", true, "", nil},
 		{"autotools", "autogen.sh", "", "", "#", "", true, "", nil},
