@@ -154,8 +154,12 @@ Literate Haskell (.lhs) is not supported.  (This is a regression from
 sloccount).
 
 LLOC counts in languages that use a semicolon as an Algol-like
-statement separator - Sather, Simula, CLU, -  are somewhat too high,
-because "end" is counted as a statement.
+statement separator, rather than a terminator, will be less accurate.
+When these require a semi after an end of block - Sather, Simula, CLU,
+- counts will run somewhat too high, because "end" is counted as a
+statement.  Conversely, reported LLOC will be a bit low in languages
+like Pascal, Modula, and Oberon that don't require a semi either after
+the last statement in the block or the block end.
 
 == REPORTING BUGS ==
 Report bugs to Eric S. Raymond <esr@thyrsus.com>.
