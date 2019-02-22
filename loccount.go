@@ -271,6 +271,7 @@ type pascalLike struct {
 	name            string
 	suffix          string
 	bracketcomments bool
+	terminator      string
 	verifier        func(*countContext, string) bool
 }
 
@@ -449,18 +450,18 @@ func init() {
 		{"expect", ".exp", "expect", reallyExpect},
 	}
 	pascalLikes = []pascalLike{
-		{"pascal", ".pas", true, nil},
-		{"pascal", ".p", true, reallyPascal},
-		{"pascal", ".inc", true, reallyPascal},
-		{"modula3", ".i3", false, nil},
-		{"modula3", ".m3", false, nil},
-		{"modula3", ".ig", false, nil},
-		{"modula3", ".mg", false, nil},
-		{"ml", ".ml", false, nil}, // Could be CAML or OCAML
-		{"mli", ".ml", false, nil},
-		{"mll", ".ml", false, nil},
-		{"mly", ".ml", false, nil},
-		{"oberon", ".mod", false, nil},
+		{"pascal", ".pas", true, ";", nil},
+		{"pascal", ".p", true, ";", reallyPascal},
+		{"pascal", ".inc", true, ";", reallyPascal},
+		{"modula3", ".i3", false, ";", nil},
+		{"modula3", ".m3", false, ";", nil},
+		{"modula3", ".ig", false, ";", nil},
+		{"modula3", ".mg", false, ";", nil},
+		{"ml", ".ml", false, "", nil}, // Could be CAML or OCAML
+		{"mli", ".ml", false, "", nil},
+		{"mll", ".ml", false, "", nil},
+		{"mly", ".ml", false, "", nil},
+		{"oberon", ".mod", false, ";", nil},
 	}
 
 	var ferr error
@@ -1305,13 +1306,14 @@ func perlCounter(ctx *countContext, path string) (uint, uint) {
 }
 
 // pascalCounter - Handle lanuages like Pascal and Modula 3
-func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
+func pascalCounter(ctx *countContext, path string, syntax pascalLike) (uint, uint) {
 	mode := stateNORMAL /* stateNORMAL, or stateINCOMMENT */
 	var sloc uint
+	var lloc uint
 	var startline uint
 
 	if syntax.verifier != nil && !syntax.verifier(ctx, path) {
-		return 0
+		return 0, 0
 	}
 
 	ctx.setup(path)
@@ -1337,6 +1339,9 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 				}
 				ctx.nonblank = false
 			}
+			if len(syntax.terminator) > 0 &&  c == syntax.terminator[0] {
+				lloc++
+			}
 		} else { /* stateINCOMMENT mode */
 			if syntax.bracketcomments && c == '}' {
 				mode = stateNORMAL
@@ -1360,7 +1365,7 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) uint {
 			path, startline)
 	}
 
-	return sloc
+	return sloc, lloc
 }
 
 func fortranCounter(ctx *countContext, path string, syntax fortranLike) uint {
@@ -1455,7 +1460,7 @@ func Generic(ctx *countContext, path string) SourceStat {
 		lang := pascalLikes[i]
 		if strings.HasSuffix(path, lang.suffix) {
 			stat.Language = lang.name
-			stat.SLOC = pascalCounter(ctx, path, lang)
+			stat.SLOC, stat.LLOC = pascalCounter(ctx, path, lang)
 			if stat.SLOC > 0 {
 				return stat
 			}
@@ -1618,17 +1623,19 @@ func listLanguages(lloc bool) []string {
 		}
 	}
 
-	if !lloc {
-		for i := range scriptingLanguages {
-			lang := scriptingLanguages[i].name
-			if lang != lastlang {
+	for i := range pascalLikes {
+		lang := pascalLikes[i].name
+		if lang != lastlang {
+			if !lloc || len(pascalLikes[i].terminator) > 0 {
 				names = append(names, lang)
 				lastlang = lang
 			}
 		}
+	}
 
-		for i := range pascalLikes {
-			lang := pascalLikes[i].name
+	if !lloc {
+		for i := range scriptingLanguages {
+			lang := scriptingLanguages[i].name
 			if lang != lastlang {
 				names = append(names, lang)
 				lastlang = lang

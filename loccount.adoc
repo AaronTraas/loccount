@@ -82,7 +82,7 @@ projects.  An EAF of 1.0 is assumed.
 
 -d _n_::
 Set debug level. At > 0, displays various progress messages.  Mainly
-of interest to developers.
+of interest to loccount developers.
 
 -e::
 Show the association between languages and file extensions.
@@ -119,7 +119,7 @@ Generally it will produce identical SLOC figures to sloccount for a
 language supported by both tools; the differences in whole-tree
 reports will mainly be due to better detection of some files sloccount
 left unclassified. Notably, for individual C and Perl files
-you can expect both tools to produce identical counts. However,
+you can expect both tools to produce identical SLOC. However,
 Python counts are different, because sloccount does not recognize
 and ignore single-quote multiline literals.
 

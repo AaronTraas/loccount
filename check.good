@@ -20,10 +20,10 @@ hello.f90 fortran90 6 0
 hello.icn icon 5 0
 hello.lsp lisp 3 0
 hello.m obj-c 6 3
-hello.m3 modula3 5 0
-hello.mod oberon 12 0
+hello.m3 modula3 5 2
+hello.mod oberon 12 9
 hello.mps mumps 3 0
-hello.pas pascal 4 0
+hello.pas pascal 4 1
 hello.pl1 pl/1 6 6
 hello.rb ruby 1 0
 hello.sa sather 5 0
@@ -39,7 +39,7 @@ ntpver shell 1 0
 occam-hello.f occam 5 0
 oneliner.pl perl 1 0
 packet.py python 849 843
-pascal-hello.p pascal 4 0
+pascal-hello.p pascal 4 2
 perl-filewrite perl 11 9
 pilotconv.l lex 36 20
 ruby-hello ruby 1 0
