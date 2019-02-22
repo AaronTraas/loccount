@@ -239,7 +239,7 @@ type SourceStat struct {
 }
 
 var debug int
-var exclusions []string
+var exclusions *regexp.Regexp
 var pipeline chan SourceStat
 
 // Data tables driving the recognition and counting of classes of languages.
@@ -1527,13 +1527,11 @@ func filter(path string, info os.FileInfo, err error) error {
 		}
 		return err
 	}
-	for i := range exclusions {
-		if path == exclusions[i] || strings.HasPrefix(path, exclusions[i]+"/") {
-			if debug > 0 {
-				fmt.Printf("exclusion '%s' filter failed: %s\n", exclusions, path)
-			}
-			return err
+	if exclusions != nil && exclusions.MatchString(path) {
+		if debug > 0 {
+			fmt.Printf("exclusion '%s' filter failed: %s\n", exclusions, path)
 		}
+		return err
 	}
 
 	/* has to come after the infix check for directory */
@@ -1731,10 +1729,24 @@ func main() {
 		fmt.Printf("loccount %s\n", version)
 		return
 	} else if slist {
-		fmt.Printf("%s\n", listLanguages(false))
+		ll := listLanguages(false)
+		if !individual {
+			fmt.Printf("%d: %s\n", len(ll), ll)
+		} else {
+			for _, lang := range ll {
+				fmt.Printf("%s\n", lang)
+			}
+		}
 		return
 	} else if llist {
-		fmt.Printf("%s\n", listLanguages(true))
+		ll := listLanguages(true)
+		if !individual {
+			fmt.Printf("%d: %s\n", len(ll), ll)
+		} else {
+			for _, lang := range ll {
+				fmt.Printf("%s\n", lang)
+			}
+		}
 		return
 	} else if extensions {
 		listExtensions()
@@ -1757,7 +1769,7 @@ func main() {
 	pipeline = make(chan SourceStat, chandepth)
 
 	if len(*excludePtr) > 0 {
-		exclusions = strings.Split(*excludePtr, ",")
+		exclusions = regexp.MustCompile(*excludePtr)
 	}
 	roots := flag.Args()
 

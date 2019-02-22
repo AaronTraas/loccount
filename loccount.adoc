@@ -94,13 +94,17 @@ Report file path, line count, and type for each individual path.
 Dump the results as self-describing JSON records for for postprocessing.
 
 -l::
-List languages for which we can report LLOC and exit.
+List languages for which we can report LLOC and exit. Combine with -i
+to list languages one per line.
 
 -s::
 List languages for which we can report SLOC and exit.
 
 -u::
 List paths of files that could not be classified into a type.
+
+-x _prefix_::
+Ignore paths maching the specified Go regular expression. 
 
 -V::
 Show program version and exit.
