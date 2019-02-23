@@ -469,6 +469,8 @@ func init() {
 		{"pascal", ".pas", true, ";", nil},
 		{"pascal", ".p", true, ";", reallyPascal},
 		{"pascal", ".inc", true, ";", reallyPascal},
+		{"modula2", ".i2", false, ";", nil},
+		{"modula2", ".m2", false, ";", nil},
 		{"modula3", ".i3", false, ";", nil},
 		{"modula3", ".m3", false, ";", nil},
 		{"modula3", ".ig", false, ";", nil},
