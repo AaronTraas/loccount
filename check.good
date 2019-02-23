@@ -35,6 +35,7 @@ hello.sh shell 1 0
 hello.tcl tcl 1 0
 hello.v verilog 4 2
 hello.vhdl vhdl 8 0
+hello.wrl vrml 4 0
 lisp-hello.l lisp 1 0
 multiline.go go 11 0
 mumps-hello.m mumps 3 0

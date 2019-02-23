@@ -416,6 +416,7 @@ func init() {
 		{"icon", ".icn", "", "", "#", "", nf, "", nil},
 		{"cobra", ".cobra", "/#", "#/", "#", "", eolwarn | cbs, "", nil},
 		{"algol60", ".alg", "", "", "COMMENT", `"""`, nf, ";", nil},
+		{"vrml", ".wrl", "", "", "#", "", eolwarn, "", nil},
 		// autoconf cruft
 		{"autotools", "config.h.in", "/*", "*/", "//", "", eolwarn, "", nil},
 		{"autotools", "autogen.sh", "", "", "#", "", eolwarn, "", nil},
