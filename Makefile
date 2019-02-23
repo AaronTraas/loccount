@@ -13,7 +13,8 @@ clean:
 install: loccount
 	go install
 
-check: loccount 
+check: loccount
+	@loccount -s >/dev/null
 	@(./loccount -i tests; ./loccount -u tests) | diff -u check.good -
 	@echo "No output is good news"
 

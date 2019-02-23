@@ -63,3 +63,5 @@ TODO items specific to the Go implementation start here:
 * Take HTML and XML out of the penalty box? (We have an HTML test load)
 
 * Beat Go into not barfing on ABC comments?  (We have a test load)
+
+* Tell Objective-C .m from MUMPS .m?

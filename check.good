@@ -23,7 +23,7 @@ hello.fs f# 2 0
 hello.icn icon 5 0
 hello.kt kotlin 4 0
 hello.lsp lisp 3 0
-hello.m obj-c 6 3
+hello.m objective-c 6 3
 hello.m3 modula3 5 2
 hello.mod oberon 12 9
 hello.mps mumps 3 0

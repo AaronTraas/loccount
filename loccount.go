@@ -343,17 +343,18 @@ func init() {
 		{"c++", ".cc", "/*", "*/", "//", "", eolwarn | cbs | cpp, ";", nil},
 		{"java", ".java", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
 		{"javascript", ".js", "/*", "*/", "//", "", eolwarn | cbs, "", nil},
-		{"obj-c", ".m", "/*", "*/", "//", "", eolwarn | cbs | cpp, ";", reallyObjectiveC},
+		{"objective-c", ".m", "/*", "*/", "//", "", eolwarn | cbs | cpp, ";", reallyObjectiveC},
+		{"objective-c", ".mm", "/*", "*/", "//", "", eolwarn | cbs | cpp, ";", reallyObjectiveC},
 		{"c#", ".cs", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
 		//{"html", ".html", "<!--", "-->", "", "", nf, "", nil},
 		//{"html", ".htm", "<!--", "-->", "", "", nf, "", nil},
 		//{"xml", ".xml", "<!--", "-->", "", "", nf, "", nil},
 		{"php", ".php", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
-		{"php3", ".php", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
-		{"php4", ".php", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
-		{"php5", ".php", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
-		{"php6", ".php", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
-		{"php7", ".php", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
+		{"php3", ".php3", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
+		{"php4", ".php4", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
+		{"php5", ".php5", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
+		{"php6", ".php6", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
+		{"php7", ".php7", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
 		{"go", ".go", "/*", "*/", "//", "`", eolwarn | cbs | gotick, "", nil},
 		{"swift", ".swift", "/*", "*/", "//", "", eolwarn, "", nil},
 		{"sql", ".sql", "/*", "*/", "--", "", nf, "", nil},
@@ -406,7 +407,7 @@ func init() {
 		{"kotlin", ".kt", "", "", "//", "", eolwarn, "", nil},
 		{"dart", ".dart", "", "", "//", "", eolwarn, ";", nil},
 		{"prolog", ".pl", "", "", "%", "", eolwarn, ".", reallyProlog},
-		{"mumps", ".m", "", "", ";", "", eolwarn, "", nil},
+		//{"mumps", ".m", "", "", ";", "", eolwarn, "", nil},	// See obj-c
 		{"mumps", ".mps", "", "", ";", "", eolwarn, "", nil},
 		{"mumps", ".m", "", "", ";", "", eolwarn, "", nil},
 		{"pop11", ".p", "", "", ";", "", eolwarn, "", reallyPOP11},
@@ -472,9 +473,9 @@ func init() {
 		{"modula3", ".ig", false, ";", nil},
 		{"modula3", ".mg", false, ";", nil},
 		{"ml", ".ml", false, "", nil}, // Could be CAML or OCAML
-		{"mli", ".ml", false, "", nil},
-		{"mll", ".ml", false, "", nil},
-		{"mly", ".ml", false, "", nil},
+		{"ml", ".mli", false, "", nil},
+		{"ml", ".mll", false, "", nil},
+		{"ml", ".mly", false, "", nil},
 		{"oberon", ".mod", false, ";", nil},
 	}
 
@@ -1663,43 +1664,69 @@ func reportCocomo(loc uint, curve func(uint) float64) {
 	fmt.Printf(" (average salary = $%d/year, overhead = %2.2f).\n", cSALARY, cOVERHEAD)
 }
 
+// listLanguages lists all languages for which we can extract line counts.
+// It also performs a sanity check on identifying file extemsions and
+// interpreter names.
 func listLanguages(lloc bool) []string {
 	names := []string{"python", "waf", "perl"}
 	var lastlang string
+	counts := make(map[string]int)
 	for i := range genericLanguages {
-		lang := genericLanguages[i].name
-		if lang != lastlang {
+		lang := genericLanguages[i]
+		if lang.verifier == nil {
+			counts[lang.suffix]++
+		}
+		if counts[lang.suffix] > 1 {
+			fmt.Fprintf(os.Stderr, "loccount: extension %s duplicated\n", lang.suffix)
+		}
+		if lang.name != lastlang {
 			if !lloc || len(genericLanguages[i].terminator) > 0 {
-				names = append(names, lang)
-				lastlang = lang
+				names = append(names, lang.name)
+				lastlang = lang.name
 			}
 		}
 	}
 
 	for i := range pascalLikes {
-		lang := pascalLikes[i].name
-		if lang != lastlang {
+		lang := pascalLikes[i]
+		if lang.verifier == nil {
+			counts[lang.suffix]++
+		}
+		if counts[lang.suffix] > 1 {
+			fmt.Fprintf(os.Stderr, "loccount: extension %s duplicated\n", lang.suffix)
+		}
+		if lang.name != lastlang {
 			if !lloc || len(pascalLikes[i].terminator) > 0 {
-				names = append(names, lang)
-				lastlang = lang
+				names = append(names, lang.name)
+				lastlang = lang.name
 			}
 		}
 	}
 
 	if !lloc {
 		for i := range scriptingLanguages {
-			lang := scriptingLanguages[i].name
-			if lang != lastlang {
-				names = append(names, lang)
-				lastlang = lang
+			lang := scriptingLanguages[i]
+			if lang.verifier == nil {
+				counts[lang.hashbang]++
+			}
+			if counts[lang.hashbang] > 1 {
+				fmt.Fprintf(os.Stderr, "loccount: hashbang %s duplicated\n", lang.suffix)
+			}
+			if lang.name != lastlang {
+				names = append(names, lang.name)
+				lastlang = lang.name
 			}
 		}
 
 		for i := range fortranLikes {
-			lang := fortranLikes[i].name
-			if lang != lastlang {
-				names = append(names, lang)
-				lastlang = lang
+			lang := fortranLikes[i]
+			if counts[lang.suffix] > 1 {
+				fmt.Fprintf(os.Stderr, "loccount: extension %s duplicated\n", lang.suffix)
+			}
+			counts[lang.suffix]++
+			if lang.name != lastlang {
+				names = append(names, lang.name)
+				lastlang = lang.name
 			}
 		}
 	}
