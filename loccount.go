@@ -306,11 +306,11 @@ var cHeaderPriority []string
 var generated string
 
 // Syntax flags
-const nf	= 0x00	// no flags
-const eolwarn	= 0x01	// Warn on EOL in string
-const cbs	= 0x02	// C-style backslash escapes
-const gotick	= 0x04	// Strong backtick a la Go
-const cpp       = 0x08	// Count C preprocessor directives or Objective C #import
+const nf = 0x00      // no flags
+const eolwarn = 0x01 // Warn on EOL in string
+const cbs = 0x02     // C-style backslash escapes
+const gotick = 0x04  // Strong backtick a la Go
+const cpp = 0x08     // Count C preprocessor directives or Objective C #import
 
 func init() {
 	// For speed, try to put more common languages and extensions
@@ -332,29 +332,29 @@ func init() {
 	// See https://en.wikipedia.org/wiki/Comparison_of_programming_languages_(syntax)
 	genericLanguages = []genericLanguage{
 		/* C family */
-		{"c", ".c", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
-		{"c-header", ".h", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
-		{"c-header", ".hpp", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
-		{"c-header", ".hxx", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
-		{"yacc", ".y", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
-		{"lex", ".l", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", reallyLex},
-		{"c++", ".cpp", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
-		{"c++", ".cxx", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
-		{"c++", ".cc", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", nil},
-		{"java", ".java", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"javascript", ".js", "/*", "*/", "//", "", eolwarn|cbs, "", nil},
-		{"obj-c", ".m", "/*", "*/", "//", "", eolwarn|cbs|cpp, ";", reallyObjectiveC},
-		{"c#", ".cs", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
+		{"c", ".c", "/*", "*/", "//", "", eolwarn | cbs | cpp, ";", nil},
+		{"c-header", ".h", "/*", "*/", "//", "", eolwarn | cbs | cpp, ";", nil},
+		{"c-header", ".hpp", "/*", "*/", "//", "", eolwarn | cbs | cpp, ";", nil},
+		{"c-header", ".hxx", "/*", "*/", "//", "", eolwarn | cbs | cpp, ";", nil},
+		{"yacc", ".y", "/*", "*/", "//", "", eolwarn | cbs | cpp, ";", nil},
+		{"lex", ".l", "/*", "*/", "//", "", eolwarn | cbs | cpp, ";", reallyLex},
+		{"c++", ".cpp", "/*", "*/", "//", "", eolwarn | cbs | cpp, ";", nil},
+		{"c++", ".cxx", "/*", "*/", "//", "", eolwarn | cbs | cpp, ";", nil},
+		{"c++", ".cc", "/*", "*/", "//", "", eolwarn | cbs | cpp, ";", nil},
+		{"java", ".java", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
+		{"javascript", ".js", "/*", "*/", "//", "", eolwarn | cbs, "", nil},
+		{"obj-c", ".m", "/*", "*/", "//", "", eolwarn | cbs | cpp, ";", reallyObjectiveC},
+		{"c#", ".cs", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
 		//{"html", ".html", "<!--", "-->", "", "", nf, "", nil},
 		//{"html", ".htm", "<!--", "-->", "", "", nf, "", nil},
 		//{"xml", ".xml", "<!--", "-->", "", "", nf, "", nil},
-		{"php", ".php", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"php3", ".php", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"php4", ".php", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"php5", ".php", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"php6", ".php", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"php7", ".php", "/*", "*/", "//", "", eolwarn|cbs, ";", nil},
-		{"go", ".go", "/*", "*/", "//", "`", eolwarn|cbs|gotick, "", nil},
+		{"php", ".php", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
+		{"php3", ".php", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
+		{"php4", ".php", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
+		{"php5", ".php", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
+		{"php6", ".php", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
+		{"php7", ".php", "/*", "*/", "//", "", eolwarn | cbs, ";", nil},
+		{"go", ".go", "/*", "*/", "//", "`", eolwarn | cbs | gotick, "", nil},
 		{"swift", ".swift", "/*", "*/", "//", "", eolwarn, "", nil},
 		{"sql", ".sql", "/*", "*/", "--", "", nf, "", nil},
 		{"haskell", ".hs", "{-", "-}", "--", "", eolwarn, "", nil},
@@ -413,7 +413,7 @@ func init() {
 		{"rebol", ".r", "", "", "comment", "", nf, "", nil},
 		{"simula", ".sim", "", "", "comment", "", nf, ";", nil},
 		{"icon", ".icn", "", "", "#", "", nf, "", nil},
-		{"cobra", ".cobra", "/#", "#/", "#", "", eolwarn|cbs, "", nil},
+		{"cobra", ".cobra", "/#", "#/", "#", "", eolwarn | cbs, "", nil},
 		{"algol60", ".alg", "", "", "COMMENT", `"""`, nf, ";", nil},
 		// autoconf cruft
 		{"autotools", "config.h.in", "/*", "*/", "//", "", eolwarn, "", nil},
@@ -693,7 +693,7 @@ func reallyObjectiveC(ctx *countContext, path string) bool {
 	}
 
 	if debug > 0 {
-		fmt.Fprint(os.Stderr, "objc verifier returned %t on %s\n", isObjC, path)
+		fmt.Fprintf(os.Stderr, "objc verifier returned %t on %s\n", isObjC, path)
 	}
 
 	return isObjC
@@ -715,7 +715,7 @@ func hasKeywords(ctx *countContext, path string, lang string, tells []string) bo
 	}
 
 	if debug > 0 {
-		fmt.Fprint(os.Stderr, "%s verifier returned %t on %s\n",
+		fmt.Fprintf(os.Stderr, "%s verifier returned %t on %s\n",
 			lang, matching, path)
 	}
 
@@ -834,7 +834,7 @@ func reallyExpect(ctx *countContext, path string) bool {
 	}
 
 	if debug > 0 {
-		fmt.Fprint(os.Stderr, "expect verifier returned %t on %s\n", isExpect, path)
+		fmt.Fprintf(os.Stderr, "expect verifier returned %t on %s\n", isExpect, path)
 	}
 
 	return isExpect
@@ -953,7 +953,7 @@ func reallyPascal(ctx *countContext, path string) bool {
 		(hasProgram && hasBegin && foundTerminatingEnd))
 
 	if debug > 0 {
-		fmt.Fprint(os.Stderr, "pascal verifier returned %t on %s\n", isPascal, path)
+		fmt.Fprintf(os.Stderr, "pascal verifier returned %t on %s\n", isPascal, path)
 	}
 
 	return isPascal
@@ -982,10 +982,10 @@ func wasGeneratedAutomatically(ctx *countContext, path string, eolcomment string
 	}
 
 	for ctx.munchline() && i > 0 {
-		//fmt.Fprint(os.Stderr, "Matching %s against %s", ctx.line, re)
+		//fmt.Fprintf(os.Stderr, "Matching %s against %s", ctx.line, re)
 		if cre.Find(ctx.line) != nil {
 			if debug > 0 {
-				fmt.Fprint(os.Stderr, "%s: is generated\n", path)
+				fmt.Fprintf(os.Stderr, "%s: is generated\n", path)
 			}
 			return true
 		}
@@ -1087,7 +1087,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 				for {
 					c, err = ctx.getachar()
 					if err != nil {
-						fmt.Fprint(os.Stderr, "WARNING - unterminated backtick, line %d, file %s\n", startLine, path)
+						fmt.Fprintf(os.Stderr, "WARNING - unterminated backtick, line %d, file %s\n", startLine, path)
 					}
 					if c == '`' {
 						break
@@ -1115,7 +1115,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 				// We found a bare newline in a string without
 				// preceding backslash.
 				if syntax.property(eolwarn) {
-					fmt.Fprint(os.Stderr, "WARNING - newline in string, line %d, file %s\n", ctx.lineNumber, path)
+					fmt.Fprintf(os.Stderr, "WARNING - newline in string, line %d, file %s\n", ctx.lineNumber, path)
 				}
 
 				// We COULD warn & reset mode to
@@ -1176,10 +1176,10 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 	}
 
 	if mode == stateINCOMMENT {
-		fmt.Fprint(os.Stderr, "%q, line %d: ERROR - terminated in comment beginning here\n",
+		fmt.Fprintf(os.Stderr, "%q, line %d: ERROR - terminated in comment beginning here\n",
 			path, startline)
 	} else if mode == stateINSTRING {
-		fmt.Fprint(os.Stderr, "%q, line %d: ERROR - terminated in string beginning here\n",
+		fmt.Fprintf(os.Stderr, "%q, line %d: ERROR - terminated in string beginning here\n",
 			path, startline)
 	}
 
@@ -1331,7 +1331,7 @@ func perlCounter(ctx *countContext, path string) (uint, uint) {
 		} else if len(heredoc) == 0 && bytes.HasPrefix(ctx.line, []byte("=cut")) {
 			// Ending a POD?
 			if !isinpod {
-				fmt.Fprint(os.Stderr, "%q, %d: cut without pod start\n",
+				fmt.Fprintf(os.Stderr, "%q, %d: cut without pod start\n",
 					path, ctx.lineNumber)
 			}
 			isinpod = false
@@ -1392,7 +1392,7 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) (uint, uin
 				}
 				ctx.nonblank = false
 			}
-			if len(syntax.terminator) > 0 &&  c == syntax.terminator[0] {
+			if len(syntax.terminator) > 0 && c == syntax.terminator[0] {
 				lloc++
 			}
 		} else { /* stateINCOMMENT mode */
@@ -1411,10 +1411,10 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) (uint, uin
 	ctx.nonblank = false
 
 	if mode == stateINCOMMENT {
-		fmt.Fprint(os.Stderr, "%q, line %d: ERROR - terminated in comment beginning here.\n",
+		fmt.Fprintf(os.Stderr, "%q, line %d: ERROR - terminated in comment beginning here.\n",
 			path, startline)
 	} else if mode == stateINSTRING {
-		fmt.Fprint(os.Stderr, "%q, line %d: ERROR - terminated in string beginning here.\n",
+		fmt.Fprintf(os.Stderr, "%q, line %d: ERROR - terminated in string beginning here.\n",
 			path, startline)
 	}
 
@@ -1625,12 +1625,11 @@ func filter(path string, info os.FileInfo, err error) error {
 }
 
 type countRecord struct {
-	language  string
+	language   string
 	slinecount uint
 	llinecount uint
-	filecount uint
+	filecount  uint
 }
-
 
 func cocomo81(sloc uint) float64 {
 	const cTIMEMULT = 2.4
