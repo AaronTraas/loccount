@@ -1,0 +1,7 @@
+/#
+ # Cobra has an unusual block-comment syntax
+ #/
+class Hello
+
+    def main
+        print 'Hello, world.'
