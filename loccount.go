@@ -373,10 +373,10 @@ func init() {
 		{"makefile", "makefile", "", "", "#", "", eolwarn, "", nil},
 		{"makefile", "Imakefile", "", "", "#", "", eolwarn, "", nil},
 		{"m4", ".m4", "", "", "#", "", eolwarn, "", nil},
-		{"lisp", ".lisp", "", "", ";", "", eolwarn, "", nil},
-		{"lisp", ".lsp", "", "", ";", "", eolwarn, "", nil}, // XLISP
-		{"lisp", ".cl", "", "", ";", "", eolwarn, "", nil},  // Common Lisp
-		{"lisp", ".l", "", "", ";", "", eolwarn, "", nil},
+		{"lisp", ".lisp", "#|", "|#", ";", "", eolwarn, "", nil},
+		{"lisp", ".lsp", "#|", "|#", ";", "", eolwarn, "", nil}, // XLISP
+		{"lisp", ".cl", "#|", "|#", ";", "", eolwarn, "", nil},  // Common Lisp
+		{"lisp", ".l", "#|", "|#", ";", "", eolwarn, "", nil},
 		{"scheme", ".scm", "", "", ";", "", eolwarn, "", nil},
 		{"elisp", ".el", "", "", ";", "", eolwarn, "", nil},    // Emacs Lisp
 		{"clojure", ".clj", "", "", ";", "", eolwarn, "", nil}, // Clojure
@@ -580,7 +580,16 @@ func (ctx *countContext) teardown() {
 
 // consume - conditionally consume an expected byte sequence
 func (ctx *countContext) consume(expect []byte) bool {
+	if debug > 1 {
+		fmt.Fprintf(os.Stderr, "consume: %q\n", expect)
+	}
+	if len(expect) == 0 {
+		return true
+	}
 	s, err := ctx.rc.Peek(len(expect))
+	if debug > 1 {
+		fmt.Fprintf(os.Stderr, "consume saw: %q\n", s)
+	}
 	if err == nil && bytes.Equal(s, expect) {
 		ctx.rc.Discard(len(expect))
 		return true
@@ -1035,6 +1044,10 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 			break
 		}
 
+		if debug > 1 {
+			fmt.Fprintf(os.Stderr, "cFamilyCounter: top of loop %c\n", c)
+		}
+
 		if mode == stateNORMAL {
 			if !ctx.lexfile && c == '"' {
 				ctx.nonblank = true
@@ -1058,7 +1071,10 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 				mode = stateINCOMMENT
 				commentType = commentBLOCK
 				startline = ctx.lineNumber
-			} else if (syntax.eolcomment != "") && c == syntax.eolcomment[0] && (len(syntax.eolcomment) > 1 && ctx.ispeek(syntax.eolcomment[1])) {
+			} else if (syntax.eolcomment != "") && c == syntax.eolcomment[0] && (len(syntax.eolcomment) == 1 || ctx.consume([]byte(syntax.eolcomment[1:]))) {
+				if debug > 1 {
+					fmt.Fprintf(os.Stderr, "cFamilyCounter: saw winged-comment leader %s\n", syntax.eolcomment)
+				}
 				c, _ = ctx.getachar()
 				mode = stateINCOMMENT
 				commentType = commentTRAILING
@@ -1138,10 +1154,16 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 			// # at start of line - assume it's a cpp directive
 			if syntax.property(cpp) && ctx.consume([]byte("#")) {
 				lloc++
+				if debug > 1 {
+					fmt.Fprintf(os.Stderr, "cFamilyCounter: cpp lloc++\n")
+				}
 			}
 		}
 		if mode == stateNORMAL && len(syntax.terminator) > 0 && c == syntax.terminator[0] {
 			lloc++
+			if debug > 1 {
+				fmt.Fprintf(os.Stderr, "cFamilyCounter: eol lloc++\n")
+			}
 		}
 	}
 	/* We're done with the file.  Handle EOF-without-EOL. */
