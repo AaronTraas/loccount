@@ -16,7 +16,7 @@ install: loccount
 check: loccount
 	@loccount -s >/dev/null
 	@(./loccount -i tests; ./loccount -u tests) | diff -u check.good -
-	@echo "No output is good news"
+	@echo "No check output is good news"
 
 testbuild: loccount
 	@(./loccount -i tests; ./loccount -u tests) >check.good
