@@ -113,6 +113,11 @@ Arguments following options may be either directories or files.
 Directories are recursed into. The report is generated on all
 paths specified on the command line.
 
+== EXIT VALUES ==
+
+Normally 0.  1 in -s or -e mode if a non-duplication check on
+file extensions or hashbangs fails.
+
 == HISTORY AND COMPATIBILITY ==
 
 The algorithms in this code originated with David A. Wheeler's

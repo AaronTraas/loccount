@@ -32,10 +32,10 @@ languages fall into one of the following groups:
   extension and verifier.  These languages have two kinds of comment.
   One is a block comment delimited by two distinct strings and the
   second is a winged comment introduced by a third string and
-  terminated by newline.  The following bool signals whether newlines
-  are permitted in strings.  You can add support simply by appending
+  terminated by newline.You can add support simply by appending
   an initializer to the genericLanguages table; any entry with a
-  nonempty comment leader invokes C-like parsing.
+  nonempty block-comment leader invokes C-like parsing.  See tthe
+  list of syntax flags for more.
 
 * Generic languages have only winged comments, usually led with #.
   This code recognizes them by file extension and verifier.  You can
@@ -323,7 +323,8 @@ func init() {
 	// If you have multiple entries for an extension, (a) all the entries
 	// with verifiers should go first, and (b) there should be at most one
 	// entry without a verifier (because any second and later ones will be
-	// pre-empted by it).
+	// pre-empted by it).  Run loccount -s to check this property; if it's
+	// violated you get a message on stderr.
 	//
 	// All entries for a given language should be in a contiguous span,
 	// otherwise the primitive duplicate director in listLanguages will
@@ -1670,10 +1671,11 @@ func reportCocomo(loc uint, curve func(uint) float64) {
 // listLanguages lists all languages for which we can extract line counts.
 // It also performs a sanity check on identifying file extemsions and
 // interpreter names.
-func listLanguages(lloc bool) []string {
+func listLanguages(lloc bool) ([]string, bool) {
 	names := []string{"python", "waf", "perl"}
 	var lastlang string
 	counts := make(map[string]int)
+	duplicates := false
 	for i := range genericLanguages {
 		lang := genericLanguages[i]
 		if lang.verifier == nil {
@@ -1681,6 +1683,7 @@ func listLanguages(lloc bool) []string {
 		}
 		if counts[lang.suffix] > 1 {
 			fmt.Fprintf(os.Stderr, "loccount: extension %s duplicated\n", lang.suffix)
+			duplicates = true
 		}
 		if lang.name != lastlang {
 			if !lloc || len(genericLanguages[i].terminator) > 0 {
@@ -1697,6 +1700,7 @@ func listLanguages(lloc bool) []string {
 		}
 		if counts[lang.suffix] > 1 {
 			fmt.Fprintf(os.Stderr, "loccount: extension %s duplicated\n", lang.suffix)
+			duplicates = true
 		}
 		if lang.name != lastlang {
 			if !lloc || len(pascalLikes[i].terminator) > 0 {
@@ -1714,6 +1718,7 @@ func listLanguages(lloc bool) []string {
 			}
 			if counts[lang.hashbang] > 1 {
 				fmt.Fprintf(os.Stderr, "loccount: hashbang %s duplicated\n", lang.suffix)
+				duplicates = true
 			}
 			if lang.name != lastlang {
 				names = append(names, lang.name)
@@ -1725,6 +1730,7 @@ func listLanguages(lloc bool) []string {
 			lang := fortranLikes[i]
 			if counts[lang.suffix] > 1 {
 				fmt.Fprintf(os.Stderr, "loccount: extension %s duplicated\n", lang.suffix)
+				duplicates = true
 			}
 			counts[lang.suffix]++
 			if lang.name != lastlang {
@@ -1734,7 +1740,7 @@ func listLanguages(lloc bool) []string {
 		}
 	}
 	sort.Strings(names)
-	return names
+	return names, duplicates
 }
 
 func listExtensions() {
@@ -1762,9 +1768,12 @@ func listExtensions() {
 		lang := fortranLikes[i]
 		extensions[lang.name] = append(extensions[lang.name], lang.suffix)
 	}
-	names := listLanguages(false)
+	names, duplicates := listLanguages(false)
 	for i := range names {
 		fmt.Printf("%s: %v\n", names[i], extensions[names[i]])
+	}
+	if duplicates {
+		os.Exit(1)
 	}
 }
 
@@ -1819,7 +1828,7 @@ func main() {
 		fmt.Printf("loccount %s\n", version)
 		return
 	} else if slist {
-		ll := listLanguages(false)
+		ll, duplicates := listLanguages(false)
 		if !individual {
 			fmt.Printf("%d: %s\n", len(ll), ll)
 		} else {
@@ -1827,9 +1836,12 @@ func main() {
 				fmt.Printf("%s\n", lang)
 			}
 		}
+		if duplicates {
+			os.Exit(1)
+		}
 		return
 	} else if llist {
-		ll := listLanguages(true)
+		ll, _ := listLanguages(true)
 		if !individual {
 			fmt.Printf("%d: %s\n", len(ll), ll)
 		} else {
