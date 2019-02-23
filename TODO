@@ -65,3 +65,11 @@ TODO items specific to the Go implementation start here:
 * Beat Go into not barfing on ABC comments?  (We have a test load)
 
 * Tell Objective-C .m from MUMPS .m?
+
+* sloccount handles different asm comment conventions.  We should too.
+
+* How to weight EAF: https://dwheeler.com/sloccount/sloccount.html#cocomo
+
+* Check that we handle every extension in sloccount's list.
+
+* Detect inline assembler in C?  https://en.wikipedia.org/wiki/Inline_assembler
