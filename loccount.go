@@ -65,6 +65,8 @@ You may add multiple entries with the same language name, but extensions
 must be unique across all tables - *except* that entries with verifiers
 may share extensions with each other and with one trailing entry that has
 no verifier.
+
+Important last step in adding a language: Add an example to the test suite!
 */
 
 // Following code swiped from Michael T. Jones's "walk" package.
