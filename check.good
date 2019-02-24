@@ -41,7 +41,7 @@ hello.v verilog 4 2
 hello.vhdl vhdl 8 0
 hello.wrl vrml 4 0
 lisp-hello.l lisp 1 0
-multiline.go go 11 0
+multiline.go go 11 4
 mumps-hello.m mumps 3 0
 ntp_fp.h c-header 254 179
 ntpver shell 1 0
@@ -54,7 +54,7 @@ pilotconv.l lex 36 20
 ruby-hello ruby 1 0
 sieve.alg algol60 47 20
 simula.sim simula 6 4
-singleline.go go 4 0
+singleline.go go 4 1
 sreplace.r rebol 7 0
 sshlogin.exp expect 16 0
 test.hs haskell 8 0

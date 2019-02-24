@@ -6,7 +6,11 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"io"
+	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -1235,6 +1239,63 @@ func genericCounter(ctx *countContext, path string,
 	return stats
 }
 
+func goCounter(path string) uint {
+	var lloc uint;
+
+	content, err1 := ioutil.ReadFile(path)
+	if err1 != nil {
+		return 0
+	}
+
+	fset := token.NewFileSet() // positions are relative to fset
+	f, err2 := parser.ParseFile(fset, path, content, 0)
+	if err2 != nil {
+		return 0
+	}
+
+	// Inspect the AST and print all identifiers and literals.
+	ast.Inspect(f, func(n ast.Node) bool {
+		switch n.(type) {
+		case *ast.AssignStmt:	// sssignment or short variable declaration
+			lloc++
+		case *ast.BranchStmt:	// break, continue, goto, or fallthrough
+			lloc++
+		case *ast.DeclStmt:	// declaration in a statement list.
+			lloc++
+		case *ast.DeferStmt:	// a defer statement.
+			lloc++
+		case *ast.ExprStmt:	// stand-alone expression in a statement list.
+			lloc++
+		case *ast.GenDecl:	// an import, constant, type or variable declaration
+			lloc++
+		case *ast.GoStmt:	// go xxxx 
+			lloc++
+		//case *ast.IfStmt:	// an if statement
+		//	lloc++
+		case *ast.ImportSpec:	// package import line
+			lloc++
+		case *ast.IncDecStmt:	// incement or decrement statement
+			lloc++
+		//case *ast.RangeStmt:	// for statement with a range clause.
+		//	lloc++
+		case *ast.ReturnStmt:	// a return statement.
+			lloc++
+		//case *ast.SelectStmt:	// a select statement.
+		//	lloc++
+		case *ast.SendStmt:	// a send statement.
+			lloc++
+		//case *ast.SwitchStmt:	// a switch statement.
+		//	lloc++
+		}
+		// Not counted: BlockStmt, FuncDecl
+		// Including IfStmt, RangeStmt, SelectStmt, SwitchStmt
+		// is probably a better complexity metric, but no longer
+		// strictly comparable with counting semis in C.
+		return true
+	})
+	return lloc
+}
+
 func pythonCounter(ctx *countContext, path string) SourceStat {
 	var isintriple bool  // A triple-quote is in effect.
 	var isincomment bool // We are in a multiline (triple-quoted) comment.
@@ -1480,6 +1541,9 @@ func countGeneric(path string) []SourceStat {
 				return []SourceStat{singleStat}
 			} else if len(lang.commentleader) > 0 {
 				stats := cFamilyCounter(ctx, path, lang)
+				if strings.HasSuffix(path, ".go") {
+					stats[0].LLOC = goCounter(path)
+				}
 				if stats[0].nonEmpty() {
 					return stats
 				}
@@ -1693,7 +1757,7 @@ func reportCocomo(loc uint, curve func(uint) float64) {
 // It also performs a sanity check on identifying file extemsions and
 // interpreter names.
 func listLanguages(lloc bool) ([]string, bool) {
-	names := []string{"python", "waf", "perl"}
+	names := []string{"python", "waf", "perl", "go"}
 	var lastlang string
 	counts := make(map[string]int)
 	duplicates := false
