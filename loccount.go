@@ -562,6 +562,7 @@ const stateINSTRING = 1      // in single-line string
 const stateINMULTISTRING = 2 // in multi-line string
 const stateINCOMMENT = 3     // in comment
 
+// countContext is state corresoding to a single source file
 type countContext struct {
 	line             []byte
 	lineNumber       uint
@@ -1446,9 +1447,10 @@ func fortranCounter(ctx *countContext, path string, syntax fortranLike) uint {
 }
 
 // Generic - recognize lots of languages with generic syntax
-func countGeneric(path string) SourceStat {
-	var stat SourceStat
+func countGeneric(path string) []SourceStat {
 	ctx := new(countContext)
+	var singleStat SourceStat
+	singleStat.Path = path
 
 	autofilter := func(eolcomment string) bool {
 		if wasGeneratedAutomatically(ctx, path, eolcomment) {
@@ -1463,73 +1465,71 @@ func countGeneric(path string) SourceStat {
 		return false
 	}
 
-	stat.Path = path
-
 	for i := range genericLanguages {
 		lang := genericLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) {
 			if autofilter(lang.eolcomment) {
-				return stat
+				return []SourceStat{singleStat}
 			} else if len(lang.commentleader) > 0 {
-				stat.SLOC, stat.LLOC = cFamilyCounter(ctx, path, lang)
+				singleStat.SLOC, singleStat.LLOC = cFamilyCounter(ctx, path, lang)
 			} else {
-				stat.SLOC, stat.LLOC = genericCounter(ctx, path,
+				singleStat.SLOC, singleStat.LLOC = genericCounter(ctx, path,
 					lang.eolcomment, lang.terminator,
 					lang.verifier)
 			}
-			if stat.SLOC > 0 {
-				stat.Language = lang.name
-				return stat
+			if singleStat.SLOC > 0 {
+				singleStat.Language = lang.name
+				return []SourceStat{singleStat}
 			}
 		}
 	}
 
 	if strings.HasSuffix(path, ".py") || hashbang(ctx, path, "python") {
 		if autofilter("#") {
-			return stat
+			return []SourceStat{singleStat}
 		}
-		stat.Language = "python"
-		stat.SLOC, stat.LLOC = pythonCounter(ctx, path)
-		return stat
+		singleStat.Language = "python"
+		singleStat.SLOC, singleStat.LLOC = pythonCounter(ctx, path)
+		return []SourceStat{singleStat}
 	}
 
 	if strings.HasSuffix(path, ".pl") || strings.HasSuffix(path, ".pm") || strings.HasSuffix(path, ".ph") || hashbang(ctx, path, "perl") {
 		if autofilter("#") {
-			return stat
+			return []SourceStat{singleStat}
 		}
-		stat.Language = "perl"
-		stat.SLOC, stat.LLOC = perlCounter(ctx, path)
-		return stat
+		singleStat.Language = "perl"
+		singleStat.SLOC, singleStat.LLOC = perlCounter(ctx, path)
+		return []SourceStat{singleStat}
 	}
 
 	if filepath.Base(path) == "wscript" {
 		if autofilter("#") {
-			return stat
+			return []SourceStat{singleStat}
 		}
-		stat.Language = "waf"
-		stat.SLOC, stat.LLOC = pythonCounter(ctx, path)
-		return stat
+		singleStat.Language = "waf"
+		singleStat.SLOC, singleStat.LLOC = pythonCounter(ctx, path)
+		return []SourceStat{singleStat}
 	}
 
 	for i := range scriptingLanguages {
 		if autofilter("#") {
-			return stat
+			return []SourceStat{singleStat}
 		}
 		lang := scriptingLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
-			stat.Language = lang.name
-			stat.SLOC, stat.LLOC = genericCounter(ctx, path, "#", "", nil)
-			return stat
+			singleStat.Language = lang.name
+			singleStat.SLOC, singleStat.LLOC = genericCounter(ctx, path, "#", "", nil)
+			return []SourceStat{singleStat}
 		}
 	}
 
 	for i := range pascalLikes {
 		lang := pascalLikes[i]
 		if strings.HasSuffix(path, lang.suffix) {
-			stat.Language = lang.name
-			stat.SLOC, stat.LLOC = pascalCounter(ctx, path, lang)
-			if stat.SLOC > 0 {
-				return stat
+			singleStat.Language = lang.name
+			singleStat.SLOC, singleStat.LLOC = pascalCounter(ctx, path, lang)
+			if singleStat.SLOC > 0 {
+				return []SourceStat{singleStat}
 			}
 		}
 	}
@@ -1537,15 +1537,17 @@ func countGeneric(path string) SourceStat {
 	for i := range fortranLikes {
 		lang := fortranLikes[i]
 		if strings.HasSuffix(path, lang.suffix) {
-			stat.Language = lang.name
-			stat.SLOC = fortranCounter(ctx, path, lang)
-			if stat.SLOC > 0 {
-				return stat
+			singleStat.Language = lang.name
+			singleStat.SLOC = fortranCounter(ctx, path, lang)
+			if singleStat.SLOC > 0 {
+				return []SourceStat{singleStat}
 			}
 		}
 	}
 
-	return stat
+	// Without this fallthrough too retirning an empty stat block,
+	// we'd get no report on unclassifiables.
+	return []SourceStat{singleStat}
 }
 
 func isDirectory(path string) bool {
@@ -1629,8 +1631,9 @@ func filter(path string, info os.FileInfo, err error) error {
 	}
 
 	// Now the real work gets done
-	st := countGeneric(path)
-	pipeline <- st
+	for _, st := range countGeneric(path) {
+		pipeline <- st
+	}
 
 	return err
 }
