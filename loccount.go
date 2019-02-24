@@ -1446,8 +1446,9 @@ func fortranCounter(ctx *countContext, path string, syntax fortranLike) uint {
 }
 
 // Generic - recognize lots of languages with generic syntax
-func Generic(ctx *countContext, path string) SourceStat {
+func countGeneric(path string) SourceStat {
 	var stat SourceStat
+	ctx := new(countContext)
 
 	autofilter := func(eolcomment string) bool {
 		if wasGeneratedAutomatically(ctx, path, eolcomment) {
@@ -1461,6 +1462,8 @@ func Generic(ctx *countContext, path string) SourceStat {
 		}
 		return false
 	}
+
+	stat.Path = path
 
 	for i := range genericLanguages {
 		lang := genericLanguages[i]
@@ -1626,9 +1629,7 @@ func filter(path string, info os.FileInfo, err error) error {
 	}
 
 	// Now the real work gets done
-	ctx := new(countContext)
-	st := Generic(ctx, path)
-	st.Path = path
+	st := countGeneric(path)
 	pipeline <- st
 
 	return err
