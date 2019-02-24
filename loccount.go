@@ -1046,8 +1046,10 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) Sour
 	}
 
 	ctx.setup(path)
-	stats.Path = path
 	defer ctx.teardown()
+
+	stats.Path = path
+	stats.Language = syntax.name
 
 	// # at start of file - assume it's a cpp directive
 	if syntax.property(cpp) && ctx.consume([]byte("#")) {
@@ -1202,28 +1204,29 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) Sour
 }
 
 // genericCounter - count SLOC in a generic language.
-func genericCounter(ctx *countContext,
-	path string, eolcomment string, terminator string,
-	verifier func(*countContext, string) bool) SourceStat {
+func genericCounter(ctx *countContext, path string,
+	syntax genericLanguage) SourceStat {
 	var stats SourceStat
 	
-	if verifier != nil && !verifier(ctx, path) {
+	if syntax.verifier != nil && !syntax.verifier(ctx, path) {
 		return stats
 	}
 
 	ctx.setup(path)
-	stats.Path = path
 	defer ctx.teardown()
 
+	stats.Path = path
+	stats.Language = syntax.name
+
 	for ctx.munchline() {
-		i := bytes.Index(ctx.line, []byte(eolcomment))
+		i := bytes.Index(ctx.line, []byte(syntax.eolcomment))
 		if i > -1 {
 			ctx.line = ctx.line[:i]
 		}
 		ctx.line = bytes.Trim(ctx.line, " \t\r\n")
 		if len(ctx.line) > 0 {
 			stats.SLOC++
-			if len(terminator) > 0 && strings.Contains(string(ctx.line), terminator) {
+			if len(syntax.terminator) > 0 && strings.Contains(string(ctx.line), syntax.terminator) {
 				stats.LLOC++
 			}
 		}
@@ -1477,12 +1480,8 @@ func countGeneric(path string) []SourceStat {
 				return []SourceStat{singleStat}
 			} else if len(lang.commentleader) > 0 {
 				singleStat = cFamilyCounter(ctx, path, lang)
-				singleStat.Language = lang.name
 			} else {
-				singleStat = genericCounter(ctx, path,
-					lang.eolcomment, lang.terminator,
-					lang.verifier)
-				singleStat.Language = lang.name
+				singleStat = genericCounter(ctx, path, lang)
 			}
 			if singleStat.nonEmpty() {
 				return []SourceStat{singleStat}
@@ -1523,7 +1522,11 @@ func countGeneric(path string) []SourceStat {
 		}
 		lang := scriptingLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
-			singleStat = genericCounter(ctx, path, "#", "", nil)
+			singleStat = genericCounter(ctx, path,
+				genericLanguage{
+					name:lang.name,
+					eolcomment:"#",
+				})
 			singleStat.Language = lang.name
 			return []SourceStat{singleStat}
 		}
