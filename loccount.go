@@ -323,6 +323,7 @@ const gotick = 0x04  // Strong backtick a la Go
 const cpp = 0x08     // Count C preprocessor directives or Objective C #import
 const asm = 0x10     // Assembler syntax: handle multiple winged-comment types
 const mstring = 0x20 // Triple-quote string literals (not implemented)
+const cnest = 0x80   // Comments nest (not implemented)
 
 const assemblerLeaders = ";#*"	// Intel, GAS, IBM
 
@@ -424,6 +425,7 @@ func init() {
 		{"julia", ".jl", "#=", "=#", "#", "", eolwarn|cbs|mstring, "", nil},
 		{"nim", ".nim", "#[", "]#", "#", "", eolwarn|cbs|mstring, "", nil},
 		{"prolog", ".pl", "", "", "%", "", eolwarn, ".", reallyProlog},
+		{"matlab", ".m", "%{", "}%", "%", "", eolwarn|cnest, "", reallyMatlab},
 		//{"mumps", ".m", "", "", ";", "", eolwarn, "", nil},	// See obj-c
 		{"mumps", ".mps", "", "", ";", "", eolwarn, "", nil},
 		{"mumps", ".m", "", "", ";", "", eolwarn, "", nil},
@@ -684,7 +686,7 @@ func isspace(c byte) bool {
 // Verifier functions for checking that files with disputed extensions
 // are actually of the types we think they are.
 
-// reallyObjectiveC - returns TRUE if filename contents really are objective-C.
+// reallyObjectiveC - returns true if filename contents really are objective-C.
 func reallyObjectiveC(ctx *countContext, path string) bool {
 	special := false // Did we find a special Objective-C pattern?
 	isObjC := false  // Value to determine.
@@ -764,6 +766,12 @@ func reallyPOP11(ctx *countContext, path string) bool {
 // reallySather - returns TRUE if filename contents really are sather.
 func reallySather(ctx *countContext, path string) bool {
 	return hasKeywords(ctx, path, "sather", []string{"class"})
+}
+
+// reallyMatlab - returns TRUE if filename contents really are MATLAB.
+// We have to disambiguate against MUMPS and Objective-C
+func reallyMatlab(ctx *countContext, path string) bool {
+	return hasKeywords(ctx, path, "matlab", []string{"end"})
 }
 
 // reallyProlog - returns TRUE if filename contents really are prolog.

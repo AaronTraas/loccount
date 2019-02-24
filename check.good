@@ -7,6 +7,7 @@ csh-lookup csh 6 0
 delegate.d d 18 10
 dirlist.pl perl 8 6
 factorial.ml ml 8 0
+funcdemo.m matlab 18 0
 gcd.p pop11 10 0
 guide.awk awk 7 0
 hanoi.pl prolog 15 2

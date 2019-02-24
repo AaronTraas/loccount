@@ -64,7 +64,7 @@ TODO items specific to the Go implementation start here:
 
 * Beat Go into not barfing on ABC comments?  (We have a test load)
 
-* Tell Objective-C .m from MUMPS .m?
+* Tell MUMPS .m from MATLAB?
 
 * How to weight EAF: https://dwheeler.com/sloccount/sloccount.html#cocomo
 
