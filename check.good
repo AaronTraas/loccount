@@ -29,8 +29,8 @@ hello.lsp lisp 3 0
 hello.m objective-c 6 3
 hello.m2 modula2 6 4
 hello.m3 modula3 5 2
-hello.mod oberon 12 9
 hello.mps mumps 3 0
+hello.ob oberon 12 9
 hello.pas pascal 4 1
 hello.pl1 pl/1 6 6
 hello.rb ruby 1 0

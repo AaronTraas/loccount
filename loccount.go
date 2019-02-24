@@ -484,6 +484,7 @@ func init() {
 		{"pascal", ".pas", true, ";", nil},
 		{"pascal", ".p", true, ";", reallyPascal},
 		{"pascal", ".inc", true, ";", reallyPascal},
+		{"modula", ".mod", false, ";", nil},
 		{"modula2", ".i2", false, ";", nil},
 		{"modula2", ".m2", false, ";", nil},
 		{"modula3", ".i3", false, ";", nil},
@@ -494,7 +495,8 @@ func init() {
 		{"ml", ".mli", false, "", nil},
 		{"ml", ".mll", false, "", nil},
 		{"ml", ".mly", false, "", nil},
-		{"oberon", ".mod", false, ";", nil},
+		{"oberon", ".ob", false, ";", nil},
+		{"oberon2", ".ob2", false, ";", nil},
 	}
 
 	var ferr error
