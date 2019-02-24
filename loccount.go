@@ -240,6 +240,10 @@ type SourceStat struct {
 	LLOC     uint
 }
 
+func (s SourceStat) nonEmpty() bool {
+	return s.SLOC > 0
+}
+
 var debug int
 var exclusions *regexp.Regexp
 var pipeline chan SourceStat
@@ -1027,27 +1031,27 @@ func hashbang(ctx *countContext, path string, langname string) bool {
 // Another minor issue is that it's possible for the antecedents in Lex rules
 // to look like C comment starts. In theory we could fix this by requiring Lex
 // files to contain %%.
-func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uint, uint) {
+func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) SourceStat {
 	/* Types of comments: */
 	const commentBLOCK = 0
 	const commentTRAILING = 1
 
+	var stats SourceStat
 	mode := stateNORMAL /* stateNORMAL, stateINSTRING, stateINMULTISTRING, or stateINCOMMENT */
-	var sloc uint
-	var lloc uint
 	var commentType int /* commentBLOCK or commentTRAILING */
 	var startline uint
 
 	if syntax.verifier != nil && !syntax.verifier(ctx, path) {
-		return 0, 0
+		return stats
 	}
 
 	ctx.setup(path)
+	stats.Path = path
 	defer ctx.teardown()
 
 	// # at start of file - assume it's a cpp directive
 	if syntax.property(cpp) && ctx.consume([]byte("#")) {
-		lloc++
+		stats.LLOC++
 	}
 	for {
 		c, err := ctx.getachar()
@@ -1155,7 +1159,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 		}
 		if c == '\n' {
 			if ctx.nonblank {
-				sloc++
+				stats.SLOC++
 			}
 			ctx.nonblank = false
 			if ctx.consume([]byte("%")) {
@@ -1164,14 +1168,14 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 			}
 			// # at start of line - assume it's a cpp directive
 			if syntax.property(cpp) && ctx.consume([]byte("#")) {
-				lloc++
+				stats.LLOC++
 				if debug > 1 {
 					fmt.Fprintf(os.Stderr, "cFamilyCounter: cpp lloc++\n")
 				}
 			}
 		}
 		if mode == stateNORMAL && len(syntax.terminator) > 0 && c == syntax.terminator[0] {
-			lloc++
+			stats.LLOC++
 			if debug > 1 {
 				fmt.Fprintf(os.Stderr, "cFamilyCounter: eol lloc++\n")
 			}
@@ -1179,7 +1183,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 	}
 	/* We're done with the file.  Handle EOF-without-EOL. */
 	if ctx.nonblank {
-		sloc++
+		stats.SLOC++
 	}
 	ctx.nonblank = false
 	if (mode == stateINCOMMENT) && (commentType == commentTRAILING) {
@@ -1194,21 +1198,21 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 			path, startline)
 	}
 
-	return sloc, lloc
+	return stats
 }
 
 // genericCounter - count SLOC in a generic language.
 func genericCounter(ctx *countContext,
 	path string, eolcomment string, terminator string,
-	verifier func(*countContext, string) bool) (uint, uint) {
-	var sloc uint
-	var lloc uint
-
+	verifier func(*countContext, string) bool) SourceStat {
+	var stats SourceStat
+	
 	if verifier != nil && !verifier(ctx, path) {
-		return 0, 0
+		return stats
 	}
 
 	ctx.setup(path)
+	stats.Path = path
 	defer ctx.teardown()
 
 	for ctx.munchline() {
@@ -1218,23 +1222,23 @@ func genericCounter(ctx *countContext,
 		}
 		ctx.line = bytes.Trim(ctx.line, " \t\r\n")
 		if len(ctx.line) > 0 {
-			sloc++
+			stats.SLOC++
 			if len(terminator) > 0 && strings.Contains(string(ctx.line), terminator) {
-				lloc++
+				stats.LLOC++
 			}
 		}
 	}
 
-	return sloc, lloc
+	return stats
 }
 
-func pythonCounter(ctx *countContext, path string) (uint, uint) {
-	var sloc uint
-	var lloc uint
+func pythonCounter(ctx *countContext, path string) SourceStat {
 	var isintriple bool  // A triple-quote is in effect.
 	var isincomment bool // We are in a multiline (triple-quoted) comment.
+	var stats SourceStat
 
 	ctx.setup(path)
+	stats.Path = path
 	defer ctx.teardown()
 
 	tripleBoundary := func(line []byte) bool { return bytes.Contains(line, []byte(dt)) || bytes.Contains(line, []byte(st)) }
@@ -1291,14 +1295,14 @@ func pythonCounter(ctx *countContext, path string) (uint, uint) {
 		}
 		ctx.line = bytes.Trim(ctx.line, " \t\r\n")
 		if !isincomment && len(ctx.line) > 0 {
-			sloc++
+			stats.SLOC++
 			if ctx.line[len(ctx.line)-1] != '\\' {
-				lloc++
+				stats.LLOC++
 			}
 		}
 	}
 
-	return sloc, lloc
+	return stats
 }
 
 // perlCounter - count SLOC in Perl
@@ -1316,13 +1320,13 @@ func pythonCounter(ctx *countContext, path string) (uint, uint) {
 // What's worse, "here" documents must be COUNTED AS CODE, even if
 // they're FORMATTED AS A PERLPOD.  Surely no one would do this, right?
 // Sigh... it can happen. See perl5.005_03/pod/splitpod.
-func perlCounter(ctx *countContext, path string) (uint, uint) {
-	var sloc uint
-	var lloc uint
+func perlCounter(ctx *countContext, path string) SourceStat {
 	var heredoc string
 	var isinpod bool
+	var stats SourceStat
 
 	ctx.setup(path)
+	stats.Path = path
 	defer ctx.teardown()
 
 	for ctx.munchline() {
@@ -1359,28 +1363,28 @@ func perlCounter(ctx *countContext, path string) (uint, uint) {
 			break
 		}
 		if !isinpod && len(ctx.line) > 0 {
-			sloc++
+			stats.SLOC++
 			if strings.Contains(string(ctx.line), ";") {
-				lloc++
+				stats.LLOC++
 			}
 		}
 	}
 
-	return sloc, lloc
+	return stats
 }
 
 // pascalCounter - Handle lanuages like Pascal and Modula 3
-func pascalCounter(ctx *countContext, path string, syntax pascalLike) (uint, uint) {
+func pascalCounter(ctx *countContext, path string, syntax pascalLike) SourceStat {
 	mode := stateNORMAL /* stateNORMAL, or stateINCOMMENT */
-	var sloc uint
-	var lloc uint
+	var stats SourceStat
 	var startline uint
 
 	if syntax.verifier != nil && !syntax.verifier(ctx, path) {
-		return 0, 0
+		return stats
 	}
 
 	ctx.setup(path)
+	stats.Path = path
 	defer ctx.teardown()
 
 	for {
@@ -1399,12 +1403,12 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) (uint, uin
 				ctx.nonblank = true
 			} else if c == '\n' {
 				if ctx.nonblank {
-					sloc++
+					stats.SLOC++
 				}
 				ctx.nonblank = false
 			}
 			if len(syntax.terminator) > 0 && c == syntax.terminator[0] {
-				lloc++
+				stats.LLOC++
 			}
 		} else { /* stateINCOMMENT mode */
 			if syntax.bracketcomments && c == '}' {
@@ -1417,7 +1421,7 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) (uint, uin
 	}
 	/* We're done with the file.  Handle EOF-without-EOL. */
 	if ctx.nonblank {
-		sloc++
+		stats.SLOC++
 	}
 	ctx.nonblank = false
 
@@ -1429,21 +1433,22 @@ func pascalCounter(ctx *countContext, path string, syntax pascalLike) (uint, uin
 			path, startline)
 	}
 
-	return sloc, lloc
+	return stats
 }
 
-func fortranCounter(ctx *countContext, path string, syntax fortranLike) uint {
-	var sloc uint
+func fortranCounter(ctx *countContext, path string, syntax fortranLike) SourceStat {
+	var stats SourceStat
 
 	ctx.setup(path)
+	stats.Path = path
 	defer ctx.teardown()
 
 	for ctx.munchline() {
 		if !(syntax.comment.Match(ctx.line) && !syntax.nocomment.Match(ctx.line)) {
-			sloc++
+			stats.SLOC++
 		}
 	}
-	return sloc
+	return stats
 }
 
 // Generic - recognize lots of languages with generic syntax
@@ -1471,14 +1476,15 @@ func countGeneric(path string) []SourceStat {
 			if autofilter(lang.eolcomment) {
 				return []SourceStat{singleStat}
 			} else if len(lang.commentleader) > 0 {
-				singleStat.SLOC, singleStat.LLOC = cFamilyCounter(ctx, path, lang)
+				singleStat = cFamilyCounter(ctx, path, lang)
+				singleStat.Language = lang.name
 			} else {
-				singleStat.SLOC, singleStat.LLOC = genericCounter(ctx, path,
+				singleStat = genericCounter(ctx, path,
 					lang.eolcomment, lang.terminator,
 					lang.verifier)
-			}
-			if singleStat.SLOC > 0 {
 				singleStat.Language = lang.name
+			}
+			if singleStat.nonEmpty() {
 				return []SourceStat{singleStat}
 			}
 		}
@@ -1488,8 +1494,8 @@ func countGeneric(path string) []SourceStat {
 		if autofilter("#") {
 			return []SourceStat{singleStat}
 		}
+		singleStat = pythonCounter(ctx, path)
 		singleStat.Language = "python"
-		singleStat.SLOC, singleStat.LLOC = pythonCounter(ctx, path)
 		return []SourceStat{singleStat}
 	}
 
@@ -1497,8 +1503,8 @@ func countGeneric(path string) []SourceStat {
 		if autofilter("#") {
 			return []SourceStat{singleStat}
 		}
+		singleStat = perlCounter(ctx, path)
 		singleStat.Language = "perl"
-		singleStat.SLOC, singleStat.LLOC = perlCounter(ctx, path)
 		return []SourceStat{singleStat}
 	}
 
@@ -1506,8 +1512,8 @@ func countGeneric(path string) []SourceStat {
 		if autofilter("#") {
 			return []SourceStat{singleStat}
 		}
+		singleStat = pythonCounter(ctx, path)
 		singleStat.Language = "waf"
-		singleStat.SLOC, singleStat.LLOC = pythonCounter(ctx, path)
 		return []SourceStat{singleStat}
 	}
 
@@ -1517,8 +1523,8 @@ func countGeneric(path string) []SourceStat {
 		}
 		lang := scriptingLanguages[i]
 		if strings.HasSuffix(path, lang.suffix) || hashbang(ctx, path, lang.hashbang) {
+			singleStat = genericCounter(ctx, path, "#", "", nil)
 			singleStat.Language = lang.name
-			singleStat.SLOC, singleStat.LLOC = genericCounter(ctx, path, "#", "", nil)
 			return []SourceStat{singleStat}
 		}
 	}
@@ -1526,9 +1532,9 @@ func countGeneric(path string) []SourceStat {
 	for i := range pascalLikes {
 		lang := pascalLikes[i]
 		if strings.HasSuffix(path, lang.suffix) {
+			singleStat = pascalCounter(ctx, path, lang)
 			singleStat.Language = lang.name
-			singleStat.SLOC, singleStat.LLOC = pascalCounter(ctx, path, lang)
-			if singleStat.SLOC > 0 {
+			if singleStat.nonEmpty() {
 				return []SourceStat{singleStat}
 			}
 		}
@@ -1537,15 +1543,15 @@ func countGeneric(path string) []SourceStat {
 	for i := range fortranLikes {
 		lang := fortranLikes[i]
 		if strings.HasSuffix(path, lang.suffix) {
+			singleStat = fortranCounter(ctx, path, lang)
 			singleStat.Language = lang.name
-			singleStat.SLOC = fortranCounter(ctx, path, lang)
-			if singleStat.SLOC > 0 {
+			if singleStat.nonEmpty() {
 				return []SourceStat{singleStat}
 			}
 		}
 	}
 
-	// Without this fallthrough too retirning an empty stat block,
+	// Without this fallthrough to returning an empty stat block,
 	// we'd get no report on unclassifiables.
 	return []SourceStat{singleStat}
 }
