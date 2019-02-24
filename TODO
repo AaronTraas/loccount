@@ -66,8 +66,6 @@ TODO items specific to the Go implementation start here:
 
 * Tell Objective-C .m from MUMPS .m?
 
-* sloccount handles different asm comment conventions.  We should too.
-
 * How to weight EAF: https://dwheeler.com/sloccount/sloccount.html#cocomo
 
 * Check that we handle every extension in sloccount's list.

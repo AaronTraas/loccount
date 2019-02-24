@@ -1,5 +1,8 @@
 = News file for loccount =
 
+Repository head::
+     Handle GAS- and Motorola-style assembler comments as well as Intel style.
+
 2.0: 2019-02-23::
      Added ability to count LLOC in many languages and make COCOMO II estimates.
      Support Algol 60, F#, Dart, Cobra, VRML, Modula-2, and Kotlin.

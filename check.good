@@ -9,6 +9,8 @@ factorial.ml ml 8 0
 gcd.p pop11 10 0
 guide.awk awk 7 0
 hanoi.pl prolog 15 2
+hello-gas.asm asm 13 26
+hello-m68000.asm asm 23 45
 hello.ada ada 5 3
 hello.c c 6 3
 hello.cl lisp 1 0

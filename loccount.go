@@ -313,6 +313,9 @@ const eolwarn = 0x01 // Warn on EOL in string
 const cbs = 0x02     // C-style backslash escapes
 const gotick = 0x04  // Strong backtick a la Go
 const cpp = 0x08     // Count C preprocessor directives or Objective C #import
+const asm = 0x10     // Assembler syntax: handle multiple winged-comment types
+
+const assemblerLeaders = ";#*"	// Intel, GAS, IBM
 
 func init() {
 	// For speed, try to put more common languages and extensions
@@ -364,9 +367,9 @@ func init() {
 		{"haskell", ".hs", "{-", "-}", "--", "", eolwarn, "", nil},
 		{"pl/1", ".pl1", "/*", "*/", "", "", eolwarn, ";", nil},
 		/* everything else */
-		{"asm", ".asm", "/*", "*/", ";", "", eolwarn, "\n", nil},
-		{"asm", ".s", "/*", "*/", ";", "", eolwarn, "\n", nil},
-		{"asm", ".S", "/*", "*/", ";", "", eolwarn, "\n", nil},
+		{"asm", ".asm", "/*", "*/", ";", "", eolwarn|asm, "\n", nil},
+		{"asm", ".s", "/*", "*/", ";", "", eolwarn|asm, "\n", nil},
+		{"asm", ".S", "/*", "*/", ";", "", eolwarn|asm, "\n", nil},
 		{"ada", ".ada", "", "", "--", "", eolwarn, ";", nil},
 		{"ada", ".adb", "", "", "--", "", eolwarn, ";", nil},
 		{"ada", ".ads", "", "", "--", "", eolwarn, ";", nil},
@@ -1078,7 +1081,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) (uin
 				mode = stateINCOMMENT
 				commentType = commentBLOCK
 				startline = ctx.lineNumber
-			} else if (syntax.eolcomment != "") && c == syntax.eolcomment[0] && (len(syntax.eolcomment) == 1 || ctx.consume([]byte(syntax.eolcomment[1:]))) {
+			} else if ((syntax.eolcomment != "") && c == syntax.eolcomment[0] && (len(syntax.eolcomment) == 1 || ctx.consume([]byte(syntax.eolcomment[1:])))) ||(syntax.property(asm) && strings.IndexByte(assemblerLeaders, c) > -1) {
 				if debug > 1 {
 					fmt.Fprintf(os.Stderr, "cFamilyCounter: saw winged-comment leader %s\n", syntax.eolcomment)
 				}
