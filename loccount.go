@@ -420,6 +420,7 @@ func init() {
 		{"f#", ".fscript", "", "", "//", "", eolwarn, "", nil},
 		{"kotlin", ".kt", "", "", "//", "", eolwarn, "", nil},
 		{"dart", ".dart", "", "", "//", "", eolwarn, ";", nil},
+		{"nim", ".nim", "#[", "]#", "#", "", eolwarn|cbs, "", nil},
 		{"prolog", ".pl", "", "", "%", "", eolwarn, ".", reallyProlog},
 		//{"mumps", ".m", "", "", ";", "", eolwarn, "", nil},	// See obj-c
 		{"mumps", ".mps", "", "", ";", "", eolwarn, "", nil},

@@ -2,7 +2,7 @@
 
 Repository head::
      Handle GAS- and Motorola-style assembler comments as well as Intel style.
-     LLOC in Go.
+     LLOC in Go. SLOC in Nim.
 
 2.0: 2019-02-23::
      Added ability to count LLOC in many languages and make COCOMO II estimates.

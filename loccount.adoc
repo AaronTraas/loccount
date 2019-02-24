@@ -147,7 +147,7 @@ tools depending on time of last release.
 The sloccount logic for treating multiple argument directories as different
 projects has not been reproduced. This may change in a future release.
 
-Nesting block comments in languages that allow this (such as Rust,
+Nesting block comments in languages that allow this (such as Rust, Nim,
 Haskell, or D) will confuse the line counting, resulting in overcounts
 after the deepest comment exit is reached.
 
