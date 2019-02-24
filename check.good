@@ -1,3 +1,4 @@
+asm-inline1.c c 18 6
 awk-hello awk 3 0
 comment.sql sql 20 0
 conditions.CBL cobol 25 0
@@ -60,6 +61,7 @@ test.hs haskell 8 0
 upload python 6 6
 wokka.cs c# 5 1
 wscript waf 65 65
+#asm-inline1.c#
 factorial.t
 hello.abc
 test1.lhs
