@@ -1031,7 +1031,7 @@ func hashbang(ctx *countContext, path string, langname string) bool {
 // Another minor issue is that it's possible for the antecedents in Lex rules
 // to look like C comment starts. In theory we could fix this by requiring Lex
 // files to contain %%.
-func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) SourceStat {
+func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) []SourceStat {
 	/* Types of comments: */
 	const commentBLOCK = 0
 	const commentTRAILING = 1
@@ -1042,7 +1042,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) Sour
 	var startline uint
 
 	if syntax.verifier != nil && !syntax.verifier(ctx, path) {
-		return stats
+		return []SourceStat{stats}
 	}
 
 	ctx.setup(path)
@@ -1200,7 +1200,7 @@ func cFamilyCounter(ctx *countContext, path string, syntax genericLanguage) Sour
 			path, startline)
 	}
 
-	return stats
+	return []SourceStat{stats}
 }
 
 // genericCounter - count SLOC in a generic language.
@@ -1479,12 +1479,15 @@ func countGeneric(path string) []SourceStat {
 			if autofilter(lang.eolcomment) {
 				return []SourceStat{singleStat}
 			} else if len(lang.commentleader) > 0 {
-				singleStat = cFamilyCounter(ctx, path, lang)
+				stats := cFamilyCounter(ctx, path, lang)
+				if stats[0].nonEmpty() {
+					return stats
+				}
 			} else {
 				singleStat = genericCounter(ctx, path, lang)
-			}
-			if singleStat.nonEmpty() {
-				return []SourceStat{singleStat}
+				if singleStat.nonEmpty() {
+					return []SourceStat{singleStat}
+				}
 			}
 		}
 	}
