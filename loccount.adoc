@@ -160,9 +160,6 @@ recognized as a comment.
 Eiffel indexing comments are counted as code, not text. (This is
 arguably a feature.)
 
-The asm counter assumes ";" winged comments. This is correct for Intel
-assemblers and some others, but not all.  GAS uses "#".
-
 In lex, flex, yacc, and bison files, block comments beginning within string
 literals will confuse this program and throw a warning.
 
@@ -182,6 +179,8 @@ the last statement in the block or the block end.
 The ".mod" extension is expected to be Oberon, but was used for
 earlier languages in the Modula family as well. All of these
 are syntactically similar.
+
+What is reported as "ml" includes its dialects Caml and Ocaml.
 
 The Algol 60 support assumes it's a dialect with all-caps unquoted keywords.
 
