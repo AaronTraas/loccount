@@ -2,7 +2,7 @@
 
 Repository head::
      Handle GAS- and Motorola-style assembler comments as well as Intel style.
-     LLOC in Go. SLOC in Nim.
+     LLOC in Go. SLOC in Julia and Nim.
      Oberon is now recognized by .ob and .ob2; .mod now maps to Modula.
 
 2.0: 2019-02-23::

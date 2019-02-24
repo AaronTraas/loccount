@@ -322,6 +322,7 @@ const cbs = 0x02     // C-style backslash escapes
 const gotick = 0x04  // Strong backtick a la Go
 const cpp = 0x08     // Count C preprocessor directives or Objective C #import
 const asm = 0x10     // Assembler syntax: handle multiple winged-comment types
+const mstring = 0x20 // Triple-quote string literals (not implemented)
 
 const assemblerLeaders = ";#*"	// Intel, GAS, IBM
 
@@ -420,7 +421,8 @@ func init() {
 		{"f#", ".fscript", "", "", "//", "", eolwarn, "", nil},
 		{"kotlin", ".kt", "", "", "//", "", eolwarn, "", nil},
 		{"dart", ".dart", "", "", "//", "", eolwarn, ";", nil},
-		{"nim", ".nim", "#[", "]#", "#", "", eolwarn|cbs, "", nil},
+		{"julia", ".jl", "#=", "=#", "#", "", eolwarn|cbs|mstring, "", nil},
+		{"nim", ".nim", "#[", "]#", "#", "", eolwarn|cbs|mstring, "", nil},
 		{"prolog", ".pl", "", "", "%", "", eolwarn, ".", reallyProlog},
 		//{"mumps", ".m", "", "", ";", "", eolwarn, "", nil},	// See obj-c
 		{"mumps", ".mps", "", "", ";", "", eolwarn, "", nil},

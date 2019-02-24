@@ -151,6 +151,10 @@ Nesting block comments in languages that allow this (such as Rust, Nim,
 Haskell, or D) will confuse the line counting, resulting in overcounts
 after the deepest comment exit is reached.
 
+Julia and Nim triple-quote literals are not fully supported. Contents
+of these multile literals will generally be shipped correctly, but not
+if the literal contains a lone ASCII double quote.
+
 PHP #-comments taking up an entire line or following only whitespace
 on a line will be counted, not recognized as comments and skipped.
 
@@ -175,10 +179,6 @@ When these require a semi after an end of block - Sather, Simula, CLU,
 statement.  Conversely, reported LLOC will be a bit low in languages
 like Pascal, Modula, and Oberon that don't require a semi either after
 the last statement in the block or the block end.
-
-The ".mod" extension is expected to be Oberon, but was used for
-earlier languages in the Modula family as well. All of these
-are syntactically similar.
 
 What is reported as "ml" includes its dialects Caml and Ocaml.
 
